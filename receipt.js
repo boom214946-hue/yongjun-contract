@@ -252,7 +252,6 @@
         <tr><td class="h">車身號碼</td><td colspan="3" style="letter-spacing:.04em">${esc(car.vin)}</td></tr>
         <tr><td class="h">出庫日期</td><td>${esc(String(r['交車時間'] || '').replace(/\//g, '-'))}</td><td class="h">出庫地點</td><td>${esc(r['出庫地點'])}</td></tr>
         <tr><td class="h">合約編號</td><td>${esc(k.no)}</td><td class="h">客　戶</td><td>${esc(k.buyer)}</td></tr>
-        <tr><td class="h">應收狀態</td><td colspan="3">${Number(r['應收合計']) > 0 ? `尚有應收 NT$ ${money(r['應收合計'])}（${esc(r['尾款狀態'])}${r['核准備註'] ? '；核准說明：' + esc(r['核准備註']) : ''}）` : '已付清'}</td></tr>
       </table>
       <div class="sec">簽核</div>
       <table><tr>${sign('值班人員', r['申請人名'] || '', String(r['建立時間'] || '').slice(0, 16))}${sign('核定主管', r['核准人'], r['核准時間'])}${sign('財務經辦', r['財務經辦'], '')}</tr></table>
