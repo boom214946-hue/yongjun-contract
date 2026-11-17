@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>永駿合約系統</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --surface2:#E6EAEF; --fg:#1C2733; --muted:#5B6878; --line:#D3D9E0;
+  --ink:#1C2733; --accent:#B4611A; --accent-soft:#F6E7D8; --ok:#2E7D4F; --ok-soft:#DFF0E5; --warn:#B3261E; --warn-soft:#F8E1DF; --pri:#1F4E79;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141A21; --surface:#1C242D; --surface2:#252F3A; --fg:#E7ECF1; --muted:#9AA7B5; --line:#2C3642;
+  --ink:#C9D6E6; --accent:#E08A3C; --accent-soft:#3A2A18; --ok:#5CB880; --ok-soft:#173025; --warn:#F07167; --warn-soft:#3A1E1C; --pri:#3D7AB8; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55;
+  padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 60px max(14px,env(safe-area-inset-left))}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.top h1{font-size:19px} .top .who{font-size:13px;color:var(--muted)}
+.pages{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.pages button{border:0;background:none;padding:10px 12px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;font-size:15px}
+.pages button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--pri)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.sec{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.label{font-size:12px;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:700;font-size:13px;white-space:nowrap;text-decoration:none;color:inherit;display:inline-block}
+.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn.acc{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.active{background:var(--accent-soft);color:var(--accent)} .pill.ready{background:var(--ok-soft);color:var(--ok)}
+.pill.stale{background:var(--warn-soft);color:var(--warn)} .pill.done{background:var(--surface2);color:var(--muted)}
+.need{color:var(--accent);font-weight:700;font-size:12px}
+input[type=text],input[type=date],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;color:var(--muted);font-weight:700}
+.kt td{white-space:nowrap}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form2 label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.form2 input,.form2 select{font-weight:400;color:var(--fg);width:100%}
+.form2 .full{grid-column:1/-1}
+.form2 input[type=checkbox]{width:auto;flex:none}
+@media (max-width:420px){.form2{grid-template-columns:1fr}}
+.calc{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(10,14,22,.55);display:grid;grid-template-columns:minmax(0,1fr);place-items:center;z-index:25;padding:16px}
+.modal .box{background:var(--surface);border-radius:14px;padding:18px;width:min(520px,100%);display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;z-index:30;max-width:calc(100% - 32px);pointer-events:none}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:13px;display:block;cursor:pointer}
+.drop input{display:none}
+.sealprev{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.sealprev .sb{border:1px dashed var(--line);border-radius:6px;display:grid;place-items:center;background:#fff;overflow:hidden;color:#999;font-size:12px}
+.sealprev img{max-width:100%;max-height:100%}.sealprev .big{width:96px;height:96px}.sealprev .small{width:52px;height:52px}
+.carlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.car{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.car .t{font-weight:700;font-size:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><h1>永駿車業 合約系統</h1><div class="who" id="who">連線中…</div></div>
+    <div class="row"><a class="btn" id="toSales" hidden>業務系統</a><button class="btn" data-reload>重新整理</button></div>
+  </header>
+  <nav class="pages" role="tablist" id="nav" hidden>
+    <button role="tab" data-page="cars">簽合約</button>
+    <button role="tab" data-page="contracts">合約列表</button>
+    <button role="tab" data-page="pays" id="nav-pays">繳款單</button>
+    <button role="tab" data-page="docs" id="nav-docs">證件申請</button>
+    <button role="tab" data-page="dlvs" id="nav-dlvs">交車</button>
+    <button role="tab" data-page="settings" id="nav-settings" hidden>公司設定</button>
+  </nav>
+  <main id="view"><div class="loading">讀取資料中…</div></main>
+</div>
+<div id="toast" class="toast" hidden></div>
+<div id="modal" class="modal" hidden><div class="box" id="mbox" role="dialog" aria-modal="true"></div></div>
+
+<script>
+// ===== 設定（跟 contract.html 一樣）=====
+const LIFF_ID = '';      // 合約系統的 LIFF ID（例如 2012275132-xxxxxxxx）
+const API_URL = '';      // 合約系統 Apps Script 部署後的網址（…/exec）
+
+// ===== 基本工具 =====
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const money = n => (n === '' || n == null || isNaN(n)) ? '' : Number(n).toLocaleString('en-US');
+const md = s => s ? `${+s.slice(5, 7)}/${+s.slice(8, 10)}` : '—';
+function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => t.hidden = true, 3500); }
+function openModal(html) { $('#mbox').innerHTML = html; $('#modal').hidden = false; }
+function closeModal() { $('#modal').hidden = true; }
+function relogin() { try { liff.logout(); } catch (e) {} liff.login({ redirectUri: location.href }); }
+function tokenOk() { try { const t = liff.getDecodedIDToken(); return !!(t && t.exp * 1000 > Date.now() + 60000); } catch (e) { return false; } }
+async function api(payload) {
+  if (!tokenOk()) { relogin(); throw new Error('relogin'); }
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
+  const j = await res.json();
+  if (j.authError) { toast('登入已過期，重新登入中…'); setTimeout(relogin, 1200); }
+  return j;
+}
+async function act(payload, btn) {
+  if (btn) { btn.disabled = true; btn.dataset.t = btn.textContent; btn.textContent = '處理中…'; }
+  try { const r = await api(payload); toast(r.message || (r.ok ? '完成' : '失敗')); if (r.ok) { closeModal(); await load(); } return r; }
+  catch (e) { if (e.message !== 'relogin') toast('連線失敗，請再試一次'); }
+  finally { if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = btn.dataset.t; } }
+}
+
+// ===== 資料 =====
+let signFiles = [];
+let pFilter = '', dFilter = '', tFilter = '';
+let D = null, page = 'cars', kFilter = '待簽約', carQ = '', SETTINGS = null, sealEdit = {};
+const isBoss = () => D && D.me.isBoss;
+const PAPER = () => !D || D.signMode !== 'online';
+const WAIT = () => PAPER() ? '待簽約' : '簽署中';
+async function load() {
+  const r = await api({ action: 'all' });
+  if (!r.ok) { $('#view').innerHTML = `<div class="panel">${esc(r.message)}</div>`; $('#who').textContent = ''; return; }
+  D = r;
+  $('#who').textContent = `${D.me.name}（${D.me.en}）・${D.me.isBoss ? '主管' : D.me.isOffice ? '行政' : '業務'}・${D.today}`;
+  $('#nav').hidden = false; $('#nav-settings').hidden = !D.canSet;
+  if (D.salesLiff) { $('#toSales').href = D.salesLiff; $('#toSales').hidden = false; }
+  render();
+}
+const signing = id => D.contracts.find(k => k['車輛編號'] === id && k['狀態'] === '簽署中');
+const compName = id => { const c = D.companies.find(x => x['編號'] === id); return c ? (c['簡稱'] || c['公司名稱']) : ''; };
+
+// ===== 簽合約：選車 =====
+function renderCars() {
+  let list = D.cars.slice().sort((a, b) => String(a.inDate).localeCompare(String(b.inDate)));
+  if (carQ) { const q = carQ.toLowerCase(); list = list.filter(c => [c.plate, c.brand, c.model, c.color, c.manager].join(' ').toLowerCase().includes(q)); }
+  const noComp = !D.companies.some(c => PAPER() || (c.hasBig && c.hasSmall));
+  return `
+  <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">選一台車簽合約</h2><div class="small muted">業務系統裡「在庫」的車；車籍資料會自動帶入合約</div></div>
+    <input type="text" id="cq" placeholder="搜尋車牌、車型" value="${esc(carQ)}" style="width:180px" aria-label="搜尋"></section>
+  ${noComp ? `<div class="panel" style="border-color:var(--warn)"><b style="color:var(--warn)">還沒有可用的甲方公司</b><div class="small muted">請管理員或行政到「公司設定」新增公司${PAPER() ? '' : '並上傳大小章'}，才能簽合約。</div></div>` : ''}
+  <section class="carlist">${list.map(c => { const k = signing(c.id);
+    return `<div class="car"><div class="t">${esc(String(c.year).slice(0, 4))} ${esc(c.model)}</div>
+      <div class="small muted"><span class="mono">${esc(c.plate)}</span>・${esc(c.brand)}・${esc(c.color) || '—'}・${esc(c.km) || '—'}</div>
+      <div class="small">開價 <b class="mono">${c.ask ? money(+c.ask) : '—'}</b> ${c.priced ? '' : '<span class="need">主管還沒定價</span>'}</div>
+      <div class="row small" style="gap:6px">${c.vin ? '<span class="pill ready">車身號碼 ✓</span>' : '<span class="pill stale">缺車身號碼</span>'}${c.hasLic ? '<span class="pill ready">行照 ✓</span>' : '<span class="pill stale">缺行照</span>'}${k ? `<span class="pill active">${esc(k['業務'])} ${WAIT()}</span>` : ''}</div>
+      <div class="row" style="justify-content:flex-end">${k ? `<a class="btn acc" href="contract.html?id=${encodeURIComponent(k['編號'])}">開啟 ${esc(k['合約編號'])}</a>`
+        : `<a class="btn acc" ${c.priced && !noComp ? `href="contract.html?car=${encodeURIComponent(c.id)}"` : 'aria-disabled="true" style="opacity:.45;pointer-events:none"'}>簽合約</a>`}</div></div>`; }).join('') || '<div class="panel muted">沒有在庫的車</div>'}</section>
+  <p class="small muted" style="margin:0">缺車身號碼或行照也可以簽，在合約上補填；簽完會自動寫回業務系統車源表。也可以先到業務系統按「車籍」補齊。</p>`;
+}
+
+// ===== 合約列表 =====
+function renderContracts() {
+  const all = D.contracts.slice().sort((a, b) => b['合約編號'].localeCompare(a['合約編號']));
+  const pend = all.filter(k => k['核定狀態'] === '待核定');
+  const groups = { 待簽約: k => k['狀態'] === '簽署中', 已簽約: k => ['已簽約', '已交車'].includes(k['狀態']), 待核定: k => k['核定狀態'] === '待核定', 全部: () => true };
+  const list = all.filter(groups[kFilter]);
+  const st = k => k['狀態'] === '簽署中' ? `<span class="pill active">${WAIT()}</span>` : k['狀態'] === '已簽約' ? '<span class="pill ready">已簽約</span>'
+    : k['狀態'] === '已交車' ? '<span class="pill ready">已交車</span>' : k['狀態'] === '已解除' ? '<span class="pill stale">已解除（退訂）</span>' : `<span class="pill done">${esc(k['狀態'])}</span>`;
+  return `
+  <section><h2 style="font-size:18px">合約列表</h2><div class="small muted">簽完 PDF 自動存到公司雲端；業務系統退訂的合約會顯示「已解除」</div></section>
+  ${isBoss() && pend.length ? `<div class="panel" style="border-color:var(--accent)"><b>${pend.length} 份合約低於底價，等你核定</b></div>` : ''}
+  <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-kf="${g}" aria-pressed="${kFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
+  <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:920px;font-size:13.5px">
+    <thead><tr><th>合約編號</th><th>簽約日</th><th>車輛</th><th>客戶</th><th>業務</th><th>甲方</th><th style="text-align:right">成交價</th><th>狀態</th><th>核定</th><th></th></tr></thead>
+    <tbody>${list.map(k => `<tr>
+      <td class="mono"><b>${esc(k['合約編號'])}</b></td><td class="mono">${k['簽約日'] ? md(k['簽約日']) : '—'}</td>
+      <td>${esc(k['車款'])} <span class="mono small muted">${esc(k['車牌'])}</span></td><td>${esc(k['乙方姓名'])}</td><td>${esc(k['業務'])}</td><td class="small">${esc(compName(k['公司編號']))}</td>
+      <td class="mono" style="text-align:right">${money(+k['成交價'])}</td><td>${st(k)}</td>
+      <td class="small">${k['核定狀態'] === '待核定' ? '<span class="pill stale">待核定</span>' : k['核定狀態'] === '已核定' ? `<span class="pill ready" title="${esc(k['核定備註'])}">${esc(k['核定人'])} 已核定</span>` : '<span class="muted">—</span>'}</td>
+      <td><div class="row" style="gap:6px;flex-wrap:nowrap">
+        ${k['狀態'] === '簽署中' ? (PAPER() ? `<a class="btn" href="contract.html?id=${encodeURIComponent(k['編號'])}">開啟／列印</a><button class="btn acc" data-ksign="${k['編號']}">已簽約</button>`
+          : `<a class="btn acc" href="contract.html?id=${encodeURIComponent(k['編號'])}">繼續簽約</a>`) + `<button class="btn danger" data-kvoid="${k['編號']}">作廢</button>` : ''}
+        ${['簽署中', '已簽約'].includes(k['狀態']) ? `<a class="btn" href="payment.html?k=${encodeURIComponent(k['編號'])}">繳款單${payCount(k['編號']) ? ' ' + payCount(k['編號']) : ''}</a>` : ''}
+        ${k['狀態'] === '已簽約' ? `<a class="btn" href="docs.html?k=${encodeURIComponent(k['編號'])}">證件申請</a><a class="btn" href="delivery.html?k=${encodeURIComponent(k['編號'])}">交車</a>` : ''}
+        ${k.hasPdf ? `<button class="btn" data-kpdf="${k['編號']}">開啟 PDF</button>` : ''}
+        ${isBoss() && k['核定狀態'] === '待核定' ? `<button class="btn pri" data-kok="${k['編號']}">核定</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有合約</td></tr>'}</tbody>
+  </table></div></section>
+  <p class="small muted" style="margin:0">${PAPER() ? '「待簽約」是已取得合約編號、印出來但還沒登記簽好的合約。客人簽好、公司蓋好章後，按「已簽約」上傳第一聯（公司留底聯），業務系統訂單才會成立。' : '「簽署中」是已鎖定、取得合約編號但客戶還沒簽完的合約。'}不簽了請按「作廢」，號碼不會重複使用。PDF 在 LINE 裡打不開時，請點右上角選「用預設瀏覽器開啟」。</p>`;
+}
+function b64Blob(dataUrl) {
+  const [h, b] = dataUrl.split(','), mime = h.match(/data:([^;]+)/)[1], bin = atob(b), u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: mime });
+}
+async function openPdf(id, btn) {
+  btn.disabled = true; const t = btn.textContent; btn.textContent = '讀取中…';
+  try {
+    const r = await api({ action: 'contractPdf', id });
+    if (!r.ok) { toast(r.message || '讀取失敗'); return; }
+    const url = URL.createObjectURL(b64Blob(r.data));
+    const w = window.open(url, '_blank');
+    if (!w) { const a = document.createElement('a'); a.href = url; a.download = r.name; document.body.appendChild(a); a.click(); a.remove(); }
+  } catch (e) { if (e.message !== 'relogin') toast('連線失敗，請再試一次'); }
+  finally { btn.disabled = false; btn.textContent = t; }
+}
+
+// ===== 繳款單 =====
+const payCount = kid => (D.pays || []).filter(p => p['合約ID'] === kid && p['狀態'] !== '作廢').length;
+const PST = { 待核對: 'active', 待核准: 'stale', 已核准: 'ready', 作廢: 'done' };
+function myPayTodo() { const m = D.me; return (D.pays || []).filter(p => (p['狀態'] === '待核對' && (m.isOffice || m.isBoss)) || (p['狀態'] === '待核准' && D.canPayApprove)); }
+function renderPays() {
+  const all = (D.pays || []).slice().sort((a, b) => String(b['建立時間']).localeCompare(String(a['建立時間'])));
+  if (!pFilter) pFilter = myPayTodo().length ? '待我處理' : '全部';
+  const todo = myPayTodo();
+  const groups = { 待我處理: p => todo.includes(p), 待核對: p => p['狀態'] === '待核對', 待核准: p => p['狀態'] === '待核准', 已核准: p => p['狀態'] === '已核准', 作廢: p => p['狀態'] === '作廢', 全部: () => true };
+  const list = all.filter(groups[pFilter]);
+  return `
+  <section><h2 style="font-size:18px">繳款單</h2><div class="small muted">流程：業務開立 → 行政（Bella）核對 → ${esc(D.payApproverEn || 'Yvonne')} 核准。開立新繳款單請到「合約列表」按該合約的「繳款單」。</div></section>
+  ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張繳款單等你處理</b></div>` : ''}
+  <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-pf="${g}" aria-pressed="${pFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
+  <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:900px;font-size:13.5px">
+    <thead><tr><th>繳款單編號</th><th>開立日</th><th>車輛</th><th>客戶</th><th>業務</th><th style="text-align:right">本次收款</th><th style="text-align:right">車價累計</th><th style="text-align:right">剩餘尾款</th><th>狀態</th><th></th></tr></thead>
+    <tbody>${list.map(p => `<tr><td class="mono"><b>${esc(p['繳款單編號'])}</b></td><td class="mono">${md(p['開立日'])}</td><td>${esc(p['車款'])} <span class="mono small muted">${esc(p['車牌'])}</span></td>
+      <td>${esc(p['客戶'])}</td><td>${esc(p['業務'])}</td><td class="mono" style="text-align:right"><b>${money(+p['本次收款'])}</b></td><td class="mono" style="text-align:right">${money(+p['車價已收'])}</td><td class="mono" style="text-align:right">${money(+p['剩餘尾款'])}</td>
+      <td><span class="pill ${PST[p['狀態']]}">${esc(p['狀態'])}</span></td><td><button class="btn ${todo.includes(p) ? 'pri' : ''}" data-pview="${p['編號']}">${todo.includes(p) ? (p['狀態'] === '待核對' ? '核對' : '核准') : '查看'}</button></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有繳款單</td></tr>'}</tbody>
+  </table></div></section>`;
+}
+function payModal(p, imgs) {
+  const m = D.me, todo = myPayTodo().includes(p);
+  const canVoid = p['狀態'] !== '作廢' && (m.isBoss || m.isOffice || (p['建立人'] === m.en && p['狀態'] === '待核對'));
+  openModal(`<h3>繳款單 ${esc(p['繳款單編號'])} <span class="pill ${PST[p['狀態']]}">${esc(p['狀態'])}</span></h3>
+    <div class="calc">${esc(p['車款'])} <span class="mono">${esc(p['車牌'])}</span>・客戶 ${esc(p['客戶'])}・業務 ${esc(p['業務'])}<br>成交價 <b class="mono">${money(+p['成交價'])}</b>・合約定金 ${money(+p['合約定金'])}・車價累計 <b class="mono">${money(+p['車價已收'])}</b>・剩餘尾款 <b class="mono">${money(+p['剩餘尾款'])}</b></div>
+    <div class="tbl-wrap"><table style="font-size:13px"><thead><tr><th>版次</th><th>日期</th><th>款項</th><th>方式</th><th style="text-align:right">金額</th><th>帳戶／備註</th></tr></thead><tbody>
+      ${p.lines.map(l => `<tr style="${l.ver == p['版次'] ? 'font-weight:700' : 'color:var(--muted)'}"><td>${l.ver == p['版次'] ? '本次' : ('0' + l.ver).slice(-2)}</td><td class="mono">${md(l.date)}</td><td>${esc(l.type)}</td><td>${esc(l.method)}</td><td class="mono" style="text-align:right">${money(l.amount)}</td><td class="small">${esc([l.account, l.note].filter(Boolean).join('・'))}</td></tr>`).join('')}</tbody></table></div>
+    ${p['備註'] ? `<div class="small">備註：${esc(p['備註'])}</div>` : ''}
+    <div><div class="label">匯款證明・簽單（${p.proofCount} 張）</div><div class="row" id="pimgs" style="gap:6px">${p.proofCount ? (imgs ? imgs.map(u => `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="憑證" style="width:96px;height:96px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></a>`).join('') : '<span class="small muted">讀取中…</span>') : '<span class="small muted">沒有上傳</span>'}</div></div>
+    <div class="small muted">開立 ${esc(p['建立人'])} ${esc(p['建立時間'])}${p['核對人'] ? `・核對 ${esc(p['核對人'])} ${esc(p['核對時間'])}` : ''}${p['核准人'] ? `・核准 ${esc(p['核准人'])} ${esc(p['核准時間'])}` : ''}${p['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(p['作廢原因'])}（${esc(p['作廢人'])}）</span>` : ''}</div>
+    ${canVoid ? `<div class="row" id="pvoidBox" hidden><input type="text" id="pvoid-reason" placeholder="作廢原因（必填），例如 金額打錯、客戶退訂" style="flex:1"><button class="btn danger" data-pvoidgo="${p['編號']}">確認作廢</button></div>` : ''}
+    <div class="row" style="justify-content:flex-end">
+      ${canVoid ? `<button class="btn danger" data-pvoid>作廢</button>` : ''}
+      <a class="btn" href="payment.html?k=${encodeURIComponent(p['合約ID'])}&v=${encodeURIComponent(p['編號'])}">預覽／列印</a>
+      <button class="btn" data-mclose>關閉</button>
+      ${todo && p['狀態'] === '待核對' ? `<button class="btn pri" data-pcheck="${p['編號']}">核對無誤</button>` : ''}
+      ${todo && p['狀態'] === '待核准' ? `<button class="btn pri" data-papprove="${p['編號']}">核准</button>` : ''}</div>`);
+}
+
+// ===== 證件申請 =====
+const DST = { 待核准: 'stale', 已核准: 'active', 已領取: 'ready', 作廢: 'done' };
+function myDocTodo() { return (D.docs || []).filter(r => (r['狀態'] === '待核准' && D.canDocApprove) || (r['狀態'] === '已核准' && (D.me.isOffice || D.me.isBoss))); }
+function renderDocs() {
+  const all = (D.docs || []).slice().sort((a, b) => String(b['申請時間']).localeCompare(String(a['申請時間'])));
+  const todo = myDocTodo();
+  if (!dFilter) dFilter = todo.length ? '待我處理' : '全部';
+  const groups = { 待我處理: r => todo.includes(r), 待核准: r => r['狀態'] === '待核准', 已核准: r => r['狀態'] === '已核准', 已領取: r => r['狀態'] === '已領取', 作廢: r => r['狀態'] === '作廢', 全部: () => true };
+  const list = all.filter(groups[dFilter]);
+  return `
+  <section><h2 style="font-size:18px">證件申請</h2><div class="small muted">過戶時向總部領回車籍資料（不需歸還）。流程：申請 → ${esc(D.docApproverEn || 'Leo')} 核准 → 匯出申請單向總部領取 → 行政登記「已領取」。新申請請到「合約列表」按該合約的「證件申請」。</div></section>
+  ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張證件申請等你處理</b></div>` : ''}
+  <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-df="${g}" aria-pressed="${dFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
+  <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:900px;font-size:13.5px">
+    <thead><tr><th>申請單號</th><th>申請時間</th><th>車輛</th><th>過戶對象</th><th>申請人</th><th>預計領取</th><th>狀態</th><th></th></tr></thead>
+    <tbody>${list.map(r => { const can = todo.includes(r);
+      return `<tr><td class="mono"><b>${esc(r['申請單號'])}</b></td><td class="mono">${esc(r['申請時間'])}</td><td>${esc(r['車款'])} <span class="mono small muted">${esc(r['車牌'])}</span></td>
+      <td>${esc(r['過戶對象'])} <span class="small muted">${esc(r['過戶對象類型'])}</span></td><td>${esc(r['申請人'])}</td><td class="mono">${r['預計領取日'] ? md(r['預計領取日']) : '—'}</td>
+      <td><span class="pill ${DST[r['狀態']]}" title="${esc(r['作廢原因'] || '')}">${esc(r['狀態'])}</span>${r['領取時間'] ? ` <span class="small muted">${esc(r['領取人'])} ${md(r['領取時間'])}</span>` : ''}</td>
+      <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ${can ? 'pri' : ''}" data-dview="${r['編號']}">${can ? (r['狀態'] === '待核准' ? '核准' : '已領取') : '查看'}</button>
+        <a class="btn" href="docs.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／匯出</a></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="muted">沒有證件申請</td></tr>'}</tbody>
+  </table></div></section>`;
+}
+function docModal(r) {
+  const m = D.me, can = myDocTodo().includes(r), canVoid = r['狀態'] !== '作廢' && (m.isBoss || m.isOffice || (r['申請人'] === m.en && r['狀態'] === '待核准'));
+  openModal(`<h3>證件申請 ${esc(r['申請單號'])} <span class="pill ${DST[r['狀態']]}">${esc(r['狀態'])}</span></h3>
+    <div class="calc">${esc(r['車款'])} <span class="mono">${esc(r['車牌'])}</span>・客戶 ${esc(r['客戶'])}・業務 ${esc(r['業務'])}<br>
+      過戶對象：<b>${esc(r['過戶對象'])}</b>（${esc(r['過戶對象類型'])} ${esc(r['過戶對象證號'])}）${r['新領車號'] ? `・新領車號 ${esc(r['新領車號'])}` : ''}</div>
+    <div><div class="label">領取資料</div>${esc(r.items.map(x => x === '鑰匙' && r['鑰匙數量'] ? `鑰匙 ${r['鑰匙數量']} 把` : x).join('、'))}${r['其他項目'] ? '、' + esc(r['其他項目']) : ''}</div>
+    ${r['備註'] ? `<div class="small">備註：${esc(r['備註'])}</div>` : ''}
+    <div class="small muted">申請 ${esc(r['申請人'])} ${esc(r['申請時間'])}${r['核准人'] ? `・核准 ${esc(r['核准人'])} ${esc(r['核准時間'])}${r['核准備註'] ? '（' + esc(r['核准備註']) + '）' : ''}` : ''}${r['領取人'] ? `・領取 ${esc(r['領取人'])} ${esc(r['領取時間'])}` : ''}${r['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(r['作廢原因'])}（${esc(r['作廢人'])}）</span>` : ''}</div>
+    ${can && r['狀態'] === '待核准' ? `<label class="label" for="dk-note">核准備註（選填）</label><input type="text" id="dk-note" placeholder="例：請今天下午前領取">` : ''}
+    ${can && r['狀態'] === '已核准' ? `<div class="small muted">領取人也就是保管人，登記後會自動印在申請單的「領取人」和「保管人」兩格。</div><div class="form2"><label>領取日<input type="date" id="dr-date" value="${D.today.replace(/\//g, '-')}"></label><label>領取人<select id="dr-who">${(D.staffNames || [D.me.name]).map(n => `<option${n === (D.keeper || D.me.name) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label></div>` : ''}
+    ${canVoid ? `<div class="row" id="dvoidBox" hidden><input type="text" id="dvoid-reason" placeholder="作廢原因（必填）" style="flex:1"><button class="btn danger" data-dvoidgo="${r['編號']}">確認作廢</button></div>` : ''}
+    <div class="row" style="justify-content:flex-end">
+      ${canVoid ? `<button class="btn danger" data-dvoid>作廢</button>` : ''}
+      <a class="btn" href="docs.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／匯出</a>
+      <button class="btn" data-mclose>關閉</button>
+      ${can && r['狀態'] === '待核准' ? `<button class="btn pri" data-dok="${r['編號']}">核准</button>` : ''}
+      ${can && r['狀態'] === '已核准' ? `<button class="btn pri" data-drecv="${r['編號']}">登記已領取</button>` : ''}</div>`);
+}
+
+// ===== 交車確認單＋出庫單 =====
+const TST = { 待核准: 'stale', 已核准: 'active', 已交車: 'ready', 作廢: 'done' };
+function myDlvTodo() { return (D.dlvs || []).filter(r => r['狀態'] === '待核准' && D.canDlvApprove); }
+function renderDlvs() {
+  const all = (D.dlvs || []).slice().sort((a, b) => String(b['建立時間']).localeCompare(String(a['建立時間'])));
+  const todo = myDlvTodo();
+  if (!tFilter) tFilter = todo.length ? '待我處理' : '全部';
+  const groups = { 待我處理: r => todo.includes(r), 待核准: r => r['狀態'] === '待核准', 已核准: r => r['狀態'] === '已核准', 已交車: r => r['狀態'] === '已交車', 作廢: r => r['狀態'] === '作廢', 全部: () => true };
+  const list = all.filter(groups[tFilter]);
+  return `
+  <section><h2 style="font-size:18px">交車（交車確認單＋出庫單）</h2><div class="small muted">出庫＝交車。流程：業務填交車確認單 → 主管核准出庫 → 印交車確認單（兩聯）和出庫單 → 交車時客人簽名 → 上傳第一聯完成交車 → 到業務系統按「完成交車」。新交車請到「合約列表」按該合約的「交車」。</div></section>
+  ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張出庫申請等你核准</b></div>` : ''}
+  <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-tf="${g}" aria-pressed="${tFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
+  <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:900px;font-size:13.5px">
+    <thead><tr><th>交車單號</th><th>交車時間</th><th>車輛</th><th>客戶</th><th>業務</th><th style="text-align:right">合計應收</th><th>狀態</th><th></th></tr></thead>
+    <tbody>${list.map(r => { const can = todo.includes(r);
+      return `<tr><td class="mono"><b>${esc(r['交車單號'])}</b></td><td class="mono">${esc(r['交車時間'])}</td><td>${esc(r['車款'])} <span class="mono small muted">${esc(r['車牌'])}</span></td>
+      <td>${esc(r['客戶'])}</td><td>${esc(r['業務'])}</td><td class="mono" style="text-align:right">${money(+r['應收合計'])}${+r['應收合計'] > 0 ? ` <span class="small" style="color:var(--accent)">${esc(r['尾款狀態'])}</span>` : ''}</td>
+      <td><span class="pill ${TST[r['狀態']]}" title="${esc(r['作廢原因'] || '')}">${esc(r['狀態'])}</span></td>
+      <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ${can ? 'pri' : ''}" data-tview="${r['編號']}">${can ? '核准出庫' : '查看'}</button>
+        <a class="btn" href="delivery.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／列印</a></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="muted">沒有交車確認單</td></tr>'}</tbody>
+  </table></div></section>`;
+}
+function dlvModal(r) {
+  const m = D.me, can = myDlvTodo().includes(r), due = +r['應收合計'];
+  const canVoid = r['狀態'] !== '作廢' && r['狀態'] !== '已交車' && (m.isBoss || m.isOffice || (r['申請人'] === m.en && r['狀態'] === '待核准'));
+  const ck = r.checks || {}, no = Object.keys(ck).filter(x => ck[x] === '無');
+  openModal(`<h3>交車 ${esc(r['交車單號'])} <span class="pill ${TST[r['狀態']]}">${esc(r['狀態'])}</span></h3>
+    <div class="calc">${esc(r['車款'])} <span class="mono">${esc(r['車牌'])}</span>・客戶 ${esc(r['客戶'])}・業務 ${esc(r['業務'])}<br>交車 ${esc(r['交車時間'])}・${esc(r['出庫地點'])}・里程 ${money(+r['交車里程'])} 公里${r['實際交車人'] && r['實際交車人'] !== r['客戶'] ? `・實際交車人 ${esc(r['實際交車人'])}` : ''}</div>
+    <div class="tbl-wrap"><table style="font-size:13px"><tbody>
+      <tr><td>車價</td><td class="mono" style="text-align:right">${money(+r['成交價'])}</td><td>已收</td><td class="mono" style="text-align:right">−${money(+r['車價已收'])}</td></tr>
+      <tr><td>代辦費用</td><td class="mono" style="text-align:right">${money(+r['代辦合計'])}</td><td>已收代辦</td><td class="mono" style="text-align:right">−${money(+r['代辦已收'])}</td></tr>
+      <tr><td><b>合計應收</b></td><td class="mono" style="text-align:right"><b style="color:${due > 0 ? 'var(--accent)' : 'var(--ok)'}">${money(due)}</b></td><td colspan="2">${due > 0 ? esc(r['尾款狀態']) + (r['備註'] ? '：' + esc(r['備註']) : '') : '已付清'}</td></tr></tbody></table></div>
+    <div class="small">代辦明細：${esc((r.fees || []).filter(f => f.amount).map(f => f.name + ' ' + money(f.amount)).join('、') || '無')}</div>
+    <div class="small">點交「無」的項目：${esc(no.join('、') || '沒有')}</div>
+    <div class="small muted">申請 ${esc(r['申請人名'] || r['申請人'])} ${esc(r['建立時間'])}${r['核准人'] ? `・核准 ${esc(r['核准人'])} ${esc(r['核准時間'])}${r['核准備註'] ? '（' + esc(r['核准備註']) + '）' : ''}` : ''}${r['完成時間'] ? `・交車完成 ${esc(r['完成人'])} ${esc(r['完成時間'])}` : ''}${r['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(r['作廢原因'])}（${esc(r['作廢人'])}）</span>` : ''}</div>
+    ${can ? `<label class="label" for="tk-note">核准說明${due > 0 ? '（還有應收款，必填）' : '（選填）'}</label><input type="text" id="tk-note" placeholder="${due > 0 ? '例：貸款撥款中，同意先交車' : ''}">` : ''}
+    ${canVoid ? `<div class="row" id="tvoidBox" hidden><input type="text" id="tvoid-reason" placeholder="作廢原因（必填）" style="flex:1"><button class="btn danger" data-tvoidgo="${r['編號']}">確認作廢</button></div>` : ''}
+    <div class="row" style="justify-content:flex-end">
+      ${canVoid ? `<button class="btn danger" data-tvoid>作廢</button>` : ''}
+      <a class="btn" href="delivery.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／列印</a>
+      <button class="btn" data-mclose>關閉</button>
+      ${can ? `<button class="btn pri" data-tok="${r['編號']}">核准出庫</button>` : ''}</div>`);
+}
+
+// ===== 公司設定 =====
+async function loadSettings() {
+  SETTINGS = null; render();
+  try { const r = await api({ action: 'settingsData' }); if (!r.ok) { toast(r.message || '讀取失敗'); return; } SETTINGS = r; if (page === 'settings') render(); }
+  catch (e) { if (e.message !== 'relogin') toast('連線失敗，請再試一次'); }
+}
+function renderSettings() {
+  if (!SETTINGS) return '<div class="loading">讀取公司設定中…</div>';
+  const cos = SETTINGS.companies, acs = SETTINGS.accounts;
+  const cname = id => { const c = cos.find(x => x['編號'] === id); return c ? (c['簡稱'] || c['公司名稱']) : '—'; };
+  return `
+  <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">公司設定</h2><div class="small muted">合約、繳款單上的公司資料、大小章與收款帳戶・管理員和行政可以修改</div></div>
+    <div class="row"><button class="btn" data-acnew>＋ 收款帳戶</button><button class="btn acc" data-conew>＋ 新增公司</button></div></section>
+  ${cos.map(c => `<section class="panel sec">
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h3 style="font-size:17px">${esc(c['公司名稱'])}${c['簡稱'] ? ` <span class="small muted">（${esc(c['簡稱'])}）</span>` : ''} ${c['啟用'] === '停用' ? '<span class="pill done">停用</span>' : ''}</h3>
+      <div class="small muted">統編 <span class="mono">${esc(c['統一編號']) || '—'}</span>・代表人 ${esc(c['代表人']) || '—'}・${esc(c['電話']) || '—'}・${esc(c['電子信箱']) || '<span class="need">信箱未填</span>'}</div>
+      <div class="small muted">${esc(c['地址']) || '<span class="need">地址未填</span>'}・管轄法院 ${esc(c['管轄法院']) || '<span class="need">未填</span>'}</div></div>
+      <button class="btn" data-coedit="${c['編號']}">修改</button></div>
+    <div class="sealprev"><div><div class="label">公司大章</div><div class="sb big">${c.sealBig ? `<img src="${c.sealBig}" alt="大章">` : '<span class="need">未上傳</span>'}</div></div>
+      <div><div class="label">負責人小章</div><div class="sb small">${c.sealSmall ? `<img src="${c.sealSmall}" alt="小章">` : '<span class="need">未上傳</span>'}</div></div></div>
+  </section>`).join('') || '<div class="panel">還沒有公司資料，請按「新增公司」。</div>'}
+  <section class="panel sec"><h3 style="font-size:16px">收款帳戶</h3>
+    <div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>顯示名稱</th><th>公司</th><th>銀行／分行</th><th>帳號</th><th>戶名</th><th>狀態</th><th></th></tr></thead>
+    <tbody>${acs.map(a => `<tr><td><b>${esc(a['顯示名稱'])}</b></td><td>${esc(cname(a['公司編號']))}</td><td>${esc(a['銀行'])} ${esc(a['分行'])}</td><td class="mono">${esc(a['帳號'])}</td><td class="small">${esc(a['戶名'])}</td>
+      <td>${a['啟用'] === '停用' ? '<span class="pill done">停用</span>' : '<span class="pill ready">使用中</span>'}</td><td><button class="btn" data-acedit="${a['編號']}">修改</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted">還沒有收款帳戶</td></tr>'}</tbody></table></div>
+    <p class="small muted" style="margin:0">收款帳戶會在第 2 階段的繳款單使用（匯款時選匯入哪個帳戶）。</p></section>`;
+}
+function companyForm(c) {
+  c = c || {}; sealEdit = {};
+  const f = (id, l, k, ph, full) => `<label${full ? ' class="full"' : ''}>${l}<input type="text" id="${id}" value="${esc(c[k] || '')}" placeholder="${ph || ''}"></label>`;
+  return `<h3>${c['編號'] ? '修改公司・' + esc(c['公司名稱']) : '新增公司'}</h3>
+  <form id="cof" class="form2" data-id="${c['編號'] || ''}">
+    ${f('co-name', '公司名稱', '公司名稱', '永駿車業股份有限公司', true)}${f('co-short', '簡稱', '簡稱', '永駿')}${f('co-tax', '統一編號', '統一編號', '8 碼')}
+    ${f('co-rep', '代表人', '代表人')}${f('co-repid', '代表人身分證', '代表人身分證')}${f('co-addr', '地址', '地址', '', true)}
+    ${f('co-phone', '電話', '電話', '03-3310699')}${f('co-mobile', '行動電話', '行動電話')}${f('co-email', '電子信箱', '電子信箱', '', true)}${f('co-court', '管轄法院', '管轄法院', '臺灣桃園地方法院', true)}
+    <div class="full sealprev">
+      <label class="drop" for="co-big" style="width:140px">公司大章<div class="sb big" id="co-bigp" style="margin:6px auto 0">${c.sealBig ? `<img src="${c.sealBig}" alt="">` : '上傳'}</div><input id="co-big" type="file" accept="image/*"></label>
+      <label class="drop" for="co-small" style="width:110px">負責人小章<div class="sb small" id="co-smallp" style="margin:6px auto 0">${c.sealSmall ? `<img src="${c.sealSmall}" alt="">` : '上傳'}</div><input id="co-small" type="file" accept="image/*"></label>
+      <p class="small muted" style="margin:0;flex:1;min-width:160px">${PAPER() ? '目前是紙本簽約（實際蓋章），大小章圖檔之後改線上簽署才會用到，可以先不上傳。' : ''}印章蓋在白紙上拍照，裁切到只剩印章再上傳，白色背景會自動去除。合約上大章 3×3 公分、小章 1.5×1.5 公分。</p></div>
+    <label class="full" style="flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-weight:400"><input type="checkbox" id="co-active" ${c['啟用'] === '停用' ? '' : 'checked'}> 使用中（停用後簽合約時不能選）</label>
+    <div class="full row" style="justify-content:flex-end"><button type="button" class="btn" data-mclose>取消</button><button class="btn acc" type="submit">儲存</button></div></form>`;
+}
+function accountForm(a) {
+  a = a || {};
+  return `<h3>${a['編號'] ? '修改收款帳戶' : '新增收款帳戶'}</h3>
+  <form id="acf" class="form2" data-id="${a['編號'] || ''}">
+    <label class="full">公司<select id="ac-co">${SETTINGS.companies.map(c => `<option value="${c['編號']}" ${c['編號'] === a['公司編號'] ? 'selected' : ''}>${esc(c['公司名稱'])}</option>`).join('')}</select></label>
+    <label>銀行<input type="text" id="ac-bank" value="${esc(a['銀行'] || '')}" placeholder="第一銀行"></label><label>分行<input type="text" id="ac-br" value="${esc(a['分行'] || '')}" placeholder="八德分行"></label>
+    <label>帳號<input type="text" id="ac-no" value="${esc(a['帳號'] || '')}" inputmode="numeric"></label><label>戶名<input type="text" id="ac-holder" value="${esc(a['戶名'] || '')}" placeholder="空白＝公司名稱"></label>
+    <label class="full">顯示名稱<input type="text" id="ac-label" value="${esc(a['顯示名稱'] || '')}" placeholder="空白會自動產生，例如 第一銀行 #98396（永駿）"></label>
+    <label class="full" style="flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-weight:400"><input type="checkbox" id="ac-active" ${a['啟用'] === '停用' ? '' : 'checked'}> 使用中</label>
+    <div class="full row" style="justify-content:flex-end"><button type="button" class="btn" data-mclose>取消</button><button class="btn acc" type="submit">儲存</button></div></form>`;
+}
+// 印章照片：去掉白色背景、縮到 600px
+function sealToPng(file) {
+  return new Promise((res, rej) => { const rd = new FileReader(); rd.onerror = rej; rd.onload = () => { const img = new Image(); img.onerror = rej; img.onload = () => {
+    const k = Math.min(1, 600 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+    const x = cv.getContext('2d'); x.drawImage(img, 0, 0, cv.width, cv.height);
+    const d = x.getImageData(0, 0, cv.width, cv.height), a = d.data;
+    for (let i = 0; i < a.length; i += 4) { const lum = .299 * a[i] + .587 * a[i + 1] + .114 * a[i + 2], red = a[i] - (a[i + 1] + a[i + 2]) / 2;
+      if (lum > 200 && red < 40) a[i + 3] = 0; else if (lum > 170 && red < 25) a[i + 3] = Math.round((200 - lum) / 30 * 255); }
+    x.putImageData(d, 0, 0); res(cv.toDataURL('image/png')); }; img.src = rd.result; }; rd.readAsDataURL(file); });
+}
+
+// ===== 已簽約：照片合成 PDF（每張照片一頁，A4 寬）=====
+function showSignFiles() {
+  $('#ks-list').innerHTML = signFiles.length ? signFiles.map((f, i) => `<div class="row" style="gap:6px">第 ${i + 1} 頁・${esc(f.name)} <button type="button" class="btn" data-ksdel="${i}" style="padding:2px 8px">移除</button></div>`).join('') : '還沒選檔案';
+}
+function photoJpeg(file) {
+  return new Promise((res, rej) => { const rd = new FileReader(); rd.onerror = rej; rd.onload = () => { const img = new Image(); img.onerror = () => rej(new Error('圖片讀取失敗')); img.onload = () => {
+    const k = Math.min(1, 2000 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(b => b ? b.arrayBuffer().then(a => res({ data: new Uint8Array(a), w: cv.width, h: cv.height })) : rej(new Error('圖片轉檔失敗')), 'image/jpeg', 0.85); }; img.src = rd.result; }; rd.readAsDataURL(file); });
+}
+function photosPdf(imgs) {
+  const enc = new TextEncoder(), parts = [], off = []; let len = 0;
+  const push = x => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (k, fn) => { off[k] = len; push(k + ' 0 obj\n'); fn(); push('\nendobj\n'); };
+  const n = 2 + imgs.length * 3;
+  push('%PDF-1.4\n');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push('<< /Type /Pages /Kids [' + imgs.map((_, i) => (3 + i * 3) + ' 0 R').join(' ') + '] /Count ' + imgs.length + ' >>'));
+  imgs.forEach((im, i) => { const p = 3 + i * 3, W = 595.28, H = +(W * im.h / im.w).toFixed(2);
+    obj(p, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${p + 1} 0 R >> >> /Contents ${p + 2} 0 R >>`));
+    obj(p + 1, () => { push(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.data.length} >>\nstream\n`); push(im.data); push('\nendstream'); });
+    const cs = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`; obj(p + 2, () => push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`)); });
+  const x = len; let xr = 'xref\n0 ' + (n + 1) + '\n0000000000 65535 f \n'; for (let k = 1; k <= n; k++) xr += String(off[k]).padStart(10, '0') + ' 00000 n \n';
+  push(xr + 'trailer\n<< /Size ' + (n + 1) + ' /Root 1 0 R >>\nstartxref\n' + x + '\n%%EOF\n');
+  return new Blob(parts, { type: 'application/pdf' });
+}
+const blobUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+async function signedPdf() {
+  const pdfs = signFiles.filter(f => f.type === 'application/pdf'), imgs = signFiles.filter(f => f.type !== 'application/pdf');
+  if (pdfs.length && (pdfs.length > 1 || imgs.length)) throw new Error('PDF 檔請只選一個，不要跟照片混在一起');
+  if (pdfs.length) { if (pdfs[0].size > 20e6) throw new Error('PDF 檔太大（超過 20MB）'); return blobUrl(pdfs[0]); }
+  const pages = []; for (const f of imgs) pages.push(await photoJpeg(f));
+  return (await blobUrl(photosPdf(pages))).replace(/^data:[^;]*;/, 'data:application/pdf;');
+}
+
+// ===== 畫面 =====
+function render() {
+  if (!D) return;
+  if (page === 'settings' && !D.canSet) page = 'cars';
+  document.querySelectorAll('[data-page]').forEach(b => b.setAttribute('aria-selected', b.dataset.page === page));
+  const v = $('#view');
+  v.innerHTML = page === 'contracts' ? renderContracts() : page === 'settings' ? renderSettings() : page === 'pays' ? renderPays() : page === 'docs' ? renderDocs() : page === 'dlvs' ? renderDlvs() : renderCars();
+  const n = myPayTodo().length; $('#nav-pays').textContent = '繳款單' + (n ? ` (${n})` : '');
+  const nd = myDocTodo().length; $('#nav-docs').textContent = '證件申請' + (nd ? ` (${nd})` : '');
+  const nt = myDlvTodo().length; $('#nav-dlvs').textContent = '交車' + (nt ? ` (${nt})` : '');
+  v.style.cssText = 'display:flex;flex-direction:column;gap:14px';
+}
+
+// ===== 事件 =====
+document.addEventListener('click', async e => {
+  if (e.target.id === 'modal') { closeModal(); return; }
+  const t = e.target.closest('button'); if (!t) return;
+  const ds = t.dataset;
+  if (ds.reload !== undefined) { $('#view').innerHTML = '<div class="loading">讀取資料中…</div>'; await load(); if (page === 'settings') loadSettings(); return; }
+  if (!D) return;
+  if (ds.mclose !== undefined) { closeModal(); return; }
+  if (ds.page) { page = ds.page; render(); window.scrollTo(0, 0); if (page === 'settings') loadSettings(); return; }
+  if (ds.kf) { kFilter = ds.kf; render(); return; }
+  if (ds.pf) { pFilter = ds.pf; render(); return; }
+  if (ds.df) { dFilter = ds.df; render(); return; }
+  if (ds.tf) { tFilter = ds.tf; render(); return; }
+  if (ds.tview) { dlvModal(D.dlvs.find(x => x['編號'] === ds.tview)); return; }
+  if (ds.tvoid !== undefined) { $('#tvoidBox').hidden = false; $('#tvoid-reason').focus(); return; }
+  if (ds.tvoidgo) { const reason = $('#tvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'dlvVoid', id: ds.tvoidgo, reason }, t); return; }
+  if (ds.tok) { const note = $('#tk-note').value.trim(), r = D.dlvs.find(x => x['編號'] === ds.tok); if (+r['應收合計'] > 0 && !note) { toast('還有應收款，請填核准說明'); return; } await act({ action: 'dlvApprove', id: ds.tok, note }, t); return; }
+  if (ds.dview) { docModal(D.docs.find(x => x['編號'] === ds.dview)); return; }
+  if (ds.dvoid !== undefined) { $('#dvoidBox').hidden = false; $('#dvoid-reason').focus(); return; }
+  if (ds.dvoidgo) { const reason = $('#dvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'docVoid', id: ds.dvoidgo, reason }, t); return; }
+  if (ds.dok) { await act({ action: 'docApprove', id: ds.dok, note: $('#dk-note') ? $('#dk-note').value.trim() : '' }, t); return; }
+  if (ds.drecv) { await act({ action: 'docReceive', id: ds.drecv, date: ($('#dr-date').value || '').replace(/-/g, '/'), who: $('#dr-who').value.trim() }, t); return; }
+  if (ds.pview) { const p = D.pays.find(x => x['編號'] === ds.pview); payModal(p, null);
+    if (p.proofCount) { try { const r = await api({ action: 'payProof', id: p['編號'] }); if (r.ok && !$('#modal').hidden) payModal(p, r.images); } catch (x) {} } return; }
+  if (ds.pvoid !== undefined) { $('#pvoidBox').hidden = false; $('#pvoid-reason').focus(); return; }
+  if (ds.pvoidgo) { const reason = $('#pvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'payVoid', id: ds.pvoidgo, reason }, t); return; }
+  if (ds.pcheck) { await act({ action: 'payCheck', id: ds.pcheck }, t); return; }
+  if (ds.papprove) { await act({ action: 'payApprove', id: ds.papprove }, t); return; }
+  if (ds.kpdf) { await openPdf(ds.kpdf, t); return; }
+  if (ds.kvoid) { if (confirm('作廢這份簽署中的合約？合約編號不會再使用。')) await act({ action: 'contractVoid', id: ds.kvoid }, t); return; }
+  if (ds.kok) { const k = D.contracts.find(x => x['編號'] === ds.kok); openModal(`<h3>核定・${esc(k['合約編號'])}</h3><div class="calc">${esc(k['車款'])} ${esc(k['車牌'])}・客戶 ${esc(k['乙方姓名'])}・業務 ${esc(k['業務'])}・成交價 <b class="mono">${money(+k['成交價'])}</b>（低於底價）</div>
+    <form id="kokf" class="sec" data-id="${k['編號']}"><label class="label" for="kok-note">核定備註（選填）</label><input type="text" id="kok-note" placeholder="例如 客戶換購，同意以此價格成交">
+    <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-mclose>取消</button><button class="btn pri" type="submit">核定</button></div></form>`); return; }
+  if (ds.ksign) { const k = D.contracts.find(x => x['編號'] === ds.ksign); signFiles = [];
+    openModal(`<h3>已簽約・${esc(k['合約編號'])}</h3><div class="calc">${esc(k['車款'])} <span class="mono">${esc(k['車牌'])}</span>・客戶 ${esc(k['乙方姓名'])}・成交價 <b class="mono">${money(+k['成交價'])}</b></div>
+    <form id="ksf" class="sec" data-id="${k['編號']}">
+      <label class="label" for="ks-date">實際簽約日</label><input type="date" id="ks-date" value="${(k['簽約日'] || D.today).replace(/\//g, '-')}">
+      <label class="drop" for="ks-file">📷 拍照或選擇檔案：簽好、蓋好章的<b>第一聯（公司留底聯）</b><br><span class="small">每一頁拍一張（正面、反面、附件一），也可以直接選掃描好的 PDF</span><input id="ks-file" type="file" accept="image/*,application/pdf" multiple></label>
+      <div id="ks-list" class="small muted">還沒選檔案</div>
+      <p class="small muted" style="margin:0">按「確認已簽約」後，業務系統會成立訂單並通知大家；檔案存到公司雲端，合約列表可以「開啟 PDF」。</p>
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-mclose>取消</button><button class="btn acc" type="submit">確認已簽約</button></div></form>`); return; }
+  if (ds.ksdel !== undefined) { signFiles.splice(+ds.ksdel, 1); showSignFiles(); return; }
+  if (ds.conew !== undefined) { openModal(companyForm(null)); return; }
+  if (ds.coedit) { openModal(companyForm(SETTINGS.companies.find(x => x['編號'] === ds.coedit))); return; }
+  if (ds.acnew !== undefined) { if (!SETTINGS.companies.length) { toast('請先新增公司'); return; } openModal(accountForm(null)); return; }
+  if (ds.acedit) { openModal(accountForm(SETTINGS.accounts.find(x => x['編號'] === ds.acedit))); return; }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'cq') { carQ = e.target.value; const pos = e.target.selectionStart; render(); const s = $('#cq'); s.focus(); s.setSelectionRange(pos, pos); }
+});
+document.addEventListener('change', async e => {
+  const id = e.target.id;
+  if (id === 'ks-file') { signFiles = signFiles.concat(Array.from(e.target.files)); e.target.value = ''; showSignFiles(); return; }
+  if ((id === 'co-big' || id === 'co-small') && e.target.files[0]) {
+    try { const u = await sealToPng(e.target.files[0]); sealEdit[id === 'co-big' ? 'big' : 'small'] = u; $('#' + id + 'p').innerHTML = `<img src="${u}" alt="">`; } catch (x) { toast('圖片讀取失敗'); }
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target, btn = f.querySelector('button[type=submit]'), g = id => ($('#' + id) ? $('#' + id).value.trim() : '');
+  if (f.id === 'kokf') await act({ action: 'contractApprove', id: f.dataset.id, note: g('kok-note') }, btn);
+  if (f.id === 'ksf') {
+    if (!signFiles.length) { toast('請先拍照或選擇簽好的第一聯'); return; }
+    if (!g('ks-date')) { toast('請填實際簽約日'); return; }
+    btn.disabled = true; btn.textContent = '整理檔案中…';
+    let pdf; try { pdf = await signedPdf(); } catch (x) { toast(x.message || '檔案讀取失敗'); btn.disabled = false; btn.textContent = '確認已簽約'; return; }
+    btn.disabled = false; btn.textContent = '確認已簽約';
+    await act({ action: 'contractSigned', id: f.dataset.id, signDate: g('ks-date').replace(/-/g, '/'), pdf }, btn);
+  }
+  if (f.id === 'cof') {
+    const company = { name: g('co-name'), short: g('co-short'), tax: g('co-tax'), rep: g('co-rep'), repId: g('co-repid'), addr: g('co-addr'), phone: g('co-phone'),
+      mobile: g('co-mobile'), email: g('co-email'), court: g('co-court'), active: $('#co-active').checked };
+    if (sealEdit.big) company.sealBig = sealEdit.big; if (sealEdit.small) company.sealSmall = sealEdit.small;
+    const r = await act({ action: 'saveCompany', id: f.dataset.id, company }, btn); if (r && r.ok) await loadSettings();
+  }
+  if (f.id === 'acf') {
+    const r = await act({ action: 'saveAccount', id: f.dataset.id, account: { company: g('ac-co'), bank: g('ac-bank'), branch: g('ac-br'), no: g('ac-no'), holder: g('ac-holder'), label: g('ac-label'), active: $('#ac-active').checked } }, btn);
+    if (r && r.ok) await loadSettings();
+  }
+});
+
+// ===== 啟動 =====
+(async function main() {
+  if (!LIFF_ID || !API_URL) { $('#view').innerHTML = '<div class="panel">合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）</div>'; return; }
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+    if (!tokenOk()) { relogin(); return; }
+    // 從業務系統「簽合約」按鈕進來（網址帶 ?car=車輛編號），直接打開簽約頁
+    const car = new URLSearchParams(location.search).get('car');
+    if (car) { location.replace('contract.html?car=' + encodeURIComponent(car)); return; }
+    await load();
+  } catch (e) {
+    if (e && e.message === 'relogin') return;
+    $('#view').innerHTML = `<div class="panel">無法連線：${esc(e.message || e)}<br>請關閉頁面重新開啟。</div>`;
+  }
+})();
+</script>
+</body>
+</html>

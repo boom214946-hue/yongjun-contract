@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>合約系統｜交車確認單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F4;--surface:#fff;--surface2:#E6EAEF;--fg:#1C2733;--muted:#5B6878;--line:#D3D9E0;--navy:#1d3557;--accent:#B4611A;--accent-soft:#F6E7D8;
+  --ok:#2E7D4F;--ok-soft:#DFF0E5;--warn:#B3261E;--warn-soft:#F8E1DF;--amber:#8a5a00;--amber-soft:#fff4d6}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55;padding-bottom:60px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+#bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#bar .ttl{font-weight:700;margin-right:auto}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:700;font-size:13.5px;white-space:nowrap;text-decoration:none;color:var(--fg);display:inline-block}
+.btn.pri{background:#f4b942;border-color:#f4b942;color:#1b1b1b}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.wrap{max-width:1100px;margin:12px auto 0;padding:0 12px;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.panel h2{font-size:16px;margin:0 0 8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.mono{font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px}
+.kv div span{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.prog{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;background:var(--ok)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.p1{background:var(--accent-soft);color:var(--accent)}.pill.p2{background:var(--amber-soft);color:var(--amber)}.pill.p3{background:var(--ok-soft);color:var(--ok)}.pill.p0{background:var(--surface2);color:var(--muted)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th,table.t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+table.t th{font-size:12px;color:var(--muted)}
+table.t tr.sel td{background:#f3f6fb}
+table.t tr.void td{color:var(--muted);text-decoration:line-through}
+table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decoration:none}
+.tw{overflow-x:auto}
+.lines{display:flex;flex-direction:column;gap:8px}
+.ln{display:grid;grid-template-columns:28px 140px 120px 130px 110px 1fr 1fr 34px;gap:6px;align-items:center}
+.ln input,.ln select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0}
+.ln .no{font-weight:700;color:var(--muted);text-align:center}
+.ln.err input,.ln.err select{border-color:var(--warn)}
+.ln .x{border:0;background:none;font-size:18px;color:var(--muted)}
+.lnh{font-size:12px;color:var(--muted);font-weight:700}
+@media (max-width:860px){.ln{grid-template-columns:1fr 1fr;padding:8px;border:1px solid var(--line);border-radius:10px}.ln .no{grid-column:1/-1;text-align:left}.lnh{display:none}}
+.msgs{display:flex;flex-direction:column;gap:5px;font-size:14px}
+.msgs div{padding:6px 10px;border-radius:8px}
+.msgs .E{background:var(--warn-soft)}.msgs .W{background:var(--amber-soft)}.msgs .O{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.sumline{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;background:var(--surface2);border-radius:8px;padding:8px 12px}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:13px;display:block;cursor:pointer}
+.drop input{display:none}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}.thumbs div{position:relative}.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.thumbs button{position:absolute;top:-6px;right:-6px;border:0;border-radius:99px;background:#333;color:#fff;width:20px;height:20px;font-size:12px;line-height:20px;padding:0}
+#preview{overflow:hidden;background:#d9d6d0;border-radius:10px;padding:10px}
+#preview .page{margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.18);transform-origin:top left}
+#render{position:fixed;left:-10000px;top:0}
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+.ov.show{display:flex}
+.dlg{background:#fff;border-radius:14px;padding:18px;width:min(480px,100%);display:flex;flex-direction:column;gap:12px}
+.dlg h3{margin:0}.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw;pointer-events:none}
+#loading{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;color:#444;padding:20px;text-align:center}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.form input,.form select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;font-weight:400;color:var(--fg)}
+.chk{display:flex;flex-wrap:wrap;gap:8px}
+.chk label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;background:#fff}
+.chk label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.err{border-color:var(--warn)!important}
+.fees{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.fee{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;background:#fff}
+.fee b{font-size:14px}.fee input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+.fee.off{background:var(--surface2)}.fee .why{font-size:12px;color:var(--muted)}
+.cks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.ck{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff;font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:4px 10px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.tot{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px;background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:14px}
+.tot div span{display:block;font-size:12px;color:var(--muted);font-weight:700}
+</style>
+</head>
+<body>
+<div id="bar">
+  <a class="btn ghost" href="index.html">← 合約列表</a>
+  <span class="ttl" id="ttl">交車確認單</span>
+</div>
+<div class="wrap">
+  <section class="panel" id="head"></section>
+  <section class="panel" id="hist"></section>
+  <section class="panel" id="newBox" hidden>
+    <h2>交車確認單＋出庫單</h2>
+    <p class="small muted" style="margin:0 0 10px">出庫＝交車。送出後由 <b id="apName"></b> 核准出庫；核准後印交車確認單（兩聯）和出庫單，交車時客人簽名，再拍照上傳第一聯完成交車。</p>
+    <div class="form">
+      <label>交車日期<input id="f-date" type="date"></label>
+      <label>交車時間<input id="f-time" type="time" value="14:00"></label>
+      <label>出庫地點<input id="f-place" maxlength="20"></label>
+      <label>交車里程（公里）<input id="f-km" inputmode="numeric"></label>
+      <label>實際交車人<input id="f-recv" maxlength="20"></label>
+    </div>
+    <p class="small muted" id="recvNote" style="margin:4px 0 0"></p>
+    <div class="lnh" style="margin:14px 0 6px">代辦費用（依合約約定，甲方負擔的不能向客人收）</div>
+    <div class="fees" id="fees"></div>
+    <div class="lnh" style="margin:14px 0 6px">金額</div>
+    <div class="tot" id="tot"></div>
+    <div id="dueBox" style="margin-top:8px" hidden>
+      <div class="small" style="margin-bottom:4px">還有應收款，交車時：
+        <span class="seg" id="paySeg"><button type="button" data-ps="已收">當天收齊</button><button type="button" data-ps="未收" aria-pressed="true">尚未收齊</button></span></div>
+      <p class="small muted" id="dueHint" style="margin:0"></p>
+    </div>
+    <div class="lnh" style="margin:14px 0 6px">點交項目</div>
+    <div class="cks" id="cks"></div>
+    <div class="form" style="margin-top:10px">
+      <label>胎壓 前輪（psi）<input id="f-tf" inputmode="numeric" placeholder="例：36"></label>
+      <label>胎壓 後輪（psi）<input id="f-tr" inputmode="numeric" placeholder="例：36"></label>
+      <label style="grid-column:span 2">備註（尚有應收時必填，例如：貸款撥款中）<input id="f-note" maxlength="100"></label>
+    </div>
+    <div class="msgs" id="msgs" style="margin-top:10px"></div>
+    <div class="acts" style="margin-top:10px"><button class="btn acc" type="button" id="submit">送出（申請出庫）</button></div>
+  </section>
+  <section class="panel" id="doneBox" hidden>
+    <h2>上傳客人簽好的交車確認單（第一聯）</h2>
+    <label class="drop" for="signFile">📷 每一頁拍一張，或選掃描好的 PDF<input id="signFile" type="file" accept="image/*,application/pdf" multiple></label>
+    <div id="signList" class="small muted" style="margin-top:6px">還沒選檔案</div>
+    <div class="acts" style="margin-top:8px"><button class="btn acc" type="button" id="done">確認已交車</button></div>
+  </section>
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0" id="pvTitle">預覽</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="openSigned" hidden>開啟簽好的確認單</button><button class="btn pri" type="button" id="print" hidden>匯出 PDF（交車確認單兩聯＋出庫單）</button></div></div>
+    <div id="preview"></div>
+  </section>
+</div>
+<div id="render" aria-hidden="true"></div>
+<div class="ov" id="ovPdf"><div class="dlg">
+  <h3>PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br><span id="pdfDesc">共 3 頁：交車確認單第一聯（公司留底）、第二聯（客戶留底）、出庫單（總部歸檔）。請用 A4 單面列印。</span><br>
+  <span class="small muted">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
+  <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave">下載</a><a class="btn acc" id="pdfOpen" target="_blank" rel="noopener">開啟 PDF</a></div>
+</div></div>
+<div class="ov" id="busy"><div class="dlg" style="width:auto"><p id="busyMsg" style="margin:0">處理中…</p></div></div>
+<div id="loading">讀取資料中…</div>
+<div id="toast"></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="receipt.js"></script>
+<script>
+(function(){
+"use strict";
+// ===== 設定（跟 index.html、contract.html 一樣）=====
+const LIFF_ID = '';      // 合約系統的 LIFF ID
+const API_URL = '';      // 合約系統 Apps Script 部署後的網址（…/exec）
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>Number(n||0).toLocaleString('en-US');
+const amt=v=>{const n=Number(String(v||'').replace(/[,\s]/g,''));return isFinite(n)&&n>0?Math.round(n):0;};
+const qs=new URLSearchParams(location.search), KID=qs.get('k')||'';
+let D=null, selId='', WM='', feeIn={}, checks={}, payState='未收', signFiles=[];
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3500);}
+function busy(m){const b=$('#busy');if(m===false){b.classList.remove('show');return;}$('#busyMsg').textContent=m;b.classList.add('show');}
+function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
+function tokenOk(){try{const t=liff.getDecodedIDToken();return !!(t&&t.exp*1000>Date.now()+60000);}catch(e){return false;}}
+async function api(payload){
+  if(!tokenOk()){relogin();throw new Error('relogin');}
+  const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({idToken:liff.getIDToken()},payload))});
+  const j=await res.json();if(j.authError){toast('登入已過期，重新登入中…');setTimeout(relogin,1200);}return j;
+}
+const ST={待核准:'p2',已核准:'p1',已交車:'p3',作廢:'p0'};
+const active=()=>D.dlvs.find(r=>r['狀態']==='待核准'||r['狀態']==='已核准');
+const delivered=()=>D.dlvs.find(r=>r['狀態']==='已交車');
+const canCreate=()=>{const m=D.me;return (m.isBoss||m.isOffice||D.contract.seller===m.en)&&!active()&&!delivered();};
+
+/* ---------- 比例分攤：乙方負擔交車日（含）到年底的天數 ---------- */
+function prorate(annual,dateStr){
+  if(!annual||!dateStr)return {share:0,days:0,total:0};
+  const d=new Date(dateStr+'T00:00:00'),y=d.getFullYear(),end=new Date(y,11,31),total=((y%4===0&&y%100!==0)||y%400===0)?366:365;
+  const days=Math.round((end-d)/864e5)+1;return {share:Math.round(annual*days/total),days,total};
+}
+function feeAmounts(){
+  const date=$('#f-date').value;
+  return D.fees.map(n=>{const ru=D.rules[n]||{who:'乙方'},v=feeIn[n]||'';
+    if(ru.who==='甲方')return {name:n,amount:0,note:''};
+    if(ru.prorate){const p=prorate(amt(v),date);return {name:n,amount:p.share,note:amt(v)?`年度 ${money(amt(v))}×${p.days}/${p.total} 天`:''};}
+    return {name:n,amount:amt(v),note:''};});
+}
+function totals(){
+  const k=D.contract,fees=feeAmounts(),feeSum=fees.reduce((a,f)=>a+f.amount,0);
+  const due=k.price-D.paid+feeSum-D.feePaid;return {fees,feeSum,due};
+}
+function renderHead(){
+  const k=D.contract,left=k.price-D.paid;
+  $('#ttl').textContent=`交車確認單・${k.no}`;
+  $('#head').innerHTML=`<div class="kv">
+    <div><span>合約編號</span>${esc(k.no)}</div><div><span>車輛</span>${esc(k.car)} <span class="muted small">${esc(k.newPlate?k.newPlate+'（原 '+k.plate+'）':k.plate)}</span></div>
+    <div><span>客戶</span>${esc(k.buyer)}</div><div><span>業務</span>${esc(k.sellerName)}</div>
+    <div><span>預計交車日</span>${esc(k.eta)||'—'}</div><div><span>證件申請</span>${esc(D.docState||'還沒申請')}</div>
+    <div><span>車價已收</span><b class="mono">${money(D.paid)}</b> / ${money(k.price)}</div><div><span>最新繳款單</span>${D.payNo?esc(D.payNo)+'（'+esc(D.payState)+'）':'—'}</div></div>
+    ${left>0?`<p class="small muted" style="margin:8px 0 0">尾款 ${money(left)} 元還沒收。交車當天收尾款，請先到「繳款單」開立尾款，金額才會正確；貸款撥款中可以先交車，送出時寫明原因。</p>`:''}`;
+}
+function renderHist(){
+  const ds=D.dlvs.slice().reverse();
+  $('#hist').innerHTML=`<h2>交車紀錄</h2>${ds.length?`<div class="tw"><table class="t"><thead><tr><th>交車單號</th><th>交車時間</th><th style="text-align:right">合計應收</th><th>狀態</th><th></th></tr></thead><tbody>
+    ${ds.map(r=>`<tr class="${r['編號']===selId?'sel':''} ${r['狀態']==='作廢'?'void':''}"><td><b>${esc(r['交車單號'])}</b></td><td class="mono">${esc(r['交車時間'])}</td>
+      <td class="mono" style="text-align:right">${money(r['應收合計'])}${+r['應收合計']>0?` <span class="small muted">${esc(r['尾款狀態'])}</span>`:''}</td>
+      <td><span class="pill ${ST[r['狀態']]}" title="${esc(r['作廢原因']||'')}">${esc(r['狀態'])}</span></td><td><button class="btn" data-sel="${r['編號']}">${r['編號']===selId?'預覽中':'預覽'}</button></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin:6px 0 0">核准出庫、作廢請到合約列表的「交車」頁。</p>`:'<p class="muted" style="margin:0">還沒有交車確認單。</p>'}`;
+}
+function renderFees(){
+  $('#fees').innerHTML=D.fees.map(n=>{const ru=D.rules[n]||{who:'乙方',why:''};
+    if(ru.who==='甲方')return `<div class="fee off"><b>${esc(n)}</b><span class="why">${ru.none?esc(ru.why):'甲方負擔（'+esc(ru.why)+'）'}</span></div>`;
+    return `<div class="fee"><b>${esc(n)}${ru.prorate?'<span class="small muted">（比例分攤）</span>':''}</b>
+      <input data-fee="${esc(n)}" inputmode="numeric" placeholder="${ru.prorate?'填年度稅額，自動算乙方負擔':'金額，沒有就留白'}" value="${feeIn[n]?money(amt(feeIn[n])):''}">
+      <span class="why" data-why="${esc(n)}">${esc(ru.why)}</span></div>`;}).join('');
+}
+function renderChecks(){
+  $('#cks').innerHTML=D.checks.map(x=>`<div class="ck"><span>${x==='汽車鑰匙'?`汽車鑰匙 <b>${esc(D.car.keys||'?')}</b> 把`:esc(x)}</span><span class="seg"><button type="button" data-ck="${esc(x)}" data-v="有" aria-pressed="${checks[x]==='有'}">有</button><button type="button" data-ck="${esc(x)}" data-v="無" aria-pressed="${checks[x]==='無'}">無</button></span></div>`).join('');
+}
+function form(){const t=totals();return {when:($('#f-date').value||'').replace(/-/g,'/')+' '+($('#f-time').value||''),place:$('#f-place').value.trim(),km:$('#f-km').value.replace(/[,\s]/g,''),
+  receiver:$('#f-recv').value.trim(),fees:t.fees,checks,payState:t.due>0?payState:'已收',tireF:$('#f-tf').value.trim(),tireR:$('#f-tr').value.trim(),note:$('#f-note').value.trim()};}
+function check(){
+  const k=D.contract,f=form(),t=totals(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
+  if(!$('#f-date').value)E('f-date','請填交車日期');if(!$('#f-time').value)E('f-time','請填交車時間');
+  const km=amt(f.km),mk=amt(k.mileage);
+  if(!km)E('f-km','請填交車里程');else if(mk&&km<mk)E('f-km',`交車里程 ${money(km)} 比定車時 ${money(mk)} 還少，請確認`);else if(mk&&km-mk>500)W('f-km',`交車里程比定車時多 ${money(km-mk)} 公里，請確認`);
+  if(!f.receiver)E('f-recv','請填實際交車人');
+  D.fees.forEach(n=>{const ru=D.rules[n]||{};if(ru.prorate&&feeIn[n]&&!$('#f-date').value)E('f-date','比例分攤要先填交車日期');});
+  if(t.due>0&&payState!=='已收'&&!f.note)E('f-note',`還有應收 ${money(t.due)} 元未收，請在備註寫明原因（例如貸款撥款中）`);
+  if(t.due>0&&payState==='已收')W('','選了「當天收齊」，記得另外開繳款單（尾款／代辦規費）');
+  D.checks.forEach(x=>{if(!checks[x])E('cks','點交項目「'+x+'」請選有或無');});
+  if(checks['汽車鑰匙']==='有'&&!D.car.keys)W('cks','車源表沒有鑰匙數量，請回業務系統補上');
+  if(!f.tireF||!f.tireR)W('f-tf','胎壓還沒填');
+  document.querySelectorAll('.form input').forEach(i=>i.classList.toggle('err',out.some(o=>o.l==='E'&&o.id===i.id)));
+  $('#msgs').innerHTML=out.map(o=>`<div class="${o.l}">${o.l==='E'?'✕ ':'！'}${esc(o.m)}</div>`).join('')||'<div class="O">✓ 檢查通過，可以送出</div>';
+  return out.filter(o=>o.l==='E');
+}
+function renderTot(){
+  const k=D.contract,t=totals();
+  $('#tot').innerHTML=`<div><span>車價</span>${money(k.price)}</div><div><span>已收（定金及預付）</span>−${money(D.paid)}</div><div><span>尾款</span>${money(k.price-D.paid)}</div>
+    <div><span>代辦費用</span>${money(t.feeSum)}</div>${D.feePaid?`<div><span>已收代辦規費</span>−${money(D.feePaid)}</div>`:''}<div><span>合計應收</span><b style="font-size:17px;color:${t.due>0?'var(--accent)':'var(--ok)'}">${money(t.due)}</b></div>`;
+  $('#dueBox').hidden=!(t.due>0);
+  document.querySelectorAll('[data-ps]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ps===payState));
+  $('#dueHint').textContent=payState==='已收'?'交車當天收齊：請另外開繳款單（尾款、代辦規費）作為收款憑證。':'尚未收齊：備註請寫原因（例如 貸款撥款中），核准出庫時主管也要填原因。';
+  D.fees.forEach(n=>{const ru=D.rules[n]||{};if(ru.prorate){const p=prorate(amt(feeIn[n]),$('#f-date').value),w=document.querySelector(`[data-why="${n}"]`);
+    if(w)w.textContent=amt(feeIn[n])?`乙方負擔 ${money(p.share)} 元（${p.days}/${p.total} 天）`:ru.why;}});
+  const r=$('#f-recv').value.trim();$('#recvNote').textContent=r&&r!==k.buyer?`實際交車人不是車主本人，確認單上的「責任聲明」適用，請兩人都簽名。`:'';
+}
+function draftRecord(){const f=form(),t=totals(),k=D.contract;
+  return {'交車單號':k.no+'-T'+(D.dlvs.length+1),'交車時間':f.when,'出庫地點':f.place,'交車里程':amt(f.km),'成交價':k.price,'車價已收':D.paid,'尾款':k.price-D.paid,fees:t.fees,
+    '代辦合計':t.feeSum,'代辦已收':D.feePaid,'應收合計':t.due,'尾款狀態':t.due>0?payState:'已收',checks,'胎壓前':f.tireF,'胎壓後':f.tireR,'實際交車人':f.receiver,'備註':f.note,
+    '申請人名':D.me.name,'核准人':'','核准時間':'','財務經辦':D.payApprover,'建立時間':D.today,'狀態':''};}
+function renderPreview(){
+  const sel=D.dlvs.find(r=>r['編號']===selId),r=sel||(canCreate()?draftRecord():null);
+  $('#pvTitle').textContent=sel?`預覽・${sel['交車單號']}（${sel['狀態']}）`:(r?'預覽・新交車確認單（尚未送出）':'預覽');
+  $('#print').hidden=!(sel&&(sel['狀態']==='已核准'||sel['狀態']==='已交車'));
+  $('#openSigned').hidden=!(sel&&sel.hasFile);
+  $('#doneBox').hidden=!(sel&&sel['狀態']==='已核准'&&(D.me.isBoss||D.me.isOffice||D.contract.seller===D.me.en));
+  const pv=$('#preview');pv.innerHTML='';if(!r){pv.innerHTML='<p class="muted" style="margin:6px">請在上方選一張交車確認單預覽。</p>';pv.style.height='';return;}
+  const pages=[RC.dlvPage(r,D,sel?'第一聯　公司留底聯':'',WM),RC.outPage(r,D,WM)];
+  const w=pv.clientWidth-20,pw=210*96/25.4,ph=297*96/25.4,z=Math.min(1,w/pw);
+  pages.forEach((pg,i)=>{pg.style.transform=`scale(${z})`;pg.style.position='absolute';pg.style.top=(10+i*(ph*z+12))+'px';pg.style.left=((pv.clientWidth-pw*z)/2)+'px';pv.appendChild(pg);});
+  pv.style.position='relative';pv.style.height=(pages.length*(ph*z+12)+10)+'px';
+}
+function renderAll(){renderHead();renderHist();$('#newBox').hidden=!canCreate();if(canCreate()){renderTot();check();}renderPreview();}
+
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.sel){selId=selId===t.dataset.sel?'':t.dataset.sel;signFiles=[];showSign();renderHist();renderPreview();$('#preview').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(t.dataset.ck){checks[t.dataset.ck]=t.dataset.v;renderChecks();check();renderPreview();return;}
+  if(t.dataset.ps){payState=t.dataset.ps;renderTot();check();renderPreview();return;}
+  if(t.dataset.rm){signFiles.splice(+t.dataset.rm,1);showSign();return;}
+  if(t.id==='submit'){selId='';renderTot();const errs=check();renderPreview();if(errs.length){toast('還有 '+errs.length+' 項要修正');return;}
+    busy('送出中…');
+    try{const r=await api({action:'dlvCreate',id:KID,form:form()});busy(false);toast(r.message||(r.ok?'完成':'失敗'),5000);if(r.ok){await load();selId=r.id;renderAll();}}
+    catch(x){busy(false);if(x.message!=='relogin')toast('連線失敗，請再試一次');}return;}
+  if(t.id==='print'){await makePdf();return;}
+  if(t.id==='pdfClose'){$('#ovPdf').classList.remove('show');return;}
+  if(t.id==='done'){await doneUpload(t);return;}
+  if(t.id==='openSigned'){busy('讀取中…');try{const r=await api({action:'dlvFile',id:selId});busy(false);if(!r.ok){toast(r.message);return;}
+    const [h,b64]=r.data.split(','),bin=atob(b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const u=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));$('#pdfName').textContent=r.name;$('#pdfDesc').textContent='客人簽好的交車確認單。';$('#pdfOpen').href=u;$('#pdfSave').href=u;$('#pdfSave').download=r.name;$('#ovPdf').classList.add('show');}
+    catch(x){busy(false);toast('讀取失敗');}return;}
+});
+document.addEventListener('input',e=>{if(!D)return;
+  if(e.target.dataset.fee){feeIn[e.target.dataset.fee]=e.target.value;}
+  if(e.target.closest('#newBox')){renderTot();check();renderPreview();}});
+document.addEventListener('change',e=>{if(e.target.dataset.fee&&amt(e.target.value))e.target.value=money(amt(e.target.value));
+  if(e.target.id==='signFile'){signFiles=signFiles.concat(Array.from(e.target.files));e.target.value='';showSign();}});
+window.addEventListener('resize',()=>{if(D)renderPreview();});
+function showSign(){$('#signList').innerHTML=signFiles.length?signFiles.map((f,i)=>`<div>第 ${i+1} 頁・${esc(f.name)} <button type="button" class="btn" data-rm="${i}" style="padding:2px 8px">移除</button></div>`).join(''):'還沒選檔案';}
+function photoJpeg(file){return new Promise((res,rej)=>{const rd=new FileReader();rd.onerror=rej;rd.onload=()=>{const img=new Image();img.onerror=()=>rej(new Error('圖片讀取失敗'));img.onload=()=>{
+  const k=Math.min(1,2000/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);
+  const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,0,cv.width,cv.height);RC.jpeg(cv).then(res,rej);};img.src=rd.result;};rd.readAsDataURL(file);});}
+const toUrl=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b);});
+async function doneUpload(btn){
+  if(!signFiles.length){toast('請先拍照或選擇簽好的交車確認單');return;}
+  const pdfs=signFiles.filter(f=>f.type==='application/pdf'),imgs=signFiles.filter(f=>f.type!=='application/pdf');
+  if(pdfs.length&&(pdfs.length>1||imgs.length)){toast('PDF 檔請只選一個，不要跟照片混在一起');return;}
+  busy('整理檔案中…');
+  try{let url;if(pdfs.length)url=await toUrl(pdfs[0]);else{const pages=[];for(const f of imgs)pages.push(await photoJpeg(f));url=(await toUrl(RC.photoPdf(pages))).replace(/^data:[^;]*;/,'data:application/pdf;');}
+    busy('上傳中…');const r=await api({action:'dlvDone',id:selId,pdf:url});busy(false);toast(r.message||(r.ok?'完成':'失敗'),6000);
+    if(r.ok){signFiles=[];showSign();await load();renderAll();}}
+  catch(x){busy(false);if(x.message!=='relogin')toast('上傳失敗：'+(x.message||x));}
+}
+async function makePdf(){
+  const sel=D.dlvs.find(r=>r['編號']===selId);if(!sel)return;
+  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路後重新整理',5000);return;}
+  busy('正在產生 PDF…');
+  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const host=$('#render');host.innerHTML='';const imgs=[];
+    for(const pg of [RC.dlvPage(sel,D,'第一聯　公司留底聯',WM),RC.dlvPage(sel,D,'第二聯　客戶留底聯',WM),RC.outPage(sel,D,WM)]){host.appendChild(pg);
+      const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await RC.jpeg(cv));}
+    host.innerHTML='';busy(false);
+    const url=URL.createObjectURL(RC.pdf(imgs)),name=`交車確認單_${sel['交車單號']}_${sel['車牌']}_${sel['客戶']}.pdf`;
+    $('#pdfName').textContent=name;$('#pdfDesc').textContent='共 3 頁：交車確認單第一聯（公司留底）、第二聯（客戶留底）、出庫單（總部歸檔）。請用 A4 單面列印。';
+    $('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;$('#ovPdf').classList.add('show');
+  }catch(x){busy(false);$('#render').innerHTML='';toast('產生 PDF 失敗：'+(x&&x.message||x),5000);}
+}
+async function load(){const r=await api({action:'dlvInit',id:KID});if(!r.ok)throw new Error(r.message||'讀取失敗');D=r;D.car.keys=D.car.keys||'';WM=RC.watermark(D.company.name,D.contract.no);}
+function fillForm(){
+  const k=D.contract;$('#apName').textContent=D.approverEn;
+  $('#f-date').value=(k.eta&&k.eta>=D.today?k.eta:D.today).replace(/\//g,'-');$('#f-place').value=D.place;$('#f-recv').value=k.buyer;
+  if(k.mileage)$('#f-km').placeholder='定車時 '+money(amt(k.mileage));
+  D.checks.forEach(x=>{checks[x]=x==='出廠證'?(D.car.fc==='V'?'有':'無'):x==='鑑定報告'?(/^(TSI|GOO)/.test(D.car.cert)?'有':'無'):x==='汽車鑰匙'?(D.car.keys?'有':''):'有';});
+  renderFees();renderChecks();
+}
+(async function main(){
+  if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
+    if(!tokenOk()){relogin();return;}
+    if(!KID){$('#loading').innerHTML='沒有指定合約。<br><a href="index.html">回合約列表</a>';return;}
+    await load();selId=qs.get('v')||(active()||delivered()||{})['編號']||'';$('#loading').remove();fillForm();renderAll();
+  }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML=esc(e.message||e)+'<br><br><a href="index.html">回合約列表</a>';}
+})();
+})();
+</script>
+</body>
+</html>

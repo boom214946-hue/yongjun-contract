@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>合約系統｜證件申請</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F4;--surface:#fff;--surface2:#E6EAEF;--fg:#1C2733;--muted:#5B6878;--line:#D3D9E0;--navy:#1d3557;--accent:#B4611A;--accent-soft:#F6E7D8;
+  --ok:#2E7D4F;--ok-soft:#DFF0E5;--warn:#B3261E;--warn-soft:#F8E1DF;--amber:#8a5a00;--amber-soft:#fff4d6}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55;padding-bottom:60px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+#bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#bar .ttl{font-weight:700;margin-right:auto}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:700;font-size:13.5px;white-space:nowrap;text-decoration:none;color:var(--fg);display:inline-block}
+.btn.pri{background:#f4b942;border-color:#f4b942;color:#1b1b1b}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.wrap{max-width:1100px;margin:12px auto 0;padding:0 12px;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.panel h2{font-size:16px;margin:0 0 8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.mono{font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px}
+.kv div span{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.prog{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;background:var(--ok)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.p1{background:var(--accent-soft);color:var(--accent)}.pill.p2{background:var(--amber-soft);color:var(--amber)}.pill.p3{background:var(--ok-soft);color:var(--ok)}.pill.p0{background:var(--surface2);color:var(--muted)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th,table.t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+table.t th{font-size:12px;color:var(--muted)}
+table.t tr.sel td{background:#f3f6fb}
+table.t tr.void td{color:var(--muted);text-decoration:line-through}
+table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decoration:none}
+.tw{overflow-x:auto}
+.lines{display:flex;flex-direction:column;gap:8px}
+.ln{display:grid;grid-template-columns:28px 140px 120px 130px 110px 1fr 1fr 34px;gap:6px;align-items:center}
+.ln input,.ln select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0}
+.ln .no{font-weight:700;color:var(--muted);text-align:center}
+.ln.err input,.ln.err select{border-color:var(--warn)}
+.ln .x{border:0;background:none;font-size:18px;color:var(--muted)}
+.lnh{font-size:12px;color:var(--muted);font-weight:700}
+@media (max-width:860px){.ln{grid-template-columns:1fr 1fr;padding:8px;border:1px solid var(--line);border-radius:10px}.ln .no{grid-column:1/-1;text-align:left}.lnh{display:none}}
+.msgs{display:flex;flex-direction:column;gap:5px;font-size:14px}
+.msgs div{padding:6px 10px;border-radius:8px}
+.msgs .E{background:var(--warn-soft)}.msgs .W{background:var(--amber-soft)}.msgs .O{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.sumline{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;background:var(--surface2);border-radius:8px;padding:8px 12px}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:13px;display:block;cursor:pointer}
+.drop input{display:none}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}.thumbs div{position:relative}.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.thumbs button{position:absolute;top:-6px;right:-6px;border:0;border-radius:99px;background:#333;color:#fff;width:20px;height:20px;font-size:12px;line-height:20px;padding:0}
+#preview{overflow:hidden;background:#d9d6d0;border-radius:10px;padding:10px}
+#preview .page{margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.18);transform-origin:top left}
+#render{position:fixed;left:-10000px;top:0}
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+.ov.show{display:flex}
+.dlg{background:#fff;border-radius:14px;padding:18px;width:min(480px,100%);display:flex;flex-direction:column;gap:12px}
+.dlg h3{margin:0}.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw;pointer-events:none}
+#loading{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;color:#444;padding:20px;text-align:center}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.form input,.form select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;font-weight:400;color:var(--fg)}
+.chk{display:flex;flex-wrap:wrap;gap:8px}
+.chk label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;background:#fff}
+.chk label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.err{border-color:var(--warn)!important}
+</style>
+</head>
+<body>
+<div id="bar">
+  <a class="btn ghost" href="index.html">← 合約列表</a>
+  <span class="ttl" id="ttl">證件申請</span>
+</div>
+<div class="wrap">
+  <section class="panel" id="head"></section>
+  <section class="panel" id="hist"></section>
+  <section class="panel" id="newBox" hidden>
+    <h2>申請領取車籍資料（過戶用）</h2>
+    <p class="small muted" style="margin:0 0 10px">送出後由 <b id="apName">Leo</b> 核准；核准後匯出申請單 PDF 向總部領取，領到後由行政在合約列表按「已領取」。資料不需歸還。</p>
+    <div class="lnh" style="margin-bottom:6px">要領取的資料</div>
+    <div class="chk" id="items"></div>
+    <p class="small muted" id="srcNote" style="margin:6px 0 0"></p>
+    <div class="form" style="margin-top:12px">
+      <label>其他資料（選填）<input id="f-other" maxlength="60" placeholder="例：完稅證明"></label>
+      <label>預計領取日<input id="f-date" type="date"></label>
+      <label>鑰匙數量（車源表帶入）<input id="f-keys" inputmode="numeric" placeholder="例：2"></label>
+      <label>新領車號（選號才填）<input id="f-plate" maxlength="10" style="text-transform:uppercase"></label>
+      <label>過戶對象類別<select id="f-type"><option>客戶</option><option>同業</option></select></label>
+      <label id="l-name">過戶對象姓名<input id="f-name" maxlength="40"></label>
+      <label id="l-id">身分證字號<input id="f-id" maxlength="12" style="text-transform:uppercase"></label>
+      <label style="grid-column:1/-1">備註（選填）<input id="f-note" maxlength="100"></label>
+    </div>
+    <div class="msgs" id="msgs" style="margin-top:10px"></div>
+    <div class="acts" style="margin-top:10px"><button class="btn acc" type="button" id="submit">送出申請</button></div>
+  </section>
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0" id="pvTitle">預覽</h2>
+      <button class="btn pri" type="button" id="print" hidden>匯出申請單 PDF</button></div>
+    <div id="preview"></div>
+  </section>
+</div>
+<div id="render" aria-hidden="true"></div>
+<div class="ov" id="ovPdf"><div class="dlg">
+  <h3>申請單 PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br>A4 一頁，給總部歸檔用。<br>
+  <span class="small muted">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
+  <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave">下載</a><a class="btn acc" id="pdfOpen" target="_blank" rel="noopener">開啟 PDF</a></div>
+</div></div>
+<div class="ov" id="busy"><div class="dlg" style="width:auto"><p id="busyMsg" style="margin:0">處理中…</p></div></div>
+<div id="loading">讀取資料中…</div>
+<div id="toast"></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="receipt.js"></script>
+<script>
+(function(){
+"use strict";
+// ===== 設定（跟 index.html、contract.html 一樣）=====
+const LIFF_ID = '';      // 合約系統的 LIFF ID
+const API_URL = '';      // 合約系統 Apps Script 部署後的網址（…/exec）
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>Number(n||0).toLocaleString('en-US');
+const qs=new URLSearchParams(location.search), KID=qs.get('k')||'';
+let D=null, selId='', WM='';
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3500);}
+function busy(m){const b=$('#busy');if(m===false){b.classList.remove('show');return;}$('#busyMsg').textContent=m;b.classList.add('show');}
+function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
+function tokenOk(){try{const t=liff.getDecodedIDToken();return !!(t&&t.exp*1000>Date.now()+60000);}catch(e){return false;}}
+async function api(payload){
+  if(!tokenOk()){relogin();throw new Error('relogin');}
+  const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({idToken:liff.getIDToken()},payload))});
+  const j=await res.json();if(j.authError){toast('登入已過期，重新登入中…');setTimeout(relogin,1200);}return j;
+}
+const ST={待核准:'p2',已核准:'p1',已領取:'p3',作廢:'p0'};
+const pending=()=>D.docs.find(r=>r['狀態']==='待核准');
+const canCreate=()=>{const m=D.me;return (m.isBoss||m.isOffice||D.contract.seller===m.en)&&!pending();};
+function twId(id){id=String(id||'').toUpperCase();if(!/^[A-Z][12890]\d{8}$/.test(id))return false;const map='ABCDEFGHJKLMNPQRSTUVXYWZIO';const code=map.indexOf(id[0])+10;
+  let sum=Math.floor(code/10)+(code%10)*9;const w=[8,7,6,5,4,3,2,1,1];for(let i=1;i<10;i++)sum+=(+id[i])*w[i-1];return sum%10===0;}
+function twTax(t){if(!/^\d{8}$/.test(t))return false;const w=[1,2,1,2,1,2,4,1];let s=0;for(let i=0;i<8;i++){const p=+t[i]*w[i];s+=Math.floor(p/10)+p%10;}return s%5===0||(t[6]==='7'&&(s+1)%5===0);}
+
+function renderHead(){
+  const k=D.contract,left=k.price-k.paid;
+  $('#ttl').textContent=`證件申請・${k.no}`;
+  $('#head').innerHTML=`<div class="kv">
+    <div><span>合約編號</span>${esc(k.no)}</div><div><span>車輛</span>${esc(k.car)} <span class="muted small">${esc(k.plate)}</span></div>
+    <div><span>客戶</span>${esc(k.buyer)}</div><div><span>業務</span>${esc(k.seller)}</div>
+    <div><span>預計過戶日</span>${esc(k.transfer)||'—'}</div><div><span>預計交車日</span>${esc(k.eta)||'—'}</div>
+    <div><span>車價已收</span><b class="mono">${money(k.paid)}</b> / ${money(k.price)}</div><div><span>尚未支付尾款</span><b class="mono" style="color:${left>0?'var(--accent)':'var(--ok)'}">${left>0?money(left):'已付清'}</b></div></div>
+    ${left>0?'<p class="small muted" style="margin:8px 0 0">尾款未付清也可以申請（貸款通常過戶後才撥款）。</p>':''}`;
+}
+function renderHist(){
+  const ds=D.docs.slice().reverse();
+  $('#hist').innerHTML=`<h2>申請紀錄</h2>${ds.length?`<div class="tw"><table class="t"><thead><tr><th>申請單號</th><th>申請時間</th><th>過戶對象</th><th>領取項目</th><th>狀態</th><th></th></tr></thead><tbody>
+    ${ds.map(r=>`<tr class="${r['編號']===selId?'sel':''} ${r['狀態']==='作廢'?'void':''}"><td><b>${esc(r['申請單號'])}</b></td><td class="mono">${esc(r['申請時間'])}</td>
+      <td>${esc(r['過戶對象'])}（${esc(r['過戶對象類型'])}）</td><td class="small" style="white-space:normal;max-width:320px">${esc(r.items.join('、'))}${r['其他項目']?'、'+esc(r['其他項目']):''}</td>
+      <td><span class="pill ${ST[r['狀態']]}" title="${esc(r['作廢原因']||'')}">${esc(r['狀態'])}</span></td><td><button class="btn" data-sel="${r['編號']}">${r['編號']===selId?'預覽中':'預覽／匯出'}</button></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin:6px 0 0">核准、已領取、作廢請到合約列表的「證件申請」頁處理。</p>`:'<p class="muted" style="margin:0">還沒有申請紀錄。</p>'}`;
+}
+function form(){const items=[...document.querySelectorAll('#items input:checked')].map(i=>i.value).filter(v=>v!=='全部');
+  return {items,otherItems:$('#f-other').value.trim(),date:$('#f-date').value.replace(/-/g,'/'),keys:$('#f-keys').value.trim(),newPlate:$('#f-plate').value.trim().toUpperCase(),
+    type:$('#f-type').value,toName:$('#f-name').value.trim(),toId:$('#f-id').value.trim().toUpperCase(),note:$('#f-note').value.trim()};}
+function check(){
+  const f=form(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
+  if(!f.items.length&&!f.otherItems)E('items','請勾選要領取的資料');
+  if(!f.toName)E('f-name','請填過戶對象');
+  if(f.type==='客戶'){if(!f.toId)W('f-id','過戶對象身分證字號未填');else if(!twId(f.toId))E('f-id','身分證字號格式或檢查碼不正確');}
+  else{if(!f.toId)W('f-id','同業統一編號未填');else if(!twTax(f.toId))E('f-id','統一編號不正確');}
+  if(f.keys&&!/^\d{1,2}$/.test(f.keys))E('f-keys','鑰匙數量請填數字');
+  if(f.items.includes('鑰匙')&&!f.keys)E('f-keys','勾了鑰匙，請填鑰匙數量');
+  if(!f.date)W('f-date','預計領取日未填');
+  document.querySelectorAll('.form input,.form select').forEach(i=>i.classList.toggle('err',out.some(o=>o.l==='E'&&o.id===i.id)));
+  $('#msgs').innerHTML=out.map(o=>`<div class="${o.l}">${o.l==='E'?'✕ ':'！'}${esc(o.m)}</div>`).join('')||'<div class="O">✓ 檢查通過，可以送出</div>';
+  return out.filter(o=>o.l==='E');
+}
+function draftRecord(){const f=form();return {'申請單號':D.contract.no+'-D'+(D.docs.length+1),'申請時間':D.today,'預計領取日':f.date,'過戶對象類型':f.type,'過戶對象':f.toName,'過戶對象證號':f.toId,
+  items:f.items,'其他項目':f.otherItems,'鑰匙數量':f.keys,'新領車號':f.newPlate,'備註':f.note,'申請人':D.me.en,'申請人名':D.me.name,'狀態':''};}
+function renderPreview(){
+  const sel=D.docs.find(r=>r['編號']===selId),r=sel||(canCreate()?draftRecord():null);
+  $('#pvTitle').textContent=sel?`預覽・${sel['申請單號']}（${sel['狀態']}）`:(r?'預覽・新申請（尚未送出）':'預覽');
+  $('#print').hidden=!sel||sel['狀態']==='作廢';
+  const pv=$('#preview');pv.innerHTML='';if(!r){pv.innerHTML='<p class="muted" style="margin:6px">請在上方選一張申請預覽。</p>';pv.style.height='';return;}
+  const pg=RC.docPage(r,D,WM);pv.appendChild(pg);
+  const w=pv.clientWidth-20,pw=210*96/25.4,z=Math.min(1,w/pw);pg.style.transform=`scale(${z})`;pv.style.height=(297*96/25.4*z+20)+'px';
+}
+function renderAll(){renderHead();renderHist();$('#newBox').hidden=!canCreate();if(canCreate())check();renderPreview();}
+
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.sel){selId=selId===t.dataset.sel?'':t.dataset.sel;renderHist();renderPreview();$('#preview').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(t.id==='submit'){selId='';const errs=check();renderPreview();if(errs.length){toast('還有 '+errs.length+' 項要修正');return;}
+    busy('送出中…');
+    try{const r=await api({action:'docCreate',id:KID,form:form()});busy(false);toast(r.message||(r.ok?'完成':'失敗'),5000);
+      if(r.ok){await load();selId=r.id;renderAll();}}
+    catch(x){busy(false);if(x.message!=='relogin')toast('連線失敗，請再試一次');}return;}
+  if(t.id==='print'){await makePdf();return;}
+  if(t.id==='pdfClose'){$('#ovPdf').classList.remove('show');return;}
+});
+document.addEventListener('input',e=>{if(!D||!e.target.closest('#newBox'))return;
+  if(e.target.value==='全部'&&e.target.type==='checkbox')document.querySelectorAll('#items input').forEach(i=>i.checked=e.target.checked);
+  else if(e.target.closest('#items'))$('#items input[value="全部"]').checked=[...document.querySelectorAll('#items input')].filter(i=>i.value!=='全部').every(i=>i.checked);
+  if(e.target.id==='f-type'){const c=e.target.value==='同業';$('#l-name').firstChild.textContent=c?'同業公司名稱':'過戶對象姓名';$('#l-id').firstChild.textContent=c?'統一編號':'身分證字號';}
+  check();renderPreview();});
+window.addEventListener('resize',()=>{if(D)renderPreview();});
+
+async function makePdf(){
+  const sel=D.docs.find(r=>r['編號']===selId);if(!sel)return;
+  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路後重新整理',5000);return;}
+  busy('正在產生 PDF…');
+  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const host=$('#render');host.innerHTML='';const pg=RC.docPage(sel,D,WM);host.appendChild(pg);
+    const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});const img=await RC.jpeg(cv);host.innerHTML='';busy(false);
+    const url=URL.createObjectURL(RC.pdf([img])),name=`車籍資料申請單_${sel['申請單號']}_${sel['車牌']}.pdf`;
+    $('#pdfName').textContent=name;$('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;$('#ovPdf').classList.add('show');
+  }catch(x){busy(false);$('#render').innerHTML='';toast('產生 PDF 失敗：'+(x&&x.message||x),5000);}
+}
+async function load(){const r=await api({action:'docInit',id:KID});if(!r.ok)throw new Error(r.message||'讀取失敗');D=r;WM=RC.watermark(D.company.name,D.contract.no);}
+function fillForm(){
+  $('#apName').textContent=D.approverEn;
+  // 依車源表帶入：鑰匙（數量）、出廠證（廠證 V）、鑑定報告（認證 TSI／GOO）；其他預設勾選
+  const c=D.car,src={鑰匙:c.keys?{on:true,t:`車源表 ${c.keys} 把`}:{on:false,t:'車源表沒有鑰匙數量'},
+    出廠證:c.fc==='V'?{on:true,t:'車源表 廠證 V'}:{on:false,t:'車源表 廠證 '+(c.fc||'未填')},
+    鑑定報告:/^(TSI|GOO)/.test(c.cert)?{on:true,t:'車源表 認證 '+c.cert}:{on:false,t:'車源表 認證 '+(c.cert||'未填')}};
+  $('#items').innerHTML=['全部'].concat(D.items).map(x=>{const s=src[x]||{on:true,t:''};return `<label title="${esc(s.t)}"><input type="checkbox" value="${esc(x)}" ${s.on?'checked':''}>${esc(x)}${s.t?`<span class="small muted">（${esc(s.t.replace('車源表 ',''))}）</span>`:''}</label>`;}).join('');
+  $('#items input[value="全部"]').checked=D.items.every(x=>(src[x]||{on:true}).on);
+  $('#srcNote').textContent=Object.values(src).some(s=>!s.on)?'沒勾的項目是依車源表判斷車上沒有；實際有的話請自己勾起來，也記得回業務系統更新車源表。':'';
+  $('#f-date').value=(D.contract.transfer&&D.contract.transfer>=D.today?D.contract.transfer:D.today).replace(/\//g,'-');
+  $('#f-keys').value=D.car.keys||'';$('#f-plate').value=D.newPlate||'';$('#f-name').value=D.transferTo.name;$('#f-id').value=D.transferTo.id;
+  const isCo=/^\d{8}$/.test(D.transferTo.id);$('#f-type').value=isCo?'同業':'客戶';$('#f-type').dispatchEvent(new Event('input',{bubbles:true}));
+}
+(async function main(){
+  if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
+    if(!tokenOk()){relogin();return;}
+    if(!KID){$('#loading').innerHTML='沒有指定合約。<br><a href="index.html">回合約列表</a>';return;}
+    await load();selId=qs.get('v')||'';$('#loading').remove();fillForm();renderAll();
+  }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML=esc(e.message||e)+'<br><br><a href="index.html">回合約列表</a>';}
+})();
+})();
+</script>
+</body>
+</html>
