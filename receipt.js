@@ -160,8 +160,8 @@
       <div class="sec">過戶對象</div>
       <table>
         <tr><td class="h">類別</td><td style="width:22%">${bx(r['過戶對象類型'] === '客戶')}客戶　${bx(r['過戶對象類型'] === '同業')}同業</td>
-            <td class="h">${r['過戶對象類型'] === '同業' ? '公司名稱' : '姓名'}</td><td>${esc(r['過戶對象'])}</td>
-            <td class="h">${r['過戶對象類型'] === '同業' ? '統一編號' : '身分證字號'}</td><td style="width:18%">${esc(r['過戶對象證號'])}</td></tr>
+            <td class="h">${/^\d{8}$/.test(r['過戶對象證號'] || '') ? '公司名稱' : '姓名'}</td><td>${esc(r['過戶對象'])}</td>
+            <td class="h">${/^\d{8}$/.test(r['過戶對象證號'] || '') ? '統一編號' : '身分證字號'}</td><td style="width:18%">${esc(r['過戶對象證號'])}</td></tr>
       </table>
       ${r['備註'] ? `<div class="sec">備註</div><table><tr><td>${esc(r['備註'])}</td></tr></table>` : ''}
       <div class="sec">簽核</div>
@@ -188,11 +188,8 @@
     const k = c.contract, car = c.car, rules = c.rules || {}, fees = r.fees || [], ck = r.checks || {};
     const bx = on => `<span style="display:inline-block;width:3.2mm;height:3.2mm;border:1px solid #222;margin-right:1mm;vertical-align:-.4mm;text-align:center;line-height:3mm;font-size:8pt">${on ? '✓' : ''}</span>`;
     const yn = v => `${bx(v === '有')}有　${bx(v === '無')}無`;
-    const fee = n => { const f = fees.find(x => x.name === n) || {}, ru = rules[n] || {}; return ru.none ? '—' : ru.who === '甲方' ? '<span class="note">甲方負擔</span>' : money(f.amount || 0); };
-    const fnote = fees.filter(x => x.note).map(x => x.name + '：' + x.note).join('；');
-    const due = Number(r['應收合計']) || 0, keys = r.keys || car.keys || '';
+    const due = Number(r['尾款']) || 0, keys = r.keys || car.keys || '';
     const label = [String(car.year || '').replace('.', '.'), car.brand, car.model, car.cc ? (car.cc / 1000).toFixed(1) : ''].filter(Boolean).join('-');
-    const cell = (a, b) => `<td class="h">${a}</td><td class="r" style="width:16%">${b}</td>`;
     sec.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2mm">
         <div><h1 style="text-align:left;padding-left:0;letter-spacing:.5em;margin:0">交車確認單</h1><div class="note">合約編號 ${esc(k.no)}</div></div>
@@ -202,27 +199,13 @@
         <tr><td class="h">車款型式</td><td>${esc(label)}</td><td class="h">車身號碼</td><td style="letter-spacing:.04em">${esc(car.vin)}</td></tr>
         <tr><td class="h">牌照號碼</td><td>${esc(k.newPlate || k.plate)}${k.newPlate ? `<span class="note">（原 ${esc(k.plate)}）</span>` : ''}</td><td class="h">車主（乙方）</td><td>${esc(k.buyer)}</td></tr>
       </table>
-      <div style="display:flex;gap:3mm;margin-top:2.5mm;align-items:flex-start">
-        <table style="width:42%"><tr class="th"><td colspan="2">各項明細</td></tr>
-          <tr><td class="h">車　　價</td><td class="r">${money(r['成交價'])}</td></tr>
-          <tr><td class="h">已收（定金及預付）</td><td class="r">−${money(r['車價已收'])}</td></tr>
-          <tr><td class="h">尾　　款</td><td class="r">${money(r['尾款'])}</td></tr>
-          <tr><td class="h">代辦費用</td><td class="r">${money(r['代辦合計'])}</td></tr>
-          ${Number(r['代辦已收']) ? `<tr><td class="h">已收代辦規費</td><td class="r">−${money(r['代辦已收'])}</td></tr>` : ''}
-          <tr><td class="h"><b>合計應收</b></td><td class="r" style="background:rgba(244,185,66,.35);font-weight:700;font-size:10.5pt">${money(due)}</td></tr></table>
-        <table style="flex:1"><tr class="th"><td colspan="4">代辦費用明細</td></tr>
-          <tr>${cell('強制險', fee('強制險'))}${cell('選牌費', fee('選牌費'))}</tr>
-          <tr>${cell('刻印費', fee('刻印費'))}${cell('規　費', fee('規費'))}</tr>
-          <tr>${cell('公路養管費', fee('公路養管費'))}${cell('領牌費', fee('領牌費'))}</tr>
-          <tr>${cell('牌照稅', fee('牌照稅'))}${cell('代辦服務費', fee('代辦服務費'))}</tr>
-          <tr>${cell('驗車費', fee('驗車費'))}${cell('代開車檢驗費', fee('代開車檢驗費'))}</tr>
-          <tr><td class="h" colspan="3" style="text-align:right">合　計</td><td class="r"><b>${money(r['代辦合計'])}</b></td></tr></table>
-      </div>
-      ${fnote ? `<div class="note" style="margin-top:1mm">費用說明：${esc(fnote)}</div>` : ''}
+      <table style="margin-top:2.5mm"><tr class="th"><td colspan="6">車款明細</td></tr>
+        <tr><td class="h">車　價</td><td class="r">${money(r['成交價'])}</td><td class="h">已收（定金及預付車款）</td><td class="r">${money(r['車價已收'])}</td>
+            <td class="h"><b>尾　款</b></td><td class="r" style="background:rgba(244,185,66,.35);font-weight:700;font-size:10.5pt;width:16%">${money(r['尾款'])}</td></tr></table>
       <div class="sec">點交項目</div>
       <table>
         <tr class="th"><td>點交項目</td><td style="width:22%">點交資料</td><td style="width:30%">備註</td></tr>
-        <tr><td><b>尾款應收 NT$ ${money(due)}</b></td><td>${due > 0 ? `${bx(r['尾款狀態'] === '已收')}已收　${bx(r['尾款狀態'] !== '已收')}未收` : `${bx(true)}已付清`}</td><td>${due > 0 && r['尾款狀態'] !== '已收' ? esc(r['備註'] || '') : ''}</td></tr>
+        <tr><td><b>尾款 NT$ ${money(due)}</b></td><td>${due > 0 ? `${bx(r['尾款狀態'] === '已收')}已收　${bx(r['尾款狀態'] !== '已收')}未收` : `${bx(true)}已付清`}</td><td>${due > 0 && r['尾款狀態'] !== '已收' ? esc(r['備註'] || '') : ''}</td></tr>
         ${(c.checks || []).map(x => `<tr><td>${x === '汽車鑰匙' ? `汽車鑰匙 ${esc(keys || '＿')} 把` : esc(x)}</td><td>${yn(ck[x])}</td><td></td></tr>`).join('')}
         <tr><td>胎壓檢查確認　前輪 <b>${esc(r['胎壓前'] || '＿＿')}</b> psi　後輪 <b>${esc(r['胎壓後'] || '＿＿')}</b> psi</td><td>${bx(r['胎壓前'] && r['胎壓後'])}已確認</td><td></td></tr>
       </table>
@@ -254,7 +237,7 @@
         <tr><td class="h">合約編號</td><td>${esc(k.no)}</td><td class="h">客　戶</td><td>${esc(k.buyer)}</td></tr>
       </table>
       <div class="sec">簽核</div>
-      <table><tr>${sign('值班人員', r['申請人名'] || '', String(r['建立時間'] || '').slice(0, 16))}${sign('核定主管', r['核准人'], r['核准時間'])}${sign('財務經辦', r['財務經辦'], '')}</tr></table>
+      <table><tr>${sign('出庫人員', r['申請人名'] || '', String(r['建立時間'] || '').slice(0, 16))}${sign('核定主管', r['核准人'], r['核准時間'])}${sign('財務經辦', r['財務經辦'], (r['財務時間'] || '') + (r['財務繳款單'] ? '　繳款單 ' + r['財務繳款單'] : ''))}</tr></table>
       <div class="foot"><span>出庫單 ${esc(r['交車單號'])}｜${esc(c.company.name)}</span><span class="cp">總部歸檔</span></div>`;
     return sec;
   }
@@ -275,5 +258,71 @@
     push(xr + 'trailer\n<< /Size ' + (n + 1) + ' /Root 1 0 R >>\nstartxref\n' + x + '\n%%EOF\n');
     return new Blob(parts, { type: 'application/pdf' });
   }
-  window.RC = { css, page, docPage, dlvPage, outPage, photoPdf, watermark, zh, pdf, jpeg, roc, money };
+
+  // ===== 代辦費用（代收代付明細）：不是合約附件 =====
+  // r: { 單號, 開立日, 客戶, 電話, 車牌, 車款, 合約編號, items:[{cat,name,amount,note}], 合計, 付款方式, 經手人名, 收款人, 收款時間, 備註 }
+  function agentPage(r, co, copy) {
+    css();
+    const sec = document.createElement('section'); sec.className = 'page rcp';
+    const items = r.items || [], rows = Math.max(items.length, 10), total = items.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const bx = on => `<span style="display:inline-block;width:3.2mm;height:3.2mm;border:1px solid #222;margin-right:1mm;vertical-align:-.4mm;text-align:center;line-height:3mm;font-size:8pt">${on ? '✓' : ''}</span>`;
+    const roc2 = s => { const m = String(s || '').match(/^(\d{4})\/(\d{2})\/(\d{2})/); return m ? `${m[1] - 1911} 年 ${+m[2]} 月 ${+m[3]} 日` : ''; };
+    sec.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2mm">
+        <div><h1 style="text-align:left;padding-left:0;letter-spacing:.3em;margin:0">代收代付明細</h1><div class="note">代辦費用・非屬車輛買賣價金</div></div>
+        <div style="text-align:right;font-size:8.5pt;line-height:1.5"><b>${esc(co.name || '')}</b><br>${esc(co.addr || '')}<br>${co.phone ? 'Tel：' + esc(co.phone) : ''}<div style="font-size:10.5pt;font-weight:700">No. ${esc(r['單號'])}</div></div>
+      </div>
+      <table>
+        <tr><td class="h">客　戶</td><td style="width:26%">${esc(r['客戶'])}</td><td class="h">電　話</td><td style="width:22%">${esc(r['電話'] || '')}</td><td class="h">開立日期</td><td>民國 ${roc2(r['開立日'])}</td></tr>
+        <tr><td class="h">牌照號碼</td><td>${esc(r['車牌'] || '')}</td><td class="h">車　款</td><td>${esc(r['車款'] || '')}</td><td class="h">合約編號</td><td>${esc(r['合約編號'] || '—')}</td></tr>
+      </table>
+      <div class="sec">代收項目</div>
+      <table>
+        <tr class="th"><td style="width:7%">項次</td><td style="width:14%">類別</td><td>項目說明</td><td style="width:18%">金額（NT$）</td></tr>
+        ${Array.from({ length: rows }, (_, i) => { const x = items[i];
+          return x ? `<tr><td class="c">${i + 1}</td><td class="c">${esc(x.cat)}</td><td>${esc(x.name)}${x.note ? `<span class="note">（${esc(x.note)}）</span>` : ''}</td><td class="r">${money(x.amount)}</td></tr>`
+            : `<tr><td class="c" style="color:#bbb">${i + 1}</td><td>&nbsp;</td><td></td><td></td></tr>`; }).join('')}
+        <tr><td colspan="3" style="text-align:right;font-weight:700">合　計　新臺幣 ${zh(total)}</td><td class="r" style="font-weight:700;font-size:10.5pt;background:rgba(244,185,66,.35)">${money(total)}</td></tr>
+      </table>
+      <div style="margin-top:2mm;font-size:9.5pt">付款方式：${['現金', '匯款', '刷卡'].map(m => `${bx(r['付款方式'] === m)}${m}`).join('　')}</div>
+      ${r['備註'] ? `<div style="margin-top:1mm">備註：${esc(r['備註'])}</div>` : ''}
+      <div class="sec" style="margin-top:3mm">說明</div>
+      <ol>
+        <li>本明細所列款項為本公司受客戶委託代為收取，將轉付予各服務廠商或主管機關，非屬車輛買賣價金，亦非買賣契約之附件。</li>
+        <li>過戶規費、稅費依主管機關實際核定金額為準；如有差額，多退少補。</li>
+        <li>保養、配件、烤漆等項目由各服務廠商提供，相關品質與保固依該廠商之規定辦理。</li>
+      </ol>
+      <table style="margin-top:3mm"><tr class="th"><td>經手人</td><td>收款確認</td><td>客戶簽收</td></tr>
+        <tr><td style="height:18mm;vertical-align:bottom;text-align:center;font-weight:700">${esc(r['經手人名'] || '')}</td>
+            <td style="vertical-align:bottom;text-align:center"><b>${esc(r['收款人'] || '')}</b><div class="note">${esc(r['收款時間'] || '')}</div></td><td></td></tr></table>
+      <div class="foot"><span>代收代付明細 ${esc(r['單號'])}${r['合約編號'] ? '｜合約 ' + esc(r['合約編號']) : ''}</span><span class="cp">${esc(copy || '')}</span></div>`;
+    return sec;
+  }
+
+  // 一張 A4 印上下兩聯（上：公司留底聯，下：客戶收執聯，中間裁切線）；項目超過 8 筆時改用每聯一整頁 agentPage
+  function agentSheet(r, co) {
+    css();
+    const items = r.items || [], total = items.reduce((a, x) => a + (Number(x.amount) || 0), 0), rows = Math.max(items.length, 6);
+    const bx = on => `<span style="display:inline-block;width:3mm;height:3mm;border:1px solid #222;margin-right:.8mm;vertical-align:-.4mm;text-align:center;line-height:2.8mm;font-size:7.5pt">${on ? '✓' : ''}</span>`;
+    const roc2 = s => { const m = String(s || '').match(/^(\d{4})\/(\d{2})\/(\d{2})/); return m ? `${m[1] - 1911}/${m[2]}/${m[3]}` : ''; };
+    const half = copy => `<div style="height:136mm;position:relative;font-size:8.6pt">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5mm">
+        <div><span style="font-size:15pt;font-weight:700;letter-spacing:.25em">代收代付明細</span><span class="note" style="margin-left:2mm">代辦費用・非屬車輛買賣價金</span></div>
+        <div style="text-align:right;line-height:1.35"><b>${esc(co.name || '')}</b>${co.phone ? '　Tel ' + esc(co.phone) : ''}<br><b style="font-size:10pt">No. ${esc(r['單號'])}</b></div></div>
+      <table><tr><td class="h">客戶</td><td>${esc(r['客戶'])}</td><td class="h">電話</td><td>${esc(r['電話'] || '')}</td><td class="h">開立日期</td><td>${roc2(r['開立日'])}</td></tr>
+        <tr><td class="h">車牌</td><td>${esc(r['車牌'] || '')}</td><td class="h">車款</td><td>${esc(r['車款'] || '')}</td><td class="h">合約編號</td><td>${esc(r['合約編號'] || '—')}</td></tr></table>
+      <table style="margin-top:1.5mm"><tr class="th"><td style="width:6%">項次</td><td style="width:13%">類別</td><td>項目說明</td><td style="width:17%">金額（NT$）</td></tr>
+        ${Array.from({ length: rows }, (_, i) => { const x = items[i]; return x ? `<tr><td class="c">${i + 1}</td><td class="c">${esc(x.cat)}</td><td>${esc(x.name)}${x.note ? `<span class="note">（${esc(x.note)}）</span>` : ''}</td><td class="r">${money(x.amount)}</td></tr>`
+          : `<tr><td class="c" style="color:#bbb">${i + 1}</td><td>&nbsp;</td><td></td><td></td></tr>`; }).join('')}
+        <tr><td colspan="3" style="text-align:right;font-weight:700">合計　新臺幣 ${zh(total)}</td><td class="r" style="font-weight:700;font-size:10pt;background:rgba(244,185,66,.35)">${money(total)}</td></tr></table>
+      <div style="display:flex;justify-content:space-between;margin-top:1.2mm"><span>付款方式：${['現金', '匯款', '刷卡'].map(m => `${bx(r['付款方式'] === m)}${m}`).join('　')}</span>${r['備註'] ? `<span>備註：${esc(r['備註'])}</span>` : ''}</div>
+      <div class="note" style="margin-top:1mm;line-height:1.45">本明細款項為本公司受客戶委託代為收取，將轉付予各服務廠商或主管機關，非屬車輛買賣價金，亦非買賣契約之附件。過戶規費、稅費依主管機關實際核定金額多退少補；保養、配件、烤漆之品質與保固依各服務廠商規定辦理。</div>
+      <table style="margin-top:1.5mm"><tr class="th"><td>經手人</td><td>收款確認</td><td>客戶簽收</td></tr>
+        <tr><td style="height:12mm;vertical-align:bottom;text-align:center;font-weight:700">${esc(r['經手人名'] || '')}</td><td style="vertical-align:bottom;text-align:center"><b>${esc(r['收款人'] || '')}</b> <span class="note">${esc(r['收款時間'] || '')}</span></td><td></td></tr></table>
+      <div style="position:absolute;right:0;bottom:0;font-weight:700;font-size:8.5pt;letter-spacing:.05em">${copy}</div></div>`;
+    const sec = document.createElement('section'); sec.className = 'page rcp'; sec.style.padding = '7mm 11mm';
+    sec.innerHTML = half('第一聯　公司留底聯') + `<div style="border-top:1px dashed #888;margin:3.5mm -11mm 4mm;position:relative"><span style="position:absolute;left:50%;top:-2.2mm;transform:translateX(-50%);background:#fff;padding:0 2mm;font-size:7pt;color:#888">✂ 沿虛線裁開</span></div>` + half('第二聯　客戶收執聯');
+    return sec;
+  }
+  window.RC = { css, page, docPage, dlvPage, outPage, agentPage, agentSheet, photoPdf, watermark, zh, pdf, jpeg, roc, money };
 })();
