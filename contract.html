@@ -163,6 +163,7 @@ body.paper .sig .veil,body.paper .sig .clr,body.paper .sig canvas{display:none!i
 body.paper .sig{pointer-events:none}
 .f_copy{font-weight:700;color:#000;font-size:8.5pt;letter-spacing:.05em}
 .page.blank{display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10pt}
+.mir{display:inline-block;min-height:1.2em}
 .sellbox{display:flex;align-items:center;gap:6px;font-size:13px;background:rgba(255,255,255,.12);padding:4px 8px;border-radius:8px}.sellbox select{font:inherit;padding:4px 6px;border-radius:6px;border:0}
 #toast{pointer-events:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw}
 
@@ -220,7 +221,7 @@ body.paper .sig{pointer-events:none}
   </div>
 
   <div class="lockable">
-  <div class="sec">第一條：標的物<small>（產地、排氣量、顏色、領牌日、領照日、原強制險到期日、配備及前車主行照影本詳附件一）</small></div>
+  <div class="sec">第一條：標的物<small>（車籍資料依行照記載、配備及前車主行照影本詳附件一）</small></div>
   <table class="g">
     <tr><td class="h">廠　牌</td><td><input class="t" name="brand" placeholder="例：Mercedes-Benz"></td>
         <td class="h">型　式</td><td><input class="t" name="model" placeholder="例：B180"></td>
@@ -344,11 +345,11 @@ body.paper .sig{pointer-events:none}
       <tr><td class="h">電子信箱</td><td><span id="p_email"></span></td>
           <td class="h">業務代表</td><td><input class="t" name="salesName"></td>
           <td class="h">業務電話</td><td><input class="t" name="salesPhone" inputmode="tel"></td></tr>
-      <tr><td class="h">乙方（買方）</td><td><input class="t" name="buyerName"></td>
-          <td class="h">身分證字號</td><td><input class="t" name="buyerId" style="text-transform:uppercase"></td>
-          <td class="h">行動電話</td><td><input class="t" name="buyerPhone" inputmode="tel"></td></tr>
-      <tr><td class="h">地　址</td><td colspan="3"><input class="t" name="buyerAddr"></td>
-          <td class="h">市　話</td><td><input class="t" name="buyerTel" inputmode="tel" placeholder="選填"></td></tr>
+      <tr><td class="h">乙方（買方）</td><td colspan="3" style="white-space:nowrap"><span class="grp tight" data-g="buyerType" style="font-size:7.8pt"><label class="rd"><input type="radio" name="buyerType" value="自然人">自然人</label><label class="rd"><input type="radio" name="buyerType" value="法人">法人</label></span><input class="t" name="buyerName" style="display:inline-block;width:calc(100% - 25mm)"></td>
+          <td class="h" id="lb_buyerId">身分證字號</td><td><input class="t" name="buyerId" style="text-transform:uppercase"></td></tr>
+      <tr><td class="h">地　址</td><td><input class="t" name="buyerAddr"></td>
+          <td class="h">行動電話</td><td><input class="t" name="buyerPhone" inputmode="tel"></td>
+          <td class="h" id="lb_tel">市　話</td><td><input class="t" name="buyerTel" inputmode="tel" placeholder="選填"><input class="t" name="buyerRep" placeholder="法人代表人姓名" style="display:none"></td></tr>
       <tr><td class="h">電子信箱</td><td><input class="t" name="buyerEmail" inputmode="email"></td>
           <td class="h">過戶登記人</td><td colspan="3" class="grp" data-g="regOwner"><label class="rd"><input type="radio" name="regOwner" value="同乙方">同乙方</label><label class="rd"><input type="radio" name="regOwner" value="其他">其他（資料詳附件一）</label><span id="regName" class="note"></span></td></tr>
     </table>
@@ -357,7 +358,10 @@ body.paper .sig{pointer-events:none}
         <div class="sealbox">
           <div class="seals"><div class="seal big" id="sealBig"><span class="cap">公司大章</span><img id="sealBigImg" alt=""></div>
           <div class="scol"><div class="sealcap">甲方<br>用印</div><div class="seal small" id="sealSmall"><span class="cap">負責人小章</span><img id="sealSmallImg" alt=""></div></div></div></div>
-        <div style="flex:1"><div class="sig big" id="sig_buyer"><span class="cap">乙方（買方）簽名</span></div><div class="signote" id="sn_buyer"></div></div>
+        <div style="flex:1" id="buyerSignBox"><div class="sig big" id="sig_buyer"><span class="cap">乙方（買方）簽名</span></div><div class="signote" id="sn_buyer"></div></div>
+        <div class="sealbox" id="buyerSeals" style="display:none;flex:1">
+          <div class="seals" style="justify-content:flex-end"><div class="scol" style="justify-content:flex-start"><div class="sealcap">乙方（法人）用印</div></div><div class="seal big"><span class="cap">公司大章</span></div>
+          <div class="scol"><div class="sealcap">&nbsp;</div><div class="seal small"><span class="cap">負責人小章</span></div></div></div></div>
       </div>
     </div>
   </div>
@@ -443,12 +447,19 @@ body.paper .sig{pointer-events:none}
   <div class="lockable">
   <div class="sec">一、車籍資料</div>
   <table class="g">
-    <tr><td class="h">產　地</td><td class="grp" data-g="origin" colspan="3"><label class="rd"><input type="radio" name="origin" value="國產">國產</label><label class="rd"><input type="radio" name="origin" value="進口">進口</label>進口國：<input class="t w6 l" name="originCountry" data-auto-r="origin:進口" style="width:10em;display:inline-block"></td>
-        <td class="h">排氣量</td><td><input class="t" name="cc" inputmode="numeric" style="width:5em;display:inline-block">立方公分</td></tr>
-    <tr><td class="h">顏　色</td><td><input class="t" name="color"></td>
-        <td class="h">領牌日</td><td style="white-space:nowrap">民國<input class="t w2" name="lpY" inputmode="numeric" style="display:inline-block;width:2.4em">年<input class="t w1" name="lpM" inputmode="numeric" style="display:inline-block;width:1.8em">月<input class="t w1" name="lpD" inputmode="numeric" style="display:inline-block;width:1.8em">日</td>
-        <td class="h">領照日</td><td style="white-space:nowrap">民國<input class="t w2" name="ldY" inputmode="numeric" style="display:inline-block;width:2.4em">年<input class="t w1" name="ldM" inputmode="numeric" style="display:inline-block;width:1.8em">月<input class="t w1" name="ldD" inputmode="numeric" style="display:inline-block;width:1.8em">日</td></tr>
-    <tr><td class="h">原有強制汽車責任保險到期日</td><td colspan="5">民國<input class="t w2" name="inY" inputmode="numeric" style="display:inline-block;width:2.4em">年<input class="t w1" name="inM" inputmode="numeric" style="display:inline-block;width:1.8em">月<input class="t w1" name="inD" inputmode="numeric" style="display:inline-block;width:1.8em">日</td></tr>
+    <tr><td class="h">牌照號碼</td><td style="width:20%"><span class="mir" data-m="plate"></span></td>
+        <td class="h">廠　牌</td><td><span class="mir" data-m="brand"></span></td>
+        <td class="h">出廠年月</td><td style="width:18%"><span class="mir" data-m="mfg"></span></td></tr>
+    <tr><td class="h">型　式</td><td><span class="mir" data-m="model"></span></td>
+        <td class="h">燃料種類</td><td><input class="t" name="fuel" list="fuelList" maxlength="8"><datalist id="fuelList"><option value="汽油"><option value="柴油"><option value="油電"><option value="電動"></datalist></td>
+        <td class="h">排氣量</td><td><input class="t" name="cc" inputmode="numeric" style="width:4em;display:inline-block">立方公分</td></tr>
+    <tr><td class="h">車身式樣及附加配備</td><td colspan="3"><input class="t l" name="bodyEquip" maxlength="40" placeholder="照行照填，例如 轎式 LED頭燈"></td>
+        <td class="h">產　地</td><td class="grp" data-g="origin"><label class="rd"><input type="radio" name="origin" value="國產">國產</label><label class="rd"><input type="radio" name="origin" value="進口">進口</label></td></tr>
+    <tr><td class="h">引擎號碼</td><td><span class="mir" data-m="engineNo"></span></td>
+        <td class="h">車身號碼</td><td colspan="3" style="letter-spacing:.04em"><span class="mir" data-m="vin"></span></td></tr>
+    <tr><td class="h">載運人數</td><td><input class="t" name="seats" inputmode="numeric" style="width:3em;display:inline-block">人</td>
+        <td class="h">顏　色</td><td><input class="t" name="color"></td>
+        <td class="h">指定檢驗日</td><td style="white-space:nowrap">民國<input class="t w2" name="isY" inputmode="numeric" style="display:inline-block;width:2.4em">年<input class="t w1" name="isM" inputmode="numeric" style="display:inline-block;width:1.8em">月<input class="t w1" name="isD" inputmode="numeric" style="display:inline-block;width:1.8em">日</td></tr>
   </table>
 
   <div class="sec" style="margin-top:2mm">二、配備</div>
@@ -520,8 +531,10 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const qs=new URLSearchParams(location.search);
 let state='edit', signedAt=null, hash='', INIT=null, CAR=null, KID=qs.get('id')||'', KNO='';
+// 空白合約：blank=1 線上填寫（非公司車，車輛資料自己填）；blank=print 列印完全空白的紙本手寫
+const BLANK=qs.get('blank')||'', PRINT=BLANK==='print';
 let profiles=[];
-const draftKey=()=>'yc_contract_draft_'+(KID||('car_'+(qs.get('car')||'')));
+const draftKey=()=>'yc_contract_draft_'+(KID||(BLANK?'blank':'car_'+(qs.get('car')||'')));
 
 /* ---------- API ---------- */
 function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
@@ -648,6 +661,17 @@ function calc(){
   const rd=num('remindDays');$('#b_remind').textContent=rd&&!isNaN(rd)?rd:'＿';
   const td=num('trDays');$('#b_trDays').textContent=td&&!isNaN(td)?td:'＿';
   $('#vh_plate').textContent=v('plate').toUpperCase();
+  // 乙方自然人／法人：證號欄位、代表人、簽署欄樣式跟著換
+  const corp=v('buyerType')==='法人';
+  $('#lb_buyerId').textContent=corp?'統一編號':'身分證字號';$('#lb_tel').textContent=corp?'代表人':'市　話';
+  const lbP=el('buyerPhone').closest('td').previousElementSibling;if(lbP)lbP.textContent=corp?'電　話':'行動電話';
+  el('buyerTel').style.display=corp?'none':'';el('buyerRep').style.display=corp?'':'none';
+  el('buyerName').placeholder=corp?'公司名稱':'';
+  $('#buyerSignBox').style.display=corp?'none':'';$('#buyerSeals').style.display=corp?'':'none';
+  $('#sig_review .cap').textContent=corp?'乙方簽章':'乙方簽名';
+  // 附件一車籍資料：跟正面第一條同步顯示（照行照的順序）
+  const mir={plate:v('plate').toUpperCase(),brand:v('brand'),model:v('model'),engineNo:v('engineNo').toUpperCase(),vin:v('vin').toUpperCase(),mfg:v('mfgY')?v('mfgY')+(v('mfgM')?'.'+String(v('mfgM')).padStart(2,'0'):''):''};
+  $$('.mir').forEach(x=>x.textContent=mir[x.dataset.m]||'');
   const same=v('regOwner')!=='其他';document.body.classList.toggle('reg-same',same);
   $('#regSame').textContent=same?`過戶登記人同乙方：${v('buyerName')||'＿＿＿'}`:'';
   $('#regName').textContent=!same&&v('reg_name')?'：'+v('reg_name'):'';
@@ -743,10 +767,11 @@ function validate(){
   if(v('owners')==='二手以上中古汽車'&&!v('ownerCount'))W('ownerCount','勾選「二手以上」，建議填寫轉手次數；不可考請勾「不知」');
   // 附件一
   const A='附件一：';
-  if(reqR('origin','產地（國產／進口）')&&v('origin')==='進口'&&!v('originCountry'))E('originCountry',A+'產地為進口，請填寫進口國');
+  reqR('origin','產地（國產／進口）');
   const cc=num('cc');if(cc==null)E('cc',A+'「排氣量」未填寫');else if(isNaN(cc)||cc<=0)E('cc',A+'排氣量只能填數字（立方公分）');
   if(!v('color'))E('color',A+'「顏色」未填寫');
-  const lp=reqD('lp',A+'領牌日'),ld=reqD('ld',A+'領照日'),ins=reqD('in',A+'原有強制汽車責任保險到期日');
+  if((v('isY')||v('isM')||v('isD'))&&rocDate('is')==='bad')E('isY',A+'指定檢驗日日期不正確（請用民國年／月／日）');
+  if(v('seats')&&!/^\d{1,2}$/.test(v('seats')))E('seats',A+'載運人數請填數字');
   if(!Array.from(F.querySelectorAll('[data-eq],[name=eq_other]')).some(x=>x.checked))W('eq_0',A+'配備沒有勾選任何項目，請與乙方逐項確認');
   if(v('eq_other')&&!v('eqOther'))E('eqOther',A+'勾選「其他配備」，請填寫內容');
   if(!v('accessories'))W('accessories',A+'「出賣人提供之配件」未填寫，沒有請填「無」');
@@ -810,10 +835,13 @@ function validate(){
   // parties
   req('salesName');
   if(req('salesPhone')&&!phoneOk(v('salesPhone')))E('salesPhone','業務代表電話格式不正確');
-  req('buyerName');
-  if(req('buyerId')){const id=v('buyerId').toUpperCase();if(!twId(id)){if(/^[A-Z]{2}\d{8}$/.test(id))W('buyerId','此為舊式居留證號，請再核對證件');else E('buyerId','身分證字號格式或檢查碼不正確');}}
-  if(req('buyerPhone','乙方行動電話')&&!phoneOk(v('buyerPhone')))E('buyerPhone','乙方行動電話格式不正確（09 開頭 10 碼）');
-  if(v('buyerTel')&&!phoneOk(v('buyerTel')))E('buyerTel','乙方市話格式不正確（請含區碼）');
+  const corpB=v('buyerType')==='法人';
+  if(!v('buyerType'))E('@buyerType','請勾選乙方是「自然人」或「法人」');
+  if(!v('buyerName'))E('buyerName',corpB?'乙方公司名稱未填寫':'乙方姓名未填寫');
+  if(corpB){const id=v('buyerId');if(!id)E('buyerId','乙方統一編號未填寫');else if(!twTax(id))E('buyerId','乙方統一編號不正確（8 碼數字，檢查碼不符）');if(!v('buyerRep'))E('buyerRep','法人請填代表人姓名');}
+  else if(req('buyerId')){const id=v('buyerId').toUpperCase();if(!twId(id)){if(/^[A-Z]{2}\d{8}$/.test(id))W('buyerId','此為舊式居留證號，請再核對證件');else E('buyerId','身分證字號格式或檢查碼不正確');}}
+  if(req('buyerPhone','乙方電話')&&!phoneOk(v('buyerPhone')))E('buyerPhone','乙方電話格式不正確（手機 09 開頭 10 碼，市話請含區碼）');
+  if(!corpB&&v('buyerTel')&&!phoneOk(v('buyerTel')))E('buyerTel','乙方市話格式不正確（請含區碼）');
   if(v('buyerEmail')&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('buyerEmail')))E('buyerEmail','乙方電子信箱格式不正確');
   if(reqR('regOwner','過戶登記人')&&v('regOwner')==='其他'){
     [['reg_name','姓名／名稱'],['reg_id','身分證字號／統編'],['reg_addr','地址']].forEach(([n,l])=>{if(!v(n))E(n,`附件一：過戶登記人「${l}」未填寫`);});
@@ -887,6 +915,7 @@ function canvasJpeg(cv){return new Promise((res,rej)=>{cv.toBlob(b=>{if(!b)retur
 
 /* ---------- save / restore（草稿存在這台裝置，避免意外關掉頁面）---------- */
 function save(){
+  if(PRINT)return;
   const d=collect();
   const sig={};Object.entries(pads).forEach(([k,p])=>sig[k]={data:padData(p),at:p.at});
   store.set(draftKey(),{d,sig,state:state==='done'?'edit':state,seller:$('#seller').value,KID,KNO});
@@ -911,6 +940,7 @@ function setDefaults(){
   el('att_payment').checked=true;el('att_delivery').checked=true;
   Array.from(document.getElementsByName('owners')).forEach(r=>r.checked=r.value==='不知');
   Array.from(document.getElementsByName('regOwner')).forEach(r=>r.checked=r.value==='同乙方');
+  Array.from(document.getElementsByName('buyerType')).forEach(r=>r.checked=r.value==='自然人');
 }
 // 從車源表帶入（只填空白欄位，業務改過的不會被蓋掉）
 function fillFromCar(c){
@@ -918,24 +948,26 @@ function fillFromCar(c){
   const yr=String(c['年份']||''),m=yr.match(/^(\d{4})(?:[.\/\-](\d{1,2}))?/);
   put('brand',c['廠牌']);put('model',c['車型']);put('plate',c['車牌']);
   if(m){put('year',m[1]);put('mfgY',m[1]);if(m[2])put('mfgM',String(+m[2]));}
-  put('vin',c['車身號碼']);put('engineNo',c['引擎號碼']);put('cc',c['排氣量']);put('color',c['顏色']);put('originCountry',c['進口國']);
+  put('vin',c['車身號碼']);put('engineNo',c['引擎號碼']);put('cc',c['排氣量']);put('color',c['顏色']);
   if(c['產地']&&!v('origin'))Array.from(document.getElementsByName('origin')).forEach(r=>r.checked=r.value===c['產地']);
   const dd=(p,s)=>{const x=String(s||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);if(x&&!v(p+'Y')){el(p+'Y').value=+x[1]-1911;el(p+'M').value=+x[2];el(p+'D').value=+x[3];}};
-  dd('lp',c['領牌日']);dd('ld',c['領照日']);dd('in',c['強制險到期日']);
+  dd('is',c['指定檢驗日']);
+  put('bodyEquip',c['車身式樣及附加配備']);put('seats',c['載運人數']);put('fuel',c['燃料種類']);
   if(c.lic&&!v('prevLic'))el('prevLic').value=c.lic;
   if(!v('price')&&c['開價']){el('price').value=Number(c['開價']).toLocaleString('en-US');}
   const km=String(c['里程']||'');if(km&&!v('mileage'))el('mileage').placeholder='車源表 '+km;
 }
 function summary(){
   const d=pfx=>{const x=rocDate(pfx);return x&&x!=='bad'?`${x.getFullYear()}/${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`:'';};
-  return {company:$('#company').value,seller:SELLER(),buyer:v('buyerName'),buyerId:v('buyerId').toUpperCase(),buyerPhone:v('buyerPhone'),buyerAddr:v('buyerAddr'),
+  return {company:$('#company').value,seller:SELLER(),buyerType:v('buyerType')||'自然人',buyerRep:v('buyerRep'),buyer:v('buyerName'),buyerId:v('buyerId').toUpperCase(),buyerPhone:v('buyerPhone'),buyerAddr:v('buyerAddr'),
     price:num('price'),deposit:num('deposit')||0,signDate:d('sg'),eta:d('dl'),transfer:d('tr')};
 }
 // 送到伺服器的欄位：不含照片（行照另外傳）
 function fieldsForServer(){const d=collect();delete d.prevLic;delete d.agree;return d;}
 function carDocsForServer(){
   const d=pfx=>{const x=rocDate(pfx);return x&&x!=='bad'?`${x.getFullYear()}/${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`:'';};
-  const o={vin:v('vin').toUpperCase(),engineNo:v('engineNo').toUpperCase(),cc:v('cc'),origin:v('origin'),country:v('originCountry'),lpDate:d('lp'),ldDate:d('ld'),insDate:d('in')};
+  const o={vin:v('vin').toUpperCase(),engineNo:v('engineNo').toUpperCase(),cc:v('cc'),origin:v('origin'),
+    bodyEquip:v('bodyEquip'),seats:v('seats'),inspDate:d('is'),fuel:v('fuel')};
   if(v('prevLic')&&CAR&&!CAR.lic)o.lic=v('prevLic');
   return o;
 }
@@ -959,6 +991,9 @@ function applyState(){
     locked:PAPER?'內容已鎖定（'+(KNO||'')+'）。簽約當天有收款，先按「簽約收款・繳款單」開立（會印在每聯第 4 頁）。按「匯出列印 PDF」→ 用「雙面列印（長邊翻頁）」印出兩聯 → 客人在兩聯的確認欄打勾、審閱簽名、立約簽名，公司蓋大小章 → 簽好後到合約列表按「已簽約」上傳第一聯。'
       :'內容已鎖定（'+(KNO||'')+'）。請乙方閱讀正反兩面及附件 → 勾選確認欄 → 審閱簽名與立約簽名 → 按「完成簽署・上傳合約」。',
     done:'簽約完成，合約已上傳。'}[state];
+  if(PRINT){['#bCheck','#bUnlock','#bFinish','#bPay'].forEach(x=>$(x).style.display='none');$('#bPrint').style.display='';$('#bPrint').textContent='列印空白合約（一式兩聯）';$('#sellBox').hidden=true;
+    $('#step2').parentElement.style.display='none';$('#hint').textContent='空白合約：可以先選甲方公司（會印上公司資料和浮水印），其他欄位全部空白，印出來手寫。用 A4 雙面列印（長邊翻頁）。';}
+  else if(INIT&&INIT.blank&&state==='edit')$('#hint').textContent='空白合約（非公司車）：車輛資料請照行照自己填寫，登記「已簽約」時會在業務系統車源表新增這台車並成立訂單。紅色＝必須修正，黃色＝提醒確認。';
   updatePads();
 }
 $('#bCheck').onclick=async()=>{
@@ -967,7 +1002,7 @@ $('#bCheck').onclick=async()=>{
   if(nE){toast(`還有 ${nE} 項必須修正，請看上方清單`);window.scrollTo({top:0,behavior:'smooth'});return;}
   busy('鎖定中，取得合約編號…');
   try{
-    const r=await api({action:'contractLock',id:KID,carId:CAR['編號'],summary:summary(),fields:fieldsForServer(),car:carDocsForServer()});
+    const r=await api({action:'contractLock',id:KID,carId:CAR['編號']||'',blank:!!(INIT&&INIT.blank),summary:summary(),fields:fieldsForServer(),car:carDocsForServer()});
     if(r.ok&&r.licSaved)CAR.lic=v('prevLic');
     busy(false);
     if(!r.ok){toast(r.message||'鎖定失敗',5000);return;}
@@ -1035,7 +1070,7 @@ $('#bPrint').onclick=async()=>{
     }
     $('#render').innerHTML='';busy(false);
     const blob=jpegPdf(imgs);
-    const name=`合約_${KNO}_${(v('plate')||'').toUpperCase()}_${v('buyerName')||''}_列印版.pdf`;
+    const name=PRINT?`空白合約_${(curProfile()||{}).name||''}.pdf`:`合約_${KNO}_${(v('plate')||'').toUpperCase()}_${v('buyerName')||''}_列印版.pdf`;
     const url=URL.createObjectURL(blob);
     $('#pdfName').textContent=name;$('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;
     $('#ovPdf').classList.add('show');
@@ -1065,20 +1100,21 @@ async function main(){
     await liff.init({liffId:LIFF_ID});
     if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
     if(!tokenOk()){relogin();return;}
-    if(!KID&&!qs.get('car')){$('#loading').innerHTML='沒有指定車輛。<br><a href="index.html">回合約列表選車</a>';return;}
-    const r=await api({action:'contractInit',id:KID,carId:qs.get('car')||''});
+    if(!KID&&!qs.get('car')&&!BLANK){$('#loading').innerHTML='沒有指定車輛。<br><a href="index.html">回合約列表選車</a>';return;}
+    const r=await api({action:'contractInit',id:KID,carId:qs.get('car')||'',blank:!!BLANK&&!KID});
     if(!r.ok){$('#loading').innerHTML=esc(r.message||'讀取失敗')+'<br><br><a href="index.html">回合約列表</a>';return;}
     INIT=r;CAR=r.car;profiles=(r.companies||[]).map(mapCompany);
     renderCompanySelect();setupSeller();
     if(r.contract){KID=r.contract.id;KNO=r.contract.no;}
-    const had=restoreDraft();
+    const had=PRINT?false:restoreDraft();
     if(!had&&r.contract&&r.contract.data){applyFields(r.contract.data);if(PAPER)state='locked';}
-    if(!had&&!(r.contract&&r.contract.data))setDefaults();
+    if(!had&&!(r.contract&&r.contract.data)&&!PRINT)setDefaults();
+    if(PRINT)state='locked';
     if(KNO)el('no').value=String(KNO).replace(/^AAA\./,'');
     if(!$('#company').value&&profiles.length===1)$('#company').value=profiles[0].id;
     fillFromCar(CAR);fillSalesRep();
     showProfile();calc();applyState();
-    document.title=(KNO?KNO+' ':'')+CAR['車牌']+' 合約';
+    document.title=PRINT?'空白合約（列印）':(KNO?KNO+' ':'')+(CAR['車牌']||(v('plate')||'非公司車'))+' 合約';
     $('#loading').remove();
   }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML='無法連線：'+esc(e&&e.message||e)+'<br>請關閉頁面重新開啟。';}
 }
