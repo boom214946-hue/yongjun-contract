@@ -104,12 +104,11 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
       <label>實際交車人<input id="f-recv" maxlength="20"></label>
     </div>
     <p class="small muted" id="recvNote" style="margin:4px 0 0"></p>
-    <div class="lnh" style="margin:14px 0 6px">代辦費用（依合約約定，甲方負擔的不能向客人收）</div>
-    <div class="fees" id="fees"></div>
-    <div class="lnh" style="margin:14px 0 6px">金額</div>
+    <p class="small muted" style="margin:10px 0 0">代辦費用（過戶規費、保養、配件等）不放在交車確認單，請另外開 <a id="agentLink">代收代付明細</a>。</p>
+    <div class="lnh" style="margin:14px 0 6px">車款</div>
     <div class="tot" id="tot"></div>
     <div id="dueBox" style="margin-top:8px" hidden>
-      <div class="small" style="margin-bottom:4px">還有應收款，交車時：
+      <div class="small" style="margin-bottom:4px">還有尾款，交車時：
         <span class="seg" id="paySeg"><button type="button" data-ps="已收">當天收齊</button><button type="button" data-ps="未收" aria-pressed="true">尚未收齊</button></span></div>
       <p class="small muted" id="dueHint" style="margin:0"></p>
     </div>
@@ -129,16 +128,17 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
     <div id="signList" class="small muted" style="margin-top:6px">還沒選檔案</div>
     <div class="acts" style="margin-top:8px"><button class="btn acc" type="button" id="done">確認已交車</button></div>
   </section>
+  <section class="panel" id="finBox" hidden></section>
   <section class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
       <h2 style="margin:0" id="pvTitle">預覽</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="openSigned" hidden>開啟簽好的確認單</button><button class="btn pri" type="button" id="print" hidden>匯出 PDF（交車確認單兩聯＋出庫單）</button></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="openSigned" hidden>開啟簽好的確認單</button><button class="btn pri" type="button" id="print" hidden>匯出交車確認單（兩聯）</button><button class="btn pri" type="button" id="printOut" hidden>匯出出庫單</button></div></div>
     <div id="preview"></div>
   </section>
 </div>
 <div id="render" aria-hidden="true"></div>
 <div class="ov" id="ovPdf"><div class="dlg">
-  <h3>PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br><span id="pdfDesc">共 3 頁：交車確認單第一聯（公司留底）、第二聯（客戶留底）、出庫單（總部歸檔）。請用 A4 單面列印。</span><br>
+  <h3>PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br><span id="pdfDesc"></span><br>
   <span class="small muted">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
   <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave">下載</a><a class="btn acc" id="pdfOpen" target="_blank" rel="noopener">開啟 PDF</a></div>
 </div></div>
@@ -161,7 +161,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const money=n=>Number(n||0).toLocaleString('en-US');
 const amt=v=>{const n=Number(String(v||'').replace(/[,\s]/g,''));return isFinite(n)&&n>0?Math.round(n):0;};
 const qs=new URLSearchParams(location.search), KID=qs.get('k')||'';
-let D=null, selId='', WM='', feeIn={}, checks={}, payState='未收', signFiles=[];
+let D=null, selId='', WM='', checks={}, payState='未收', signFiles=[];
 function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3500);}
 function busy(m){const b=$('#busy');if(m===false){b.classList.remove('show');return;}$('#busyMsg').textContent=m;b.classList.add('show');}
 function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
@@ -176,23 +176,7 @@ const active=()=>D.dlvs.find(r=>r['狀態']==='待核准'||r['狀態']==='已核
 const delivered=()=>D.dlvs.find(r=>r['狀態']==='已交車');
 const canCreate=()=>{const m=D.me;return (m.isBoss||m.isOffice||D.contract.seller===m.en)&&!active()&&!delivered();};
 
-/* ---------- 比例分攤：乙方負擔交車日（含）到年底的天數 ---------- */
-function prorate(annual,dateStr){
-  if(!annual||!dateStr)return {share:0,days:0,total:0};
-  const d=new Date(dateStr+'T00:00:00'),y=d.getFullYear(),end=new Date(y,11,31),total=((y%4===0&&y%100!==0)||y%400===0)?366:365;
-  const days=Math.round((end-d)/864e5)+1;return {share:Math.round(annual*days/total),days,total};
-}
-function feeAmounts(){
-  const date=$('#f-date').value;
-  return D.fees.map(n=>{const ru=D.rules[n]||{who:'乙方'},v=feeIn[n]||'';
-    if(ru.who==='甲方')return {name:n,amount:0,note:''};
-    if(ru.prorate){const p=prorate(amt(v),date);return {name:n,amount:p.share,note:amt(v)?`年度 ${money(amt(v))}×${p.days}/${p.total} 天`:''};}
-    return {name:n,amount:amt(v),note:''};});
-}
-function totals(){
-  const k=D.contract,fees=feeAmounts(),feeSum=fees.reduce((a,f)=>a+f.amount,0);
-  const due=k.price-D.paid+feeSum-D.feePaid;return {fees,feeSum,due};
-}
+function totals(){const k=D.contract;return {due:k.price-D.paid};}
 function renderHead(){
   const k=D.contract,left=k.price-D.paid;
   $('#ttl').textContent=`交車確認單・${k.no}`;
@@ -211,27 +195,19 @@ function renderHist(){
       <td><span class="pill ${ST[r['狀態']]}" title="${esc(r['作廢原因']||'')}">${esc(r['狀態'])}</span></td><td><button class="btn" data-sel="${r['編號']}">${r['編號']===selId?'預覽中':'預覽'}</button></td></tr>`).join('')}</tbody></table></div>
     <p class="small muted" style="margin:6px 0 0">核准出庫、作廢請到合約列表的「交車」頁。</p>`:'<p class="muted" style="margin:0">還沒有交車確認單。</p>'}`;
 }
-function renderFees(){
-  $('#fees').innerHTML=D.fees.map(n=>{const ru=D.rules[n]||{who:'乙方',why:''};
-    if(ru.who==='甲方')return `<div class="fee off"><b>${esc(n)}</b><span class="why">${ru.none?esc(ru.why):'甲方負擔（'+esc(ru.why)+'）'}</span></div>`;
-    return `<div class="fee"><b>${esc(n)}${ru.prorate?'<span class="small muted">（比例分攤）</span>':''}</b>
-      <input data-fee="${esc(n)}" inputmode="numeric" placeholder="${ru.prorate?'填年度稅額，自動算乙方負擔':'金額，沒有就留白'}" value="${feeIn[n]?money(amt(feeIn[n])):''}">
-      <span class="why" data-why="${esc(n)}">${esc(ru.why)}</span></div>`;}).join('');
-}
 function renderChecks(){
   $('#cks').innerHTML=D.checks.map(x=>`<div class="ck"><span>${x==='汽車鑰匙'?`汽車鑰匙 <b>${esc(D.car.keys||'?')}</b> 把`:esc(x)}</span><span class="seg"><button type="button" data-ck="${esc(x)}" data-v="有" aria-pressed="${checks[x]==='有'}">有</button><button type="button" data-ck="${esc(x)}" data-v="無" aria-pressed="${checks[x]==='無'}">無</button></span></div>`).join('');
 }
 function form(){const t=totals();return {when:($('#f-date').value||'').replace(/-/g,'/')+' '+($('#f-time').value||''),place:$('#f-place').value.trim(),km:$('#f-km').value.replace(/[,\s]/g,''),
-  receiver:$('#f-recv').value.trim(),fees:t.fees,checks,payState:t.due>0?payState:'已收',tireF:$('#f-tf').value.trim(),tireR:$('#f-tr').value.trim(),note:$('#f-note').value.trim()};}
+  receiver:$('#f-recv').value.trim(),checks,payState:t.due>0?payState:'已收',tireF:$('#f-tf').value.trim(),tireR:$('#f-tr').value.trim(),note:$('#f-note').value.trim()};}
 function check(){
   const k=D.contract,f=form(),t=totals(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
   if(!$('#f-date').value)E('f-date','請填交車日期');if(!$('#f-time').value)E('f-time','請填交車時間');
   const km=amt(f.km),mk=amt(k.mileage);
   if(!km)E('f-km','請填交車里程');else if(mk&&km<mk)E('f-km',`交車里程 ${money(km)} 比定車時 ${money(mk)} 還少，請確認`);else if(mk&&km-mk>500)W('f-km',`交車里程比定車時多 ${money(km-mk)} 公里，請確認`);
   if(!f.receiver)E('f-recv','請填實際交車人');
-  D.fees.forEach(n=>{const ru=D.rules[n]||{};if(ru.prorate&&feeIn[n]&&!$('#f-date').value)E('f-date','比例分攤要先填交車日期');});
-  if(t.due>0&&payState!=='已收'&&!f.note)E('f-note',`還有應收 ${money(t.due)} 元未收，請在備註寫明原因（例如貸款撥款中）`);
-  if(t.due>0&&payState==='已收')W('','選了「當天收齊」，記得另外開繳款單（尾款／代辦規費）');
+  if(t.due>0&&payState!=='已收'&&!f.note)E('f-note',`尾款 ${money(t.due)} 元還沒收，請在備註寫明原因（例如貸款撥款中）`);
+  if(t.due>0&&payState==='已收')W('','選了「當天收齊」：送出後請在出庫單按「開立尾款繳款單」，Yvonne 核准後財務經辦會自動簽核');
   D.checks.forEach(x=>{if(!checks[x])E('cks','點交項目「'+x+'」請選有或無');});
   if(checks['汽車鑰匙']==='有'&&!D.car.keys)W('cks','車源表沒有鑰匙數量，請回業務系統補上');
   if(!f.tireF||!f.tireR)W('f-tf','胎壓還沒填');
@@ -241,23 +217,22 @@ function check(){
 }
 function renderTot(){
   const k=D.contract,t=totals();
-  $('#tot').innerHTML=`<div><span>車價</span>${money(k.price)}</div><div><span>已收（定金及預付）</span>−${money(D.paid)}</div><div><span>尾款</span>${money(k.price-D.paid)}</div>
-    <div><span>代辦費用</span>${money(t.feeSum)}</div>${D.feePaid?`<div><span>已收代辦規費</span>−${money(D.feePaid)}</div>`:''}<div><span>合計應收</span><b style="font-size:17px;color:${t.due>0?'var(--accent)':'var(--ok)'}">${money(t.due)}</b></div>`;
+  $('#tot').innerHTML=`<div><span>車價</span>${money(k.price)}</div><div><span>已收（定金及預付車款）</span>${money(D.paid)}</div><div><span>尾款</span><b style="font-size:17px;color:${t.due>0?'var(--accent)':'var(--ok)'}">${t.due>0?money(t.due):'已付清'}</b></div>`;
   $('#dueBox').hidden=!(t.due>0);
   document.querySelectorAll('[data-ps]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ps===payState));
-  $('#dueHint').textContent=payState==='已收'?'交車當天收齊：請另外開繳款單（尾款、代辦規費）作為收款憑證。':'尚未收齊：備註請寫原因（例如 貸款撥款中），核准出庫時主管也要填原因。';
-  D.fees.forEach(n=>{const ru=D.rules[n]||{};if(ru.prorate){const p=prorate(amt(feeIn[n]),$('#f-date').value),w=document.querySelector(`[data-why="${n}"]`);
-    if(w)w.textContent=amt(feeIn[n])?`乙方負擔 ${money(p.share)} 元（${p.days}/${p.total} 天）`:ru.why;}});
+  $('#dueHint').textContent=payState==='已收'?'交車當天收齊：送出後在出庫單按「開立尾款繳款單」，Bella 核對、Yvonne 核准後，出庫單的財務經辦會自動簽上。':'尚未收齊（例如貸款撥款中）：備註請寫原因，主管核准出庫時也要填說明；之後收到款再開尾款繳款單。';
   const r=$('#f-recv').value.trim();$('#recvNote').textContent=r&&r!==k.buyer?`實際交車人不是車主本人，確認單上的「責任聲明」適用，請兩人都簽名。`:'';
 }
 function draftRecord(){const f=form(),t=totals(),k=D.contract;
-  return {'交車單號':k.no+'-T'+(D.dlvs.length+1),'交車時間':f.when,'出庫地點':f.place,'交車里程':amt(f.km),'成交價':k.price,'車價已收':D.paid,'尾款':k.price-D.paid,fees:t.fees,
-    '代辦合計':t.feeSum,'代辦已收':D.feePaid,'應收合計':t.due,'尾款狀態':t.due>0?payState:'已收',checks,'胎壓前':f.tireF,'胎壓後':f.tireR,'實際交車人':f.receiver,'備註':f.note,
-    '申請人名':D.me.name,'核准人':'','核准時間':'','財務經辦':D.payApprover,'建立時間':D.today,'狀態':''};}
+  return {'交車單號':k.no+'-T'+(D.dlvs.length+1),'交車時間':f.when,'出庫地點':f.place,'交車里程':amt(f.km),'成交價':k.price,'車價已收':D.paid,'尾款':k.price-D.paid,
+    '應收合計':t.due,'尾款狀態':t.due>0?payState:'已收',checks,'胎壓前':f.tireF,'胎壓後':f.tireR,'實際交車人':f.receiver,'備註':f.note,
+    '申請人名':D.me.name,'核准人':'','核准時間':'','財務經辦':'','建立時間':D.today,'狀態':''};}
 function renderPreview(){
   const sel=D.dlvs.find(r=>r['編號']===selId),r=sel||(canCreate()?draftRecord():null);
   $('#pvTitle').textContent=sel?`預覽・${sel['交車單號']}（${sel['狀態']}）`:(r?'預覽・新交車確認單（尚未送出）':'預覽');
   $('#print').hidden=!(sel&&(sel['狀態']==='已核准'||sel['狀態']==='已交車'));
+  $('#printOut').hidden=!(sel&&sel['財務經辦']&&(sel['狀態']==='已核准'||sel['狀態']==='已交車'));
+  renderFin(sel);
   $('#openSigned').hidden=!(sel&&sel.hasFile);
   $('#doneBox').hidden=!(sel&&sel['狀態']==='已核准'&&(D.me.isBoss||D.me.isOffice||D.contract.seller===D.me.en));
   const pv=$('#preview');pv.innerHTML='';if(!r){pv.innerHTML='<p class="muted" style="margin:6px">請在上方選一張交車確認單預覽。</p>';pv.style.height='';return;}
@@ -265,6 +240,14 @@ function renderPreview(){
   const w=pv.clientWidth-20,pw=210*96/25.4,ph=297*96/25.4,z=Math.min(1,w/pw);
   pages.forEach((pg,i)=>{pg.style.transform=`scale(${z})`;pg.style.position='absolute';pg.style.top=(10+i*(ph*z+12))+'px';pg.style.left=((pv.clientWidth-pw*z)/2)+'px';pv.appendChild(pg);});
   pv.style.position='relative';pv.style.height=(pages.length*(ph*z+12)+10)+'px';
+}
+// 出庫單的財務經辦：車價收齊（尾款繳款單核准）後自動簽上
+function renderFin(sel){
+  const box=$('#finBox');if(!sel||sel['狀態']==='作廢'){box.hidden=true;return;}
+  box.hidden=false;const k=D.contract,left=k.price-D.paid;
+  if(sel['財務經辦'])box.innerHTML=`<h2>出庫單・財務經辦</h2><p style="margin:0">✅ <b>${esc(sel['財務經辦'])}</b> 已簽核（${esc(sel['財務時間']||'')}，繳款單 ${esc(sel['財務繳款單']||'')}）。可以匯出出庫單給總部歸檔。</p>`;
+  else box.innerHTML=`<h2>出庫單・財務經辦</h2><p style="margin:0 0 8px">${left>0?`尾款 <b style="color:var(--accent)">${money(left)}</b> 元還沒收齊。`:`車價已全部開立繳款單，等最新一張繳款單核准。`}車價收齊、繳款單由 Yvonne 核准後，財務經辦會自動簽上，出庫單才能匯出。</p>
+    ${left>0?`<a class="btn acc" href="payment.html?k=${encodeURIComponent(KID)}&tail=1">開立尾款繳款單（${money(left)}）</a>`:`<a class="btn" href="payment.html?k=${encodeURIComponent(KID)}">查看繳款單</a>`}${D.payNo?` <span class="small muted">最新繳款單 ${esc(D.payNo)}（${esc(D.payState)}）</span>`:''}`;
 }
 function renderAll(){renderHead();renderHist();$('#newBox').hidden=!canCreate();if(canCreate()){renderTot();check();}renderPreview();}
 
@@ -278,7 +261,8 @@ document.addEventListener('click',async e=>{
     busy('送出中…');
     try{const r=await api({action:'dlvCreate',id:KID,form:form()});busy(false);toast(r.message||(r.ok?'完成':'失敗'),5000);if(r.ok){await load();selId=r.id;renderAll();}}
     catch(x){busy(false);if(x.message!=='relogin')toast('連線失敗，請再試一次');}return;}
-  if(t.id==='print'){await makePdf();return;}
+  if(t.id==='print'){await makePdf('dlv');return;}
+  if(t.id==='printOut'){await makePdf('out');return;}
   if(t.id==='pdfClose'){$('#ovPdf').classList.remove('show');return;}
   if(t.id==='done'){await doneUpload(t);return;}
   if(t.id==='openSigned'){busy('讀取中…');try{const r=await api({action:'dlvFile',id:selId});busy(false);if(!r.ok){toast(r.message);return;}
@@ -286,9 +270,8 @@ document.addEventListener('click',async e=>{
     catch(x){busy(false);toast('讀取失敗');}return;}
 });
 document.addEventListener('input',e=>{if(!D)return;
-  if(e.target.dataset.fee){feeIn[e.target.dataset.fee]=e.target.value;}
   if(e.target.closest('#newBox')){renderTot();check();renderPreview();}});
-document.addEventListener('change',e=>{if(e.target.dataset.fee&&amt(e.target.value))e.target.value=money(amt(e.target.value));
+document.addEventListener('change',e=>{
   if(e.target.id==='signFile'){signFiles=signFiles.concat(Array.from(e.target.files));e.target.value='';showSign();}});
 window.addEventListener('resize',()=>{if(D)renderPreview();});
 function showSign(){$('#signList').innerHTML=signFiles.length?signFiles.map((f,i)=>`<div>第 ${i+1} 頁・${esc(f.name)} <button type="button" class="btn" data-rm="${i}" style="padding:2px 8px">移除</button></div>`).join(''):'還沒選檔案';}
@@ -306,17 +289,18 @@ async function doneUpload(btn){
     if(r.ok){signFiles=[];showSign();await load();renderAll();}}
   catch(x){busy(false);if(x.message!=='relogin')toast('上傳失敗：'+(x.message||x));}
 }
-async function makePdf(){
+async function makePdf(kind){
   const sel=D.dlvs.find(r=>r['編號']===selId);if(!sel)return;
   if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路後重新整理',5000);return;}
   busy('正在產生 PDF…');
   try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
     const host=$('#render');host.innerHTML='';const imgs=[];
-    for(const pg of [RC.dlvPage(sel,D,'第一聯　公司留底聯',WM),RC.dlvPage(sel,D,'第二聯　客戶留底聯',WM),RC.outPage(sel,D,WM)]){host.appendChild(pg);
+    const list=kind==='out'?[RC.outPage(sel,D,WM)]:[RC.dlvPage(sel,D,'第一聯　公司留底聯',WM),RC.dlvPage(sel,D,'第二聯　客戶留底聯',WM)];
+    for(const pg of list){host.appendChild(pg);
       const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await RC.jpeg(cv));}
     host.innerHTML='';busy(false);
-    const url=URL.createObjectURL(RC.pdf(imgs)),name=`交車確認單_${sel['交車單號']}_${sel['車牌']}_${sel['客戶']}.pdf`;
-    $('#pdfName').textContent=name;$('#pdfDesc').textContent='共 3 頁：交車確認單第一聯（公司留底）、第二聯（客戶留底）、出庫單（總部歸檔）。請用 A4 單面列印。';
+    const url=URL.createObjectURL(RC.pdf(imgs)),name=`${kind==='out'?'出庫單':'交車確認單'}_${sel['交車單號']}_${sel['車牌']}_${sel['客戶']}.pdf`;
+    $('#pdfName').textContent=name;$('#pdfDesc').textContent=kind==='out'?'出庫單 1 頁，給總部歸檔（財務經辦已簽核）。':'共 2 頁：交車確認單第一聯（公司留底）、第二聯（客戶留底）。請用 A4 單面列印，交車時客人簽名。';
     $('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;$('#ovPdf').classList.add('show');
   }catch(x){busy(false);$('#render').innerHTML='';toast('產生 PDF 失敗：'+(x&&x.message||x),5000);}
 }
@@ -326,7 +310,7 @@ function fillForm(){
   $('#f-date').value=(k.eta&&k.eta>=D.today?k.eta:D.today).replace(/\//g,'-');$('#f-place').value=D.place;$('#f-recv').value=k.buyer;
   if(k.mileage)$('#f-km').placeholder='定車時 '+money(amt(k.mileage));
   D.checks.forEach(x=>{checks[x]=x==='出廠證'?(D.car.fc==='V'?'有':'無'):x==='鑑定報告'?(/^(TSI|GOO)/.test(D.car.cert)?'有':'無'):x==='汽車鑰匙'?(D.car.keys?'有':''):'有';});
-  renderFees();renderChecks();
+  renderChecks();$('#agentLink').href='agent.html?k='+encodeURIComponent(KID);
 }
 (async function main(){
   if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
