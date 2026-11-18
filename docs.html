@@ -94,8 +94,8 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
       <label>鑰匙數量（車源表帶入）<input id="f-keys" inputmode="numeric" placeholder="例：2"></label>
       <label>新領車號（選號才填）<input id="f-plate" maxlength="10" style="text-transform:uppercase"></label>
       <label>過戶對象類別<select id="f-type"><option>客戶</option><option>同業</option></select></label>
-      <label id="l-name">過戶對象姓名<input id="f-name" maxlength="40"></label>
-      <label id="l-id">身分證字號<input id="f-id" maxlength="12" style="text-transform:uppercase"></label>
+      <label id="l-name">過戶對象姓名／公司名稱<input id="f-name" maxlength="40"></label>
+      <label id="l-id">身分證字號／統一編號<input id="f-id" maxlength="12" style="text-transform:uppercase"></label>
       <label style="grid-column:1/-1">備註（選填）<input id="f-note" maxlength="100"></label>
     </div>
     <div class="msgs" id="msgs" style="margin-top:10px"></div>
@@ -174,7 +174,7 @@ function check(){
   const f=form(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
   if(!f.items.length&&!f.otherItems)E('items','請勾選要領取的資料');
   if(!f.toName)E('f-name','請填過戶對象');
-  if(f.type==='客戶'){if(!f.toId)W('f-id','過戶對象身分證字號未填');else if(!twId(f.toId))E('f-id','身分證字號格式或檢查碼不正確');}
+  if(f.type==='客戶'){if(!f.toId)W('f-id','過戶對象身分證字號／統一編號未填');else if(!twId(f.toId)&&!twTax(f.toId))E('f-id',/^\d{8}$/.test(f.toId)?'統一編號不正確':'身分證字號格式或檢查碼不正確');}
   else{if(!f.toId)W('f-id','同業統一編號未填');else if(!twTax(f.toId))E('f-id','統一編號不正確');}
   if(f.keys&&!/^\d{1,2}$/.test(f.keys))E('f-keys','鑰匙數量請填數字');
   if(f.items.includes('鑰匙')&&!f.keys)E('f-keys','勾了鑰匙，請填鑰匙數量');
@@ -209,7 +209,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('input',e=>{if(!D||!e.target.closest('#newBox'))return;
   if(e.target.value==='全部'&&e.target.type==='checkbox')document.querySelectorAll('#items input').forEach(i=>i.checked=e.target.checked);
   else if(e.target.closest('#items'))$('#items input[value="全部"]').checked=[...document.querySelectorAll('#items input')].filter(i=>i.value!=='全部').every(i=>i.checked);
-  if(e.target.id==='f-type'){const c=e.target.value==='同業';$('#l-name').firstChild.textContent=c?'同業公司名稱':'過戶對象姓名';$('#l-id').firstChild.textContent=c?'統一編號':'身分證字號';}
+  if(e.target.id==='f-type'){const c=e.target.value==='同業';$('#l-name').firstChild.textContent=c?'同業公司名稱':'過戶對象姓名／公司名稱';$('#l-id').firstChild.textContent=c?'統一編號':'身分證字號／統一編號';}
   check();renderPreview();});
 window.addEventListener('resize',()=>{if(D)renderPreview();});
 
@@ -236,7 +236,7 @@ function fillForm(){
   $('#srcNote').textContent=Object.values(src).some(s=>!s.on)?'沒勾的項目是依車源表判斷車上沒有；實際有的話請自己勾起來，也記得回業務系統更新車源表。':'';
   $('#f-date').value=(D.contract.transfer&&D.contract.transfer>=D.today?D.contract.transfer:D.today).replace(/\//g,'-');
   $('#f-keys').value=D.car.keys||'';$('#f-plate').value=D.newPlate||'';$('#f-name').value=D.transferTo.name;$('#f-id').value=D.transferTo.id;
-  const isCo=/^\d{8}$/.test(D.transferTo.id);$('#f-type').value=isCo?'同業':'客戶';$('#f-type').dispatchEvent(new Event('input',{bubbles:true}));
+  $('#f-type').value='客戶';$('#f-type').dispatchEvent(new Event('input',{bubbles:true}));
 }
 (async function main(){
   if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
