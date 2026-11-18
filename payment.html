@@ -78,7 +78,7 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
   <section class="panel" id="hist"></section>
   <section class="panel" id="newBox" hidden>
     <h2 id="newTitle">開立新繳款單</h2>
-    <p class="small muted" style="margin:0 0 10px">只填<b>這次收到的錢</b>；之前的收款會自動帶入。客人付超過合約定金的部分，請選「預付車款」。</p>
+    <p class="small muted" style="margin:0 0 10px">只填<b>這次收到的車款</b>；之前的收款會自動帶入。客人付超過合約定金的部分，請選「預付車款」。代辦費用（過戶規費、保養、配件）不開在繳款單，請另開「代收代付明細」。</p>
     <div class="ln lnh"><span></span><span>收款日期</span><span>款項</span><span>金額</span><span>付款方式</span><span>收款帳戶（匯款）</span><span>備註</span><span></span></div>
     <div class="lines" id="lines"></div>
     <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="addLine">＋ 再加一筆</button></div>
@@ -181,7 +181,7 @@ function check(){
     if(!amt(l.amount))E(i,`${n}：金額未填`);if(!l.type)E(i,`${n}：請選款項`);if(!l.method)E(i,`${n}：請選付款方式`);
     if(!l.date)E(i,`${n}：收款日期未填`);else if(l.date>isoToday())E(i,`${n}：收款日期不能是未來`);
     if(l.method==='匯款'&&!l.account)E(i,`${n}：匯款請選匯入的收款帳戶`);
-    if((['貸款撥款','支票','其他'].includes(l.method)||l.type==='代辦規費')&&!l.note.trim())E(i,`${n}：請在備註寫明（貸款機構、票號、規費項目）`);});
+    if(['貸款撥款','支票','其他'].includes(l.method)&&!l.note.trim())E(i,`${n}：請在備註寫明（貸款機構、票號）`);});
   const cum=prevLines().concat(draft.map(l=>({type:l.type,amount:amt(l.amount)})));
   const dep=cum.filter(l=>l.type==='定金').reduce((a,l)=>a+l.amount,0),car=cum.filter(l=>l.type&&l.type!=='代辦規費').reduce((a,l)=>a+l.amount,0);
   let split=null;
@@ -281,7 +281,9 @@ async function load(){
     if(!KID){$('#loading').innerHTML='沒有指定合約。<br><a href="index.html">回合約列表</a>';return;}
     await load();
     if(qs.get('from')==='contract'){$('#toContract').hidden=false;$('#toContract').href='contract.html?id='+encodeURIComponent(KID);}
-    draft=[{date:isoToday(),type:live().length?'':'定金',amount:live().length?'':(D.contract.deposit?money(D.contract.deposit):''),method:'',account:'',note:''}];
+    const left0=D.contract.price-(latest()?+latest()['車價已收']:0);
+    if(qs.get('tail')==='1'&&left0>0)draft=[{date:isoToday(),type:'尾款',amount:money(left0),method:'',account:'',note:''}];
+    else draft=[{date:isoToday(),type:live().length?'':'定金',amount:live().length?'':(D.contract.deposit?money(D.contract.deposit):''),method:'',account:'',note:''}];
     selId=qs.get('v')||'';
     $('#loading').remove();renderAll();
   }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML=esc(e.message||e)+'<br><br><a href="index.html">回合約列表</a>';}
