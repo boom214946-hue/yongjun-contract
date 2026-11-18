@@ -85,6 +85,7 @@ th{font-size:12px;color:var(--muted);font-weight:700}
     <button role="tab" data-page="pays" id="nav-pays">繳款單</button>
     <button role="tab" data-page="docs" id="nav-docs">證件申請</button>
     <button role="tab" data-page="dlvs" id="nav-dlvs">交車</button>
+    <button role="tab" data-page="agents" id="nav-agents">代辦費用</button>
     <button role="tab" data-page="settings" id="nav-settings" hidden>公司設定</button>
   </nav>
   <main id="view"><div class="loading">讀取資料中…</div></main>
@@ -124,7 +125,7 @@ async function act(payload, btn) {
 
 // ===== 資料 =====
 let signFiles = [];
-let pFilter = '', dFilter = '', tFilter = '';
+let pFilter = '', dFilter = '', tFilter = '', aFilter = '';
 let D = null, page = 'cars', kFilter = '待簽約', carQ = '', SETTINGS = null, sealEdit = {};
 const isBoss = () => D && D.me.isBoss;
 const PAPER = () => !D || D.signMode !== 'online';
@@ -149,6 +150,8 @@ function renderCars() {
   return `
   <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">選一台車簽合約</h2><div class="small muted">業務系統裡「在庫」的車；車籍資料會自動帶入合約</div></div>
     <input type="text" id="cq" placeholder="搜尋車牌、車型" value="${esc(carQ)}" style="width:180px" aria-label="搜尋"></section>
+  <section class="panel row" style="justify-content:space-between"><div><b>非公司車輛</b><div class="small muted">車輛資料自己填；登記已簽約時，會在業務系統新增這台車（類別「非公司車」）並成立訂單</div></div>
+    <div class="row"><a class="btn" ${noComp ? 'aria-disabled="true" style="opacity:.45;pointer-events:none"' : 'href="contract.html?blank=print"'}>列印空白合約（手寫）</a><a class="btn acc" ${noComp ? 'aria-disabled="true" style="opacity:.45;pointer-events:none"' : 'href="contract.html?blank=1"'}>空白合約（線上填寫）</a></div></section>
   ${noComp ? `<div class="panel" style="border-color:var(--warn)"><b style="color:var(--warn)">還沒有可用的甲方公司</b><div class="small muted">請管理員或行政到「公司設定」新增公司${PAPER() ? '' : '並上傳大小章'}，才能簽合約。</div></div>` : ''}
   <section class="carlist">${list.map(c => { const k = signing(c.id);
     return `<div class="car"><div class="t">${esc(String(c.year).slice(0, 4))} ${esc(c.model)}</div>
@@ -184,6 +187,7 @@ function renderContracts() {
           : `<a class="btn acc" href="contract.html?id=${encodeURIComponent(k['編號'])}">繼續簽約</a>`) + `<button class="btn danger" data-kvoid="${k['編號']}">作廢</button>` : ''}
         ${['簽署中', '已簽約'].includes(k['狀態']) ? `<a class="btn" href="payment.html?k=${encodeURIComponent(k['編號'])}">繳款單${payCount(k['編號']) ? ' ' + payCount(k['編號']) : ''}</a>` : ''}
         ${k['狀態'] === '已簽約' ? `<a class="btn" href="docs.html?k=${encodeURIComponent(k['編號'])}">證件申請</a><a class="btn" href="delivery.html?k=${encodeURIComponent(k['編號'])}">交車</a>` : ''}
+        ${['簽署中', '已簽約'].includes(k['狀態']) ? `<a class="btn" href="agent.html?k=${encodeURIComponent(k['編號'])}">代辦費用</a>` : ''}
         ${k.hasPdf ? `<button class="btn" data-kpdf="${k['編號']}">開啟 PDF</button>` : ''}
         ${isBoss() && k['核定狀態'] === '待核定' ? `<button class="btn pri" data-kok="${k['編號']}">核定</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有合約</td></tr>'}</tbody>
   </table></div></section>
@@ -302,13 +306,14 @@ function renderDlvs() {
   ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張出庫申請等你核准</b></div>` : ''}
   <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-tf="${g}" aria-pressed="${tFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
   <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:900px;font-size:13.5px">
-    <thead><tr><th>交車單號</th><th>交車時間</th><th>車輛</th><th>客戶</th><th>業務</th><th style="text-align:right">合計應收</th><th>狀態</th><th></th></tr></thead>
+    <thead><tr><th>交車單號</th><th>交車時間</th><th>車輛</th><th>客戶</th><th>業務</th><th style="text-align:right">尾款</th><th>財務經辦</th><th>狀態</th><th></th></tr></thead>
     <tbody>${list.map(r => { const can = todo.includes(r);
       return `<tr><td class="mono"><b>${esc(r['交車單號'])}</b></td><td class="mono">${esc(r['交車時間'])}</td><td>${esc(r['車款'])} <span class="mono small muted">${esc(r['車牌'])}</span></td>
       <td>${esc(r['客戶'])}</td><td>${esc(r['業務'])}</td><td class="mono" style="text-align:right">${money(+r['應收合計'])}${+r['應收合計'] > 0 ? ` <span class="small" style="color:var(--accent)">${esc(r['尾款狀態'])}</span>` : ''}</td>
+      <td class="small">${r['財務經辦'] ? '✓ ' + esc(r['財務經辦']) : r['狀態'] === '作廢' ? '—' : '<span class="need">等車價收齊</span>'}</td>
       <td><span class="pill ${TST[r['狀態']]}" title="${esc(r['作廢原因'] || '')}">${esc(r['狀態'])}</span></td>
       <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ${can ? 'pri' : ''}" data-tview="${r['編號']}">${can ? '核准出庫' : '查看'}</button>
-        <a class="btn" href="delivery.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／列印</a></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="muted">沒有交車確認單</td></tr>'}</tbody>
+        <a class="btn" href="delivery.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／列印</a></div></td></tr>`; }).join('') || '<tr><td colspan="9" class="muted">沒有交車確認單</td></tr>'}</tbody>
   </table></div></section>`;
 }
 function dlvModal(r) {
@@ -319,18 +324,56 @@ function dlvModal(r) {
     <div class="calc">${esc(r['車款'])} <span class="mono">${esc(r['車牌'])}</span>・客戶 ${esc(r['客戶'])}・業務 ${esc(r['業務'])}<br>交車 ${esc(r['交車時間'])}・${esc(r['出庫地點'])}・里程 ${money(+r['交車里程'])} 公里${r['實際交車人'] && r['實際交車人'] !== r['客戶'] ? `・實際交車人 ${esc(r['實際交車人'])}` : ''}</div>
     <div class="tbl-wrap"><table style="font-size:13px"><tbody>
       <tr><td>車價</td><td class="mono" style="text-align:right">${money(+r['成交價'])}</td><td>已收</td><td class="mono" style="text-align:right">−${money(+r['車價已收'])}</td></tr>
-      <tr><td>代辦費用</td><td class="mono" style="text-align:right">${money(+r['代辦合計'])}</td><td>已收代辦</td><td class="mono" style="text-align:right">−${money(+r['代辦已收'])}</td></tr>
-      <tr><td><b>合計應收</b></td><td class="mono" style="text-align:right"><b style="color:${due > 0 ? 'var(--accent)' : 'var(--ok)'}">${money(due)}</b></td><td colspan="2">${due > 0 ? esc(r['尾款狀態']) + (r['備註'] ? '：' + esc(r['備註']) : '') : '已付清'}</td></tr></tbody></table></div>
-    <div class="small">代辦明細：${esc((r.fees || []).filter(f => f.amount).map(f => f.name + ' ' + money(f.amount)).join('、') || '無')}</div>
+      <tr><td><b>尾款</b></td><td class="mono" style="text-align:right"><b style="color:${due > 0 ? 'var(--accent)' : 'var(--ok)'}">${money(due)}</b></td><td colspan="2">${due > 0 ? esc(r['尾款狀態']) + (r['備註'] ? '：' + esc(r['備註']) : '') : '已付清'}</td></tr></tbody></table></div>
+    <div class="small">出庫單財務經辦：${r['財務經辦'] ? esc(r['財務經辦']) + '（' + esc(r['財務時間'] || '') + '，繳款單 ' + esc(r['財務繳款單'] || '') + '）' : '尚未簽核（車價收齊、繳款單核准後自動簽上）'}</div>
     <div class="small">點交「無」的項目：${esc(no.join('、') || '沒有')}</div>
     <div class="small muted">申請 ${esc(r['申請人名'] || r['申請人'])} ${esc(r['建立時間'])}${r['核准人'] ? `・核准 ${esc(r['核准人'])} ${esc(r['核准時間'])}${r['核准備註'] ? '（' + esc(r['核准備註']) + '）' : ''}` : ''}${r['完成時間'] ? `・交車完成 ${esc(r['完成人'])} ${esc(r['完成時間'])}` : ''}${r['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(r['作廢原因'])}（${esc(r['作廢人'])}）</span>` : ''}</div>
-    ${can ? `<label class="label" for="tk-note">核准說明${due > 0 ? '（還有應收款，必填）' : '（選填）'}</label><input type="text" id="tk-note" placeholder="${due > 0 ? '例：貸款撥款中，同意先交車' : ''}">` : ''}
+    ${can ? `<label class="label" for="tk-note">核准說明${due > 0 ? '（尾款未收齊，必填）' : '（選填）'}</label><input type="text" id="tk-note" placeholder="${due > 0 ? '例：貸款撥款中，同意先交車' : ''}">` : ''}
     ${canVoid ? `<div class="row" id="tvoidBox" hidden><input type="text" id="tvoid-reason" placeholder="作廢原因（必填）" style="flex:1"><button class="btn danger" data-tvoidgo="${r['編號']}">確認作廢</button></div>` : ''}
     <div class="row" style="justify-content:flex-end">
       ${canVoid ? `<button class="btn danger" data-tvoid>作廢</button>` : ''}
       <a class="btn" href="delivery.html?k=${encodeURIComponent(r['合約ID'])}&v=${encodeURIComponent(r['編號'])}">預覽／列印</a>
       <button class="btn" data-mclose>關閉</button>
       ${can ? `<button class="btn pri" data-tok="${r['編號']}">核准出庫</button>` : ''}</div>`);
+}
+
+// ===== 代辦費用（代收代付明細）=====
+const AST = { 待確認收款: 'stale', 已收款: 'ready', 作廢: 'done' };
+function myAgentTodo() { return (D.agents || []).filter(r => r['狀態'] === '待確認收款' && (D.me.isOffice || D.me.isBoss)); }
+function renderAgents() {
+  const all = (D.agents || []).slice().sort((a, b) => String(b['建立時間']).localeCompare(String(a['建立時間'])));
+  const todo = myAgentTodo();
+  if (!aFilter) aFilter = todo.length ? '待我處理' : '全部';
+  const groups = { 待我處理: r => todo.includes(r), 待確認收款: r => r['狀態'] === '待確認收款', 已收款: r => r['狀態'] === '已收款', 作廢: r => r['狀態'] === '作廢', 全部: () => true };
+  const list = all.filter(groups[aFilter]);
+  return `
+  <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">代辦費用（代收代付明細）</h2><div class="small muted">過戶規費、保養、配件、烤漆等代客收款、轉付廠商的費用；不是合約附件。有合約的請到「合約列表」按「代辦費用」，沒有合約的（例如老客人保養）按右邊新增。</div></div>
+    <a class="btn acc" href="agent.html">＋ 新增（不綁合約）</a></section>
+  ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張代收明細等你確認收款</b></div>` : ''}
+  <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-af="${g}" aria-pressed="${aFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
+  <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:860px;font-size:13.5px">
+    <thead><tr><th>單號</th><th>開立日</th><th>客戶</th><th>車牌</th><th>項目</th><th style="text-align:right">合計</th><th>付款</th><th>狀態</th><th></th></tr></thead>
+    <tbody>${list.map(r => { const can = todo.includes(r);
+      return `<tr><td class="mono"><b>${esc(r['單號'])}</b></td><td class="mono">${md(r['開立日'])}</td><td>${esc(r['客戶'])}</td><td class="mono">${esc(r['車牌'])}</td>
+      <td class="small" style="white-space:normal;max-width:260px">${esc(r.items.map(x => x.name).join('、'))}</td><td class="mono" style="text-align:right">${money(+r['合計'])}</td><td>${esc(r['付款方式'])}</td>
+      <td><span class="pill ${AST[r['狀態']]}" title="${esc(r['作廢原因'] || '')}">${esc(r['狀態'])}</span>${r['收款人'] ? ` <span class="small muted">${esc(r['收款人'])}</span>` : ''}</td>
+      <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ${can ? 'pri' : ''}" data-aview="${r['編號']}">${can ? '確認收款' : '查看'}</button>
+        <a class="btn" href="agent.html?${r['合約ID'] ? 'k=' + encodeURIComponent(r['合約ID']) + '&' : ''}v=${encodeURIComponent(r['編號'])}">預覽／列印</a></div></td></tr>`; }).join('') || '<tr><td colspan="9" class="muted">沒有代收明細</td></tr>'}</tbody>
+  </table></div></section>`;
+}
+function agentModal(r) {
+  const m = D.me, can = myAgentTodo().includes(r), canVoid = r['狀態'] !== '作廢' && (m.isBoss || m.isOffice || (r['經手人'] === m.en && r['狀態'] === '待確認收款'));
+  openModal(`<h3>代收明細 ${esc(r['單號'])} <span class="pill ${AST[r['狀態']]}">${esc(r['狀態'])}</span></h3>
+    <div class="calc">客戶 ${esc(r['客戶'])}${r['電話'] ? '・' + esc(r['電話']) : ''}・${esc(r['車牌'])} ${esc(r['車款'])}${r['合約編號'] ? '・合約 ' + esc(r['合約編號']) : ''}</div>
+    <div class="tbl-wrap"><table style="font-size:13px"><tbody>${r.items.map(x => `<tr><td>${esc(x.cat)}</td><td>${esc(x.name)}${x.note ? ` <span class="small muted">${esc(x.note)}</span>` : ''}</td><td class="mono" style="text-align:right">${money(x.amount)}</td></tr>`).join('')}
+      <tr><td colspan="2"><b>合計（${esc(r['付款方式'])}）</b></td><td class="mono" style="text-align:right"><b>${money(+r['合計'])}</b></td></tr></tbody></table></div>
+    <div class="small muted">經手 ${esc(r['經手人名'] || r['經手人'])} ${esc(r['建立時間'])}${r['收款人'] ? `・收款確認 ${esc(r['收款人'])} ${esc(r['收款時間'])}` : ''}${r['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(r['作廢原因'])}（${esc(r['作廢人'])}）</span>` : ''}</div>
+    ${canVoid ? `<div class="row" id="avoidBox" hidden><input type="text" id="avoid-reason" placeholder="作廢原因（必填）" style="flex:1"><button class="btn danger" data-avoidgo="${r['編號']}">確認作廢</button></div>` : ''}
+    <div class="row" style="justify-content:flex-end">
+      ${canVoid ? `<button class="btn danger" data-avoid>作廢</button>` : ''}
+      <a class="btn" href="agent.html?${r['合約ID'] ? 'k=' + encodeURIComponent(r['合約ID']) + '&' : ''}v=${encodeURIComponent(r['編號'])}">預覽／列印</a>
+      <button class="btn" data-mclose>關閉</button>
+      ${can ? `<button class="btn pri" data-apaid="${r['編號']}">已收款</button>` : ''}</div>`);
 }
 
 // ===== 公司設定 =====
@@ -438,10 +481,11 @@ function render() {
   if (page === 'settings' && !D.canSet) page = 'cars';
   document.querySelectorAll('[data-page]').forEach(b => b.setAttribute('aria-selected', b.dataset.page === page));
   const v = $('#view');
-  v.innerHTML = page === 'contracts' ? renderContracts() : page === 'settings' ? renderSettings() : page === 'pays' ? renderPays() : page === 'docs' ? renderDocs() : page === 'dlvs' ? renderDlvs() : renderCars();
+  v.innerHTML = page === 'contracts' ? renderContracts() : page === 'settings' ? renderSettings() : page === 'pays' ? renderPays() : page === 'docs' ? renderDocs() : page === 'dlvs' ? renderDlvs() : page === 'agents' ? renderAgents() : renderCars();
   const n = myPayTodo().length; $('#nav-pays').textContent = '繳款單' + (n ? ` (${n})` : '');
   const nd = myDocTodo().length; $('#nav-docs').textContent = '證件申請' + (nd ? ` (${nd})` : '');
   const nt = myDlvTodo().length; $('#nav-dlvs').textContent = '交車' + (nt ? ` (${nt})` : '');
+  const na = myAgentTodo().length; $('#nav-agents').textContent = '代辦費用' + (na ? ` (${na})` : '');
   v.style.cssText = 'display:flex;flex-direction:column;gap:14px';
 }
 
@@ -458,10 +502,15 @@ document.addEventListener('click', async e => {
   if (ds.pf) { pFilter = ds.pf; render(); return; }
   if (ds.df) { dFilter = ds.df; render(); return; }
   if (ds.tf) { tFilter = ds.tf; render(); return; }
+  if (ds.af) { aFilter = ds.af; render(); return; }
+  if (ds.aview) { agentModal(D.agents.find(x => x['編號'] === ds.aview)); return; }
+  if (ds.avoid !== undefined) { $('#avoidBox').hidden = false; $('#avoid-reason').focus(); return; }
+  if (ds.avoidgo) { const reason = $('#avoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'agentVoid', id: ds.avoidgo, reason }, t); return; }
+  if (ds.apaid) { await act({ action: 'agentPaid', id: ds.apaid }, t); return; }
   if (ds.tview) { dlvModal(D.dlvs.find(x => x['編號'] === ds.tview)); return; }
   if (ds.tvoid !== undefined) { $('#tvoidBox').hidden = false; $('#tvoid-reason').focus(); return; }
   if (ds.tvoidgo) { const reason = $('#tvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'dlvVoid', id: ds.tvoidgo, reason }, t); return; }
-  if (ds.tok) { const note = $('#tk-note').value.trim(), r = D.dlvs.find(x => x['編號'] === ds.tok); if (+r['應收合計'] > 0 && !note) { toast('還有應收款，請填核准說明'); return; } await act({ action: 'dlvApprove', id: ds.tok, note }, t); return; }
+  if (ds.tok) { const note = $('#tk-note').value.trim(), r = D.dlvs.find(x => x['編號'] === ds.tok); if (+r['應收合計'] > 0 && !note) { toast('尾款未收齊，請填核准說明'); return; } await act({ action: 'dlvApprove', id: ds.tok, note }, t); return; }
   if (ds.dview) { docModal(D.docs.find(x => x['編號'] === ds.dview)); return; }
   if (ds.dvoid !== undefined) { $('#dvoidBox').hidden = false; $('#dvoid-reason').focus(); return; }
   if (ds.dvoidgo) { const reason = $('#dvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'docVoid', id: ds.dvoidgo, reason }, t); return; }
