@@ -209,11 +209,21 @@ function draftRecord(){
 function renderPreview(){
   const sel=D.pays.find(p=>p['編號']===selId);
   const r=sel||draftRecord();
-  $('#pvTitle').textContent=sel?`預覽・${sel['繳款單編號']}（${sel['狀態']}）`:'預覽・新繳款單（尚未開立）';
+  $('#pvTitle').textContent=sel?`預覽・${sel['繳款單編號']}（${sel['狀態']==='已核准'&&!sel['主管簽核人']?'待主管簽核':sel['狀態']}）`:'預覽・新繳款單（尚未開立）';
   $('#print').hidden=!sel||sel['狀態']==='作廢';
-  const pv=$('#preview');pv.innerHTML='';const pg=RC.page(r,D.company,sel?'第一聯　公司留底聯':'',WM);pv.appendChild(pg);
-  const w=pv.clientWidth-20,pw=210*96/25.4,z=Math.min(1,w/pw);pg.style.transform=`scale(${z})`;pv.style.height=(297*96/25.4*z+20)+'px';
+  const pv=$('#preview');pv.innerHTML='';
+  const pages=[RC.page(r,D.company,sel?'第一聯　公司留底聯':'',WM)];
+  if(sel&&PROOFS[sel['編號']])pages.push(...RC.proofPages(sel,D.company,PROOFS[sel['編號']],WM));
+  const w=pv.clientWidth-20,pw=210*96/25.4,ph=297*96/25.4,z=Math.min(1,w/pw);
+  pages.forEach((pg,i)=>{const box=document.createElement('div');box.style.height=(ph*z)+'px';if(i)box.style.marginTop='10px';box.appendChild(pg);pv.appendChild(box);pg.style.transform=`scale(${z})`;});
+  pv.style.height='auto';
+  if(sel&&sel.proofCount&&!PROOFS[sel['編號']])loadProofs(sel).then(ok=>{if(ok&&selId===sel['編號'])renderPreview();});
 }
+// 繳款單據（匯款證明等）：公司留底聯後面附上
+const PROOFS={};
+async function loadProofs(p){if(!p.proofCount)return true;if(PROOFS[p['編號']])return true;
+  try{const r=await api({action:'payProof',id:p['編號']});if(r.ok){PROOFS[p['編號']]=r.images||[];return true;}}catch(x){}
+  return false;}
 function renderAll(){renderHead();renderHist();
   $('#newBox').hidden=!canCreate();
   if(canCreate()){renderLines();check();}
@@ -259,7 +269,9 @@ async function makePdf(){
   busy('正在產生 PDF…');
   try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
     const host=$('#render');host.innerHTML='';const imgs=[];
-    for(const cp of ['第一聯　公司留底聯','第二聯　客戶留底聯']){const pg=RC.page(sel,D.company,cp,WM);host.appendChild(pg);
+    if(sel.proofCount&&!(await loadProofs(sel))){busy(false);toast('繳款單據讀取失敗，請稍後再試',5000);return;}
+    const pages=[RC.page(sel,D.company,'第一聯　公司留底聯',WM)].concat(sel.proofCount?RC.proofPages(sel,D.company,PROOFS[sel['編號']]||[],WM):[],[RC.page(sel,D.company,'第二聯　客戶留底聯',WM)]);
+    for(const pg of pages){host.innerHTML='';host.appendChild(pg);
       const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await RC.jpeg(cv));}
     host.innerHTML='';busy(false);
     const url=URL.createObjectURL(RC.pdf(imgs)),name=`繳款單_${sel['繳款單編號']}_${sel['車牌']}_${sel['客戶']}.pdf`;
