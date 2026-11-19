@@ -1,122 +1,521 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>合約系統｜證件申請</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>合約系統｜簽約</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#EEF1F4;--surface:#fff;--surface2:#E6EAEF;--fg:#1C2733;--muted:#5B6878;--line:#D3D9E0;--navy:#1d3557;--accent:#B4611A;--accent-soft:#F6E7D8;
-  --ok:#2E7D4F;--ok-soft:#DFF0E5;--warn:#B3261E;--warn-soft:#F8E1DF;--amber:#8a5a00;--amber-soft:#fff4d6}
-*{box-sizing:border-box}[hidden]{display:none!important}
+:root{--ink:#161616;--line:#2b2b2b;--soft:#8a8a8a;--err:#ffe1de;--errline:#d93025;--warn:#fff4d6;--navy:#1d3557;--ok:#1e7b4a;--z:1}
+*{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55;padding-bottom:60px}
-button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer}
-#bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-#bar .ttl{font-weight:700;margin-right:auto}
-.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:700;font-size:13.5px;white-space:nowrap;text-decoration:none;color:var(--fg);display:inline-block}
-.btn.pri{background:#f4b942;border-color:#f4b942;color:#1b1b1b}
-.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.danger{color:var(--warn);border-color:var(--warn)}
-.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.wrap{max-width:1100px;margin:12px auto 0;padding:0 12px;display:flex;flex-direction:column;gap:12px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
-.panel h2{font-size:16px;margin:0 0 8px}
-.muted{color:var(--muted)}.small{font-size:13px}
-.mono{font-variant-numeric:tabular-nums}
-.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px}
-.kv div span{display:block;font-size:12px;color:var(--muted);font-weight:700}
-.prog{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:10px}
-.prog i{display:block;height:100%;background:var(--ok)}
-.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
-.pill.p1{background:var(--accent-soft);color:var(--accent)}.pill.p2{background:var(--amber-soft);color:var(--amber)}.pill.p3{background:var(--ok-soft);color:var(--ok)}.pill.p0{background:var(--surface2);color:var(--muted)}
-table.t{width:100%;border-collapse:collapse;font-size:14px}
-table.t th,table.t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
-table.t th{font-size:12px;color:var(--muted)}
-table.t tr.sel td{background:#f3f6fb}
-table.t tr.void td{color:var(--muted);text-decoration:line-through}
-table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decoration:none}
-.tw{overflow-x:auto}
-.lines{display:flex;flex-direction:column;gap:8px}
-.ln{display:grid;grid-template-columns:28px 140px 120px 130px 110px 1fr 1fr 34px;gap:6px;align-items:center}
-.ln input,.ln select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0}
-.ln .no{font-weight:700;color:var(--muted);text-align:center}
-.ln.err input,.ln.err select{border-color:var(--warn)}
-.ln .x{border:0;background:none;font-size:18px;color:var(--muted)}
-.lnh{font-size:12px;color:var(--muted);font-weight:700}
-@media (max-width:860px){.ln{grid-template-columns:1fr 1fr;padding:8px;border:1px solid var(--line);border-radius:10px}.ln .no{grid-column:1/-1;text-align:left}.lnh{display:none}}
-.msgs{display:flex;flex-direction:column;gap:5px;font-size:14px}
-.msgs div{padding:6px 10px;border-radius:8px}
-.msgs .E{background:var(--warn-soft)}.msgs .W{background:var(--amber-soft)}.msgs .O{background:var(--ok-soft);color:var(--ok);font-weight:700}
-.sumline{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;background:var(--surface2);border-radius:8px;padding:8px 12px}
-.drop{border:1.5px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:13px;display:block;cursor:pointer}
-.drop input{display:none}
-.thumbs{display:flex;gap:6px;flex-wrap:wrap}.thumbs div{position:relative}.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
-.thumbs button{position:absolute;top:-6px;right:-6px;border:0;border-radius:99px;background:#333;color:#fff;width:20px;height:20px;font-size:12px;line-height:20px;padding:0}
-#preview{overflow:hidden;background:#d9d6d0;border-radius:10px;padding:10px}
-#preview .page{margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.18);transform-origin:top left}
-#render{position:fixed;left:-10000px;top:0}
-.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+body{background:#e8e6e1;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* ---------- toolbar ---------- */
+#bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#bar .steps{display:flex;gap:4px;margin-right:auto;font-size:13px;flex-wrap:wrap}
+#bar .step{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);opacity:.65;white-space:nowrap}
+#bar .step.on{background:#fff;color:var(--navy);opacity:1;font-weight:700}
+#bar .step.done{opacity:1;background:rgba(255,255,255,.28)}
+.btn{font:inherit;font-size:14px;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;background:#fff;color:var(--navy);font-weight:500;white-space:nowrap}
+.btn.primary{background:#f4b942;color:#1b1b1b;font-weight:700}
+.btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.small{font-size:12px;padding:3px 8px}
+
+#panel{max-width:820px;margin:10px auto 0;padding:0 8px}
+#issues{background:#fff;border-radius:10px;padding:10px 14px;box-shadow:0 1px 4px rgba(0,0,0,.12);font-size:14px;display:none;max-height:38vh;overflow:auto}
+#issues h3{margin:2px 0 6px;font-size:15px}
+#issues ul{margin:0;padding-left:0;list-style:none}
+#issues li{padding:5px 8px;border-radius:6px;margin:3px 0;cursor:pointer}
+#issues li.E{background:var(--err)}
+#issues li.W{background:var(--warn)}
+#issues li b{margin-right:6px}
+#issues .okmsg{color:var(--ok);font-weight:700}
+#hint{font-size:13px;color:#444;text-align:center;margin:8px 0 0}
+
+/* ---------- pages ---------- */
+.page{width:210mm;height:297mm;padding:7.5mm 9.5mm 6mm;background:#fff;margin:12px auto;box-shadow:0 2px 12px rgba(0,0,0,.18);position:relative;font-size:8.7pt;line-height:1.34;overflow:hidden;zoom:var(--z)}
+#render .page{zoom:1;margin:0;box-shadow:none}
+h1.title{font-size:19pt;letter-spacing:.35em;text-align:center;margin:0 0 1mm;font-weight:700}
+.sub{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.2mm;font-size:10pt}
+.sub .rev{font-weight:700;letter-spacing:.08em}
+.box{border:1px solid var(--line);margin-bottom:1.3mm}
+.row{padding:.4mm 1.6mm;border-top:1px solid var(--line)}
+.box>.row:first-child{border-top:0}
+.sec{font-weight:700;font-size:9.1pt;margin:.8mm 0 .3mm}
+.tight .rd{margin-right:1.6mm}
+.sec small{font-weight:400;color:#555;font-size:8pt;margin-left:4px}
+.lbl{font-weight:500}
+.note{color:#444;font-size:8pt}
+.flex{display:flex;flex-wrap:wrap;align-items:center;column-gap:4mm;row-gap:.3mm}
+
+input.t,select.t,textarea.t,span.t{font:inherit;color:var(--ink);border:0;border-bottom:1px solid #777;background:transparent;padding:0 2px;height:1.38em;line-height:1.3;border-radius:0;vertical-align:baseline;text-align:center}
+span.t{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom}
+input.t.l,span.t.l{text-align:left}
+select.t{text-align:left;padding-right:0}
+textarea.t,div.ta{display:block;width:100%;height:2.9em;resize:none;text-align:left;border:1px solid #bbb;padding:1px 4px;white-space:pre-wrap;overflow:hidden}
+input.t:focus,select.t:focus,textarea.t:focus{outline:none;background:#eaf2ff}
+input.t::placeholder,textarea.t::placeholder{color:#b9b9b9}
+.w1{width:1.8em}.w2{width:2.4em}.w3{width:3.2em}.w4{width:4.2em}.w5{width:5.5em}.w6{width:7em}.w8{width:9em}.w10{width:11.5em}.w12{width:14em}.wf{width:100%}
+.err{background:var(--err)!important;box-shadow:0 0 0 1px var(--errline) inset}
+.warnf{background:var(--warn)!important}
+.cn{font-size:8.4pt;color:#333}
+.amt{white-space:nowrap}
+.amt .d{display:inline-block;min-width:1.45em;border-bottom:1px solid #777;text-align:center;font-weight:700;margin:0 .1em;line-height:1.25}
+.numin{font-size:8.4pt}
+.sealbox{border:1px dashed #9a9a9a;border-radius:2px;padding:1mm 1.5mm;flex:none}
+.scol{display:flex;flex-direction:column;justify-content:space-between;align-self:stretch}
+.sealcap{font-size:7.5pt;color:#777}
+.seals{display:flex;align-items:stretch;gap:2.5mm}
+.seal{position:relative;border:1px solid #c9c9c9;background:#fff}
+.seal.big{width:30mm;height:30mm}
+.seal.small{width:15mm;height:15mm}
+.seal .cap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#aaa;text-align:center}
+.seal img{position:absolute;inset:.6mm;width:calc(100% - 1.2mm);height:calc(100% - 1.2mm);object-fit:contain;display:none}
+.seal.has img{display:block}.seal.has .cap{display:none}
+.seal.err{border-color:var(--errline);background:var(--err)}
+.sig.big{height:32mm}
+
+.rd{display:inline-flex;align-items:center;white-space:nowrap;cursor:pointer;margin-right:2.6mm}
+.rd input,.bx{appearance:none;-webkit-appearance:none;width:1.05em;height:1.05em;border:1px solid #222;margin:0 .25em 0 0;position:relative;flex:none;background:#fff;border-radius:1px;display:inline-block;vertical-align:-.12em}
+.rd input:checked::after,.bx.on::after{content:"";position:absolute;left:.3em;top:.04em;width:.32em;height:.6em;border:solid #000;border-width:0 .15em .15em 0;transform:rotate(45deg)}
+.grp.err{border-radius:3px}
+
+table.g{width:100%;border-collapse:collapse}
+table.g td{border:1px solid var(--line);padding:.45mm 1.4mm;vertical-align:middle}
+table.g td.h{background:rgba(120,105,80,.09);font-weight:500;white-space:nowrap;width:1%}
+table.g input.t,table.g span.t{width:100%;border-bottom:0;text-align:left}
+
+/* signatures */
+.sigwrap{display:flex;gap:2mm}
+.sig{position:relative;border:1px dashed #9a9a9a;height:15mm;flex:1;background:#fff;border-radius:2px}
+.sig.sm{height:11mm;width:52mm;flex:none;display:inline-block;vertical-align:middle}
+.sig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.sig .cap{position:absolute;left:1.5mm;top:.6mm;font-size:7.5pt;color:#777;pointer-events:none}
+.sig .clr{position:absolute;right:1mm;top:1mm;z-index:3}
+.sig .veil{position:absolute;inset:0;background:rgba(240,240,240,.85);display:flex;align-items:center;justify-content:center;font-size:8pt;color:#666;z-index:2;text-align:center;padding:0 2mm}
+.sig.active{border-color:#1d6fd6;border-style:solid;box-shadow:0 0 0 2px rgba(29,111,214,.15)}
+.sig.err{border-color:var(--errline);border-style:solid}
+.signote{font-size:7.2pt;color:#555;margin-top:.3mm;min-height:1em}
+.agree{display:flex;gap:2mm;align-items:flex-start;padding:1mm 1.6mm;background:#fbfaf6;font-size:8.6pt}
+.agree input{appearance:none;-webkit-appearance:none;width:1.25em;height:1.25em;border:1.5px solid #222;flex:none;margin-top:.1em;position:relative;background:#fff}
+.agree input:checked::after{content:"";position:absolute;left:.36em;top:.06em;width:.36em;height:.68em;border:solid #000;border-width:0 .17em .17em 0;transform:rotate(45deg)}
+.agree.err{background:var(--err)}
+
+.foot{position:absolute;left:9.5mm;right:9.5mm;bottom:3.2mm;display:flex;justify-content:space-between;font-size:7pt;color:#666;border-top:1px solid #ccc;padding-top:.6mm}
+
+/* back */
+.back h2{font-size:12.5pt;text-align:center;margin:0 0 .6mm;letter-spacing:.2em}
+.back .subb{text-align:center;font-size:8.5pt;color:#444;margin-bottom:1.6mm}
+.cl{margin:0 0 .5mm;font-size:8.15pt;line-height:1.4}
+.cl .ct{font-weight:700;display:block;font-size:8.6pt}
+.cl p{margin:0;text-indent:0}
+.cl ol{margin:0;padding-left:1.6em}
+.cl .fill{font-weight:700;text-decoration:underline;padding:0 .2em}
+.cl.new .ct::after{content:"";}
+
+/* receipt */
+.rc-toggle{background:#fff7e0;border:1px solid #f0d58a;border-radius:6px;padding:2mm 3mm;margin-bottom:2mm;font-size:10pt}
+.rc-toggle input{width:1.1em;height:1.1em;vertical-align:-.15em}
+body.mode-contract #rcpt:not(.on) .rc-body,body.mode-contract #rcpt:not(.on) .foot{display:none}
+body.mode-contract #rcpt:not(.on){height:auto;min-height:0}
+body.mode-receipt #front,body.mode-receipt #back,body.mode-receipt #rcToggle{display:none}
+body.mode-contract .sync{pointer-events:none;background:#f6f6f6}
+body.mode-contract input.sync-prev{pointer-events:none}
+table.rc td{padding:.9mm 1.4mm}
+table.rc tr.th td{background:#f3f2ef;font-weight:500;text-align:center}
+table.rc td.c{text-align:center}
+input.t.r,span.t.r{text-align:right}
+.eqs .rd{margin:.4mm 3.5mm .4mm 0}
+.licbox{position:relative;border:1px dashed #9a9a9a;height:88mm;display:flex;align-items:center;justify-content:center;background:#fafafa}
+.licbox img{max-width:100%;max-height:100%;display:none}
+.licbox.has img{display:block}.licbox.has{background:#fff}
+.licbox.has .lichint{position:absolute;right:2mm;top:2mm;text-align:right}
+.licbox.has .lichint span{display:none}
+.lichint{text-align:center;font-size:9pt;color:#666}
+.licbox.err{border-color:var(--errline);background:var(--err)}
+body.mode-receipt #veh{display:none}
+body.reg-same .reg{pointer-events:none;background:#f3f3f3}
+body.locked .lichint{display:none}
+/* locked */
+body.locked .lockable input,body.locked .lockable select,body.locked .lockable textarea,body.locked .lockable .rd,body.locked .rc-lock input,body.locked .rc-lock select,body.locked #rcToggle{pointer-events:none}
+body.locked .lockable input.t,body.locked .lockable select.t,body.locked .lockable textarea.t{background:transparent}
+
+/* overlays */
+.ov{position:fixed;inset:0;background:rgba(20,24,33,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
 .ov.show{display:flex}
-.dlg{background:#fff;border-radius:14px;padding:18px;width:min(480px,100%);display:flex;flex-direction:column;gap:12px}
-.dlg h3{margin:0}.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw;pointer-events:none}
-#loading{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;color:#444;padding:20px;text-align:center}
-.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
-.form input,.form select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;font-weight:400;color:var(--fg)}
-.chk{display:flex;flex-wrap:wrap;gap:8px}
-.chk label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;background:#fff}
-.chk label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
-.err{border-color:var(--warn)!important}
+.dlg{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px;font-size:14px}
+.dlg h3{margin:0 0 10px}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.dlg .btn{border:1px solid #ccd;}
+.dlg .btn.primary{border:0}
+.prof{border:1px solid #ddd;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.prof h4{margin:0 0 8px;font-size:14px;color:var(--navy)}
+.prof label{display:grid;grid-template-columns:7em 1fr;align-items:center;gap:6px;margin:5px 0;font-size:13px}
+.prof input[type=text]{font:inherit;padding:6px 8px;border:1px solid #ccc;border-radius:6px;width:100%}
+.prof .stp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.prof .stp img{max-height:46px;border:1px solid #eee}
+#render{position:fixed;left:0;top:0;z-index:-5;width:210mm;background:#fff}
+#busy .dlg{text-align:center;font-size:15px}
+body.paper .sig .veil,body.paper .sig .clr,body.paper .sig canvas{display:none!important}
+body.paper .sig{pointer-events:none}
+.f_copy{font-weight:700;color:#000;font-size:8.5pt;letter-spacing:.05em}
+.page.blank{display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10pt}
+.mir{display:inline-block;min-height:1.2em}
+.sellbox{display:flex;align-items:center;gap:6px;font-size:13px;background:rgba(255,255,255,.12);padding:4px 8px;border-radius:8px}.sellbox select{font:inherit;padding:4px 6px;border-radius:6px;border:0}
+#toast{pointer-events:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw}
+
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .no-print,#bar,#panel,.ov,#toast,#render{display:none!important}
+  .page{zoom:1;margin:0;box-shadow:none;page-break-after:always}
+  input.t::placeholder,textarea.t::placeholder{color:transparent}
+  .err,.warnf{background:transparent!important;box-shadow:none!important}
+  .sig{border-color:#bbb!important;box-shadow:none!important}
+}
 </style>
 </head>
 <body>
-<div id="bar">
-  <a class="btn ghost" href="index.html">← 合約列表</a>
-  <span class="ttl" id="ttl">證件申請</span>
+<div id="bar" class="no-print">
+  <a class="btn ghost" href="index.html" style="text-decoration:none">← 合約列表</a>
+  <div class="steps">
+    <span class="step" data-s="edit">① 業務填寫</span>
+    <span class="step" data-s="locked" id="step2">② 鎖定・乙方簽名</span>
+    <span class="step" data-s="done" id="step3">③ 完成</span>
+  </div>
+  <label class="sellbox" id="sellBox" hidden>收訂業務 <select id="seller"></select></label>
+  <button class="btn" id="bUnlock" type="button">解除鎖定修改</button>
+  <button class="btn primary" id="bCheck" type="button">檢查內容並鎖定</button>
+  <button class="btn primary" id="bFinish" type="button">完成簽署・上傳合約</button>
+  <a class="btn" id="bPay" style="text-decoration:none">簽約收款・繳款單</a>
+  <button class="btn" id="bOnline" type="button">改用線上簽名</button>
+  <button class="btn primary" id="bPrint" type="button">匯出列印 PDF（一式兩聯）</button>
 </div>
-<div class="wrap">
-  <section class="panel" id="head"></section>
-  <section class="panel" id="hist"></section>
-  <section class="panel" id="newBox" hidden>
-    <h2>申請領取車籍資料（過戶用）</h2>
-    <p class="small muted" style="margin:0 0 10px">送出後由 <b id="apName">Leo</b> 核准；核准後匯出申請單 PDF 向總部領取，領到後由行政在合約列表按「已領取」。資料不需歸還。</p>
-    <div class="lnh" style="margin-bottom:6px">要領取的資料</div>
-    <div class="chk" id="items"></div>
-    <p class="small muted" id="srcNote" style="margin:6px 0 0"></p>
-    <div class="form" style="margin-top:12px">
-      <label>其他資料（選填）<input id="f-other" maxlength="60" placeholder="例：完稅證明"></label>
-      <label>預計領取日<input id="f-date" type="date"></label>
-      <label>鑰匙數量（車源表帶入）<input id="f-keys" inputmode="numeric" placeholder="例：2"></label>
-      <label>新領車號（選號才填）<input id="f-plate" maxlength="10" style="text-transform:uppercase"></label>
-      <label>過戶對象類別<select id="f-type"><option>客戶</option><option>同業</option></select></label>
-      <label id="l-name">過戶對象姓名／公司名稱<input id="f-name" maxlength="40"></label>
-      <label id="l-id">身分證字號／統一編號<input id="f-id" maxlength="12" style="text-transform:uppercase"></label>
-      <label style="grid-column:1/-1">備註（選填）<input id="f-note" maxlength="100"></label>
+
+<div id="panel" class="no-print">
+  <div id="issues"></div>
+  <p id="hint"></p>
+</div>
+
+<form id="f" autocomplete="off" onsubmit="return false">
+
+<!-- ================= 正面 ================= -->
+<section class="page" id="front">
+  <h1 class="title">中古汽車買賣定型化契約書</h1>
+  <div class="sub lockable">
+    <span class="rev">契約審閱期間不得少於三日</span>
+    <b>簽約日期：中華民國<input class="t w2" name="sgY" inputmode="numeric">年<input class="t w1" name="sgM" inputmode="numeric">月<input class="t w1" name="sgD" inputmode="numeric">日</b>
+    <span>合約編號 AAA.<input class="t w5" name="no" placeholder="鎖定後產生" readonly></span>
+  </div>
+
+  <div class="box lockable">
+    <div class="row">一、本契約訂定前，甲方（出賣人）已將本契約書之正本及相關附件交付乙方（買受人）攜回審閱，未經乙方攜回審閱，乙方得主張不受本契約之拘束。</div>
+    <div class="row flex">
+      <span>二、本契約於民國
+      <input class="t w2" name="rvY" inputmode="numeric" placeholder="115">年<input class="t w1" name="rvM" inputmode="numeric">月<input class="t w1" name="rvD" inputmode="numeric">日經乙方攜回審閱
+      <input class="t w1" name="rvDays" inputmode="numeric" value="3">日。</span>
+      <span>乙方審閱簽名：<span class="sig sm" id="sig_review"><span class="cap">乙方簽名</span></span></span>
     </div>
-    <div class="msgs" id="msgs" style="margin-top:10px"></div>
-    <div class="acts" style="margin-top:10px"><button class="btn acc" type="button" id="submit">送出申請</button></div>
-  </section>
-  <section class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <h2 style="margin:0" id="pvTitle">預覽</h2>
-      <button class="btn pri" type="button" id="print" hidden>匯出申請單 PDF</button></div>
-    <div id="preview"></div>
-  </section>
-</div>
+  </div>
+
+  <div class="lockable">
+  <div class="sec">第一條：標的物<small>（車籍資料依行照記載、配備及前車主行照影本詳附件一）</small></div>
+  <table class="g">
+    <tr><td class="h">廠　牌</td><td><input class="t" name="brand" placeholder="例：Mercedes-Benz"></td>
+        <td class="h">型　式</td><td><input class="t" name="model" placeholder="例：B180"></td>
+        <td class="h">年　份</td><td style="width:10%"><input class="t" name="year" inputmode="numeric" placeholder="西元"></td>
+        <td class="h">出廠年月</td><td style="width:15%;white-space:nowrap"><input class="t w3" name="mfgY" inputmode="numeric" placeholder="西元" style="width:3em;display:inline-block">年<input class="t w1" name="mfgM" inputmode="numeric" style="width:2em;display:inline-block">月</td></tr>
+    <tr><td class="h">牌照號碼</td><td><input class="t" name="plate" placeholder="ABC-1234"></td>
+        <td class="h">車身號碼</td><td colspan="3"><input class="t" name="vin" placeholder="17 碼"></td>
+        <td class="h">引擎號碼</td><td><input class="t" name="engineNo"></td></tr>
+  </table>
+  <div class="box" style="border-top:0">
+    <div class="row grp" data-g="engine"><span class="lbl">甲方說明本車引擎：</span>
+      <label class="rd"><input type="radio" name="engine" value="原裝">原裝</label>
+      <label class="rd"><input type="radio" name="engine" value="已更換過原廠新引擎">已更換過原廠新引擎</label>
+      <label class="rd"><input type="radio" name="engine" value="已換過原廠中古引擎">已換過原廠中古引擎</label>
+      <label class="rd"><input type="radio" name="engine" value="不知">不知</label></div>
+    <div class="row grp" data-g="mileGuar"><span class="lbl">定車時之里程數：</span><input class="t w5" name="mileage" inputmode="numeric">公里<span class="note">（交車以交車確認單為準）</span>
+      <label class="rd"><input type="radio" name="mileGuar" value="擔保">擔保</label><label class="rd"><input type="radio" name="mileGuar" value="不擔保">不擔保</label>車輛之里程數和現況之里程數一致<span class="note">（未勾選則視為擔保）</span></div>
+    <div class="row grp" data-g="owners"><span class="lbl">交易次數：</span>
+      <label class="rd"><input type="radio" name="owners" value="一手中古汽車">一手中古汽車</label>
+      <label class="rd"><input type="radio" name="owners" value="二手以上中古汽車">二手以上中古汽車（轉手次數</label><input class="t w2" name="ownerCount" inputmode="numeric">）
+      <label class="rd"><input type="radio" name="owners" value="不知">不知</label></div>
+    <div class="row grp tight" data-g="usage"><span class="lbl">原使用情形：</span>
+      <label class="rd"><input type="radio" name="usage" value="自用車">自用車</label>
+      <label class="rd"><input type="radio" name="usage" value="計程車">計程車</label>
+      <label class="rd"><input type="radio" name="usage" value="租賃車">租賃車</label>
+      <label class="rd"><input type="radio" name="usage" value="教練車">教練車</label>
+      <label class="rd"><input type="radio" name="usage" value="公司行號業務用車">公司行號業務用車</label>
+      <label class="rd"><input type="radio" name="usage" value="展示車">展示車</label>
+      <label class="rd"><input type="radio" name="usage" value="常租車">常租車</label>
+      <label class="rd"><input type="radio" name="usage" value="法拍車">法拍車</label>
+      <label class="rd"><input type="radio" name="usage" value="其他">其他</label><input class="t l" name="usageOther" style="width:3.5em"></div>
+  </div>
+
+  <div class="sec">第二條：價金給付方式</div>
+  <div class="box">
+    <div class="row">
+      <span class="lbl">一、車價：</span>現金交易總價新臺幣 <span class="amt" data-for="price"></span>整<span class="note">（NT$</span><input class="t w5 numin" name="price" inputmode="numeric" data-money placeholder="輸入數字"><span class="note">）</span>
+    </div>
+    <div class="row">
+      <span class="lbl">二、定金：</span>新臺幣 <span class="amt" data-for="deposit"></span>整<span class="note">（NT$</span><input class="t w5 numin" name="deposit" inputmode="numeric" data-money placeholder="輸入數字"><span class="note">）</span><span id="depPct" class="note"></span>
+      <br><span class="note">定金不得超過總價百分之十。</span>定金收受日：民國<input class="t w2" name="dpY" inputmode="numeric">年<input class="t w1" name="dpM" inputmode="numeric">月<input class="t w1" name="dpD" inputmode="numeric">日
+    </div>
+    <div class="row">
+      <span class="lbl">三、餘款：</span>新臺幣 <span class="amt" data-for="balance"></span>整<span class="note">（NT$<span id="balance"></span>，總價扣除定金自動計算）</span>
+      <br>餘款應於民國<input class="t w2" name="bpY" inputmode="numeric">年<input class="t w1" name="bpM" inputmode="numeric">月<input class="t w1" name="bpD" inputmode="numeric">日前付清。<span class="note">實際付款方式以甲方開立之繳款單為準（詳反面第二條）。</span>
+    </div>
+  </div>
+
+  <div class="sec">第三條：影響車況重大事項之告知<small>（重大事故定義及其他告知事項詳反面第三條）</small></div>
+  <div class="box">
+    <div class="row grp" data-g="accident">一、曾否發生重大事故：
+      <label class="rd"><input type="radio" name="accident" value="否">否</label>
+      <label class="rd"><input type="radio" name="accident" value="是">是，受損狀況：</label><input class="t l" name="accidentDesc" style="width:24%">
+      <label class="rd" style="margin-left:2mm"><input type="radio" name="accident" value="依第三方鑑定報告為準">依第三方車況鑑定報告（附件）為準</label></div>
+    <div class="row grp" data-g="flood">二、是否為泡水車：
+      <label class="rd"><input type="radio" name="flood" value="否">否</label>
+      <label class="rd"><input type="radio" name="flood" value="全部泡水">全部泡水</label>
+      <label class="rd"><input type="radio" name="flood" value="一半泡水">一半泡水</label>
+      <label class="rd"><input type="radio" name="flood" value="浸水車（超過腳踏墊）">浸水車（超過腳踏墊）</label>
+      <label class="rd"><input type="radio" name="flood" value="浸水車（超過車底盤）">浸水車（超過車底盤）</label></div>
+  </div>
+
+  <div class="sec">第四條：交車　／　第五條：過戶</div>
+  <div class="box">
+    <div class="row"><b>預計交車日期：民國<input class="t w2" name="dlY" inputmode="numeric">年<input class="t w1" name="dlM" inputmode="numeric">月<input class="t w1" name="dlD" inputmode="numeric">日<input class="t w1" name="dlH" inputmode="numeric">時<input class="t w1" name="dlMin" inputmode="numeric">分</b>
+      <span class="note">（實際交車以交車確認單為準）</span>　甲方逾期交車之催告期間：<input class="t w1" name="remindDays" inputmode="numeric" value="5">日<span class="note">（不得少於五日）</span></div>
+    <div class="row"><b>預計過戶日期：民國<input class="t w2" name="trY" inputmode="numeric">年<input class="t w1" name="trM" inputmode="numeric">月<input class="t w1" name="trD" inputmode="numeric">日</b>　
+      甲方應於締約日之翌日起<input class="t w1" name="trDays" inputmode="numeric">日內（不得逾三日）辦理過戶。<span class="note">（詳反面第五條）</span></div>
+  </div>
+
+  <div class="sec">第十三條：辦理交車前，欠繳之一切罰鍰，均由甲方負擔　／　第十四條：稅費<small>（過戶前欠繳之一切稅費由甲方負擔，詳反面）</small></div>
+  <div class="box">
+    <div class="row grp" data-g="fines">欠繳罰鍰：
+      <label class="rd"><input type="radio" name="fines" value="無">無</label>
+      <label class="rd"><input type="radio" name="fines" value="有">有，合計金額新臺幣</label><input class="t w5" name="finesAmt" inputmode="numeric" data-money>元</div>
+    <div class="row grp" data-g="licTax">一、該車<input class="t w2" name="taxYear1" inputmode="numeric">年度，牌照稅由
+      <label class="rd"><input type="radio" name="licTax" value="甲方">甲方</label>
+      <label class="rd"><input type="radio" name="licTax" value="乙方">乙方</label>
+      <label class="rd"><input type="radio" name="licTax" value="甲乙雙方依交車日比例分攤">甲乙雙方依交車日比例分攤</label>負責繳清。</div>
+    <div class="row grp" data-g="fuelFee">二、該車<input class="t w2" name="taxYear2" inputmode="numeric">年度，公路養管費由
+      <label class="rd"><input type="radio" name="fuelFee" value="甲方">甲方</label>
+      <label class="rd"><input type="radio" name="fuelFee" value="乙方">乙方</label>
+      <label class="rd"><input type="radio" name="fuelFee" value="甲乙雙方依交車日比例分攤">甲乙雙方依交車日比例分攤</label>負責繳清。</div>
+    <div class="row flex">
+      <span class="grp" data-g="transferFee">三、該車過戶手續費由
+      <label class="rd"><input type="radio" name="transferFee" value="甲方">甲方</label>
+      <label class="rd"><input type="radio" name="transferFee" value="乙方">乙方</label>負責。</span>
+      <span class="grp" data-g="insurance">四、該車強制汽車責任險<span class="note">（不含任意險）</span>由
+      <label class="rd"><input type="radio" name="insurance" value="甲方">甲方</label>
+      <label class="rd"><input type="radio" name="insurance" value="乙方">乙方</label>負責。</span></div>
+  </div>
+
+  <div class="sec">第十五條：保固責任<small>（條文詳反面第十五條）</small>　／　特約事項及附件</div>
+  <div class="box">
+    <div class="row grp" data-g="warranty" style="display:flex;align-items:center;white-space:nowrap">其他特約事項及約定理由：
+      <label class="rd"><input type="radio" name="warranty" value="無保固">無保固</label>
+      <label class="rd"><input type="radio" name="warranty" value="約定保固">甲乙雙方同意約定保固範圍：</label>
+      <input class="t l" name="warrantyScope" style="flex:1;min-width:0" placeholder="例：依附件保固範圍說明"></div>
+    <div class="row">
+      <div class="grp" data-g="plateFee" style="white-space:nowrap">特約事項：<label class="rd"><input type="checkbox" name="sp_plate">選號：</label>號碼<input class="t w5" name="sp_plateNo" data-auto="sp_plate" placeholder="可留白">，選號規費由<label class="rd"><input type="radio" name="plateFee" value="甲方">甲方</label><label class="rd"><input type="radio" name="plateFee" value="乙方">乙方</label>負擔<span class="note">；因選號需求，過戶期限依監理機關作業時間順延。</span></div>
+      <div style="display:flex;white-space:nowrap"><label class="rd"><input type="checkbox" name="sp_other">其他：</label><input class="t l" name="special" data-auto="sp_other" style="flex:1;min-width:0" placeholder="例：車況依第三方鑑定為準"><span class="note">（未勾選者視為無特約事項）</span></div>
+    </div>
+    <div class="row">本契約附件：<label class="rd"><span class="bx on"></span>附件一</label>
+      <label class="rd"><input type="checkbox" name="att_payment">繳款單</label>
+      <label class="rd"><input type="checkbox" name="att_delivery">交車確認單</label>
+      <label class="rd"><input type="checkbox" name="att_warranty">保固範圍說明</label>
+      <label class="rd"><input type="checkbox" name="att_inspect">第三方鑑定報告</label>
+      <label class="rd"><input type="checkbox" name="att_other">其他：</label><input class="t l" name="attOther" style="width:6em"></div>
+  </div>
+  </div><!-- /lockable -->
+
+  <div class="box" style="margin-top:1.2mm">
+    <label class="agree" id="agreeRow"><input type="checkbox" name="agree" id="agree">
+      <span id="agreeTxt">乙方確認正面及附件各項記載無誤，並同意依電子簽章法以電子簽名方式簽署本契約。</span></label>
+    <table class="g lockable pt" style="border-top:1px solid var(--line)">
+      <tr><td class="h">甲方（賣方）</td><td style="width:30%"><select class="t wf" name="company" id="company"></select></td>
+          <td class="h">統一編號</td><td style="width:13%"><span id="p_tax"></span></td>
+          <td class="h">代表人</td><td><span id="p_rep"></span> <span class="note" id="p_repId"></span></td></tr>
+      <tr><td class="h">地　址</td><td colspan="3"><span id="p_addr"></span></td>
+          <td class="h">電話／行動</td><td><span id="p_phone"></span><span id="p_mobile"></span></td></tr>
+      <tr><td class="h">電子信箱</td><td><span id="p_email"></span></td>
+          <td class="h">業務代表</td><td><input class="t" name="salesName"></td>
+          <td class="h">業務電話</td><td><input class="t" name="salesPhone" inputmode="tel"></td></tr>
+      <tr><td class="h">乙方（買方）</td><td colspan="3" style="white-space:nowrap"><span class="grp tight" data-g="buyerType" style="font-size:7.8pt"><label class="rd"><input type="radio" name="buyerType" value="自然人">自然人</label><label class="rd"><input type="radio" name="buyerType" value="法人">法人</label></span><input class="t" name="buyerName" style="display:inline-block;width:calc(100% - 25mm)"></td>
+          <td class="h" id="lb_buyerId">身分證字號</td><td><input class="t" name="buyerId" style="text-transform:uppercase"></td></tr>
+      <tr><td class="h">地　址</td><td><input class="t" name="buyerAddr"></td>
+          <td class="h">行動電話</td><td><input class="t" name="buyerPhone" inputmode="tel"></td>
+          <td class="h" id="lb_tel">市　話</td><td><input class="t" name="buyerTel" inputmode="tel" placeholder="選填"><input class="t" name="buyerRep" placeholder="法人代表人姓名" style="display:none"></td></tr>
+      <tr><td class="h">電子信箱</td><td><input class="t" name="buyerEmail" inputmode="email"></td>
+          <td class="h">過戶登記人</td><td colspan="3" class="grp" data-g="regOwner"><label class="rd"><input type="radio" name="regOwner" value="同乙方">同乙方</label><label class="rd"><input type="radio" name="regOwner" value="其他">其他（資料詳附件一）</label><span id="regName" class="note"></span></td></tr>
+    </table>
+    <div class="row" style="border-top:1px solid var(--line)">
+      <div class="sigwrap">
+        <div class="sealbox">
+          <div class="seals"><div class="seal big" id="sealBig"><span class="cap">公司大章</span><img id="sealBigImg" alt=""></div>
+          <div class="scol"><div class="sealcap">甲方<br>用印</div><div class="seal small" id="sealSmall"><span class="cap">負責人小章</span><img id="sealSmallImg" alt=""></div></div></div></div>
+        <div style="flex:1" id="buyerSignBox"><div class="sig big" id="sig_buyer"><span class="cap">乙方（買方）簽名</span></div><div class="signote" id="sn_buyer"></div></div>
+        <div class="sealbox" id="corpPhotoBox" style="display:none;width:46mm;flex:none;text-align:center">
+          <div class="sealcap">乙方用印照片（輔助）</div><div class="seal" id="corpPhotoWrap" style="width:42mm;height:30mm;margin:1mm auto 0;display:flex;align-items:center;justify-content:center"><img id="corpPhotoImg" alt="" style="max-width:100%;max-height:100%;display:none"><span class="cap" id="corpPhotoCap">未上傳</span></div>
+          <label class="btn no-print" style="font-size:11px;padding:3px 8px;margin-top:1mm;display:inline-block" id="corpPhotoBtn">上傳用印照片<input type="file" accept="image/*" id="corpPhotoFile" style="display:none"></label>
+          <input type="hidden" name="corpSeal"></div>
+        <div class="sealbox" id="buyerSeals" style="display:none;flex:1">
+          <div class="seals" style="justify-content:flex-end"><div class="scol" style="justify-content:flex-start"><div class="sealcap">乙方（法人）用印</div></div><div class="seal big"><span class="cap">公司大章</span></div>
+          <div class="scol"><div class="sealcap">&nbsp;</div><div class="seal small"><span class="cap">負責人小章</span></div></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>合約編號 AAA.<span class="f_no"></span>｜正面</span><span class="f_hash"></span></div>
+</section>
+
+<!-- ================= 反面 ================= -->
+<section class="page back" id="back">
+  <h2>中古汽車買賣定型化契約書・條款</h2>
+  <div class="subb">合約編號 AAA.<span class="f_no"></span>　｜　本頁條款與正面記載共同構成本契約內容</div>
+
+  <div class="cl"><span class="ct">第二條：價金給付方式（續）</span>
+    <p>乙方應給付全部價金，甲方不得再以營業稅或其他名義，要求乙方給付額外之金額。但辦理過戶手續費及規費等不在此限。定金及餘款之實際付款方式（現金、匯款、貸款、信用卡等，得分次或併用）及金額，以甲方開立之繳款單為準，繳款單為本契約之附件。乙方於定金以外提前支付之款項，屬價金之預付，非屬定金。</p></div>
+
+  <div class="cl"><span class="ct">第三條：影響車況重大事項之告知（續）</span>
+    <p>正面第三條第一款所稱「重大事故」，係指車輛發生事故致汽車之引擎、變速箱、懸吊系統或車體主要結構（如大樑、門柱、底盤、車頂）受損或發生其他重大損壞，亦即車輛受損在「車門柱、水箱上支架、水箱下支架、劍尾、內龜前板、戶定內板、戶定外板、後內龜板、後尾板、備胎中心螺絲外側後廂底板」範圍內者。正面第三條第二款所稱「全部泡水」，指浸水高度超過引擎蓋；「一半泡水」，指浸水高度超過車椅座或超過機油尺；「浸水車（超過腳踏墊）」，指水位超過腳踏墊，未超過車椅座或機油尺；「浸水車（超過車底盤）」，指水位超過車底盤，未超過腳踏墊。</p>
+    <ol start="3">
+      <li>甲方明知標的物曾發生交通事故致人於死、或曾於車內發生自殺、他殺、或因意外事故死亡之情形應告知乙方。</li>
+      <li>甲方擔保本汽車非以其他車輛之車牌裝置於本汽車及非於不同車輛解體拼裝之汽車。</li>
+      <li>甲方擔保交車之汽車與試車之汽車為同一車輛。</li>
+      <li>若甲方有違反前述規定之一者，乙方得請求減少價金，或得解除契約，並得請求返還扣除使用利益之價金及自解約日至返還日之利息。</li>
+    </ol></div>
+
+  <div class="cl"><span class="ct">第四條：交車（續）</span>
+    <p>預計交車日期依正面記載，實際交車日期及時間以雙方簽署之交車確認單為準。交車前應辦妥過戶手續。交車時應交付辦妥過戶手續之新行車執照。</p></div>
+
+  <div class="cl"><span class="ct">第五條：過戶（續）</span>
+    <p>甲方應於締約日之翌日起<span class="fill" id="b_trDays">＿</span>日內（不得逾三日），向監理機關辦理過戶予乙方或指定之第三人。但有正當事由（如乙方選號需求）無法於期限內辦理者，不在此限。乙方於辦理過戶前，應辦理強制汽車責任險，其保險費由正面第十四條勾選之一方負擔。甲方未能於前項期限內完成過戶者，乙方得解除契約。</p></div>
+
+  <div class="cl"><span class="ct">第六條：出賣人給付遲延</span>
+    <p>甲方逾正面所載預計交車日期未交付車輛，經乙方定<span class="fill" id="b_remind">五</span>日（不得少於五日）以上之期間催告，甲方仍不履行時，乙方得解除契約，並請求返還已支付之價金，及自支付日起至返還日止依法定利率計算之利息。前項情形，乙方證明有其他損害者，並得請求賠償。乙方支付定金者，甲方並應賠償與定金同金額之違約金。</p></div>
+
+  <div class="cl"><span class="ct">第七條：買受人受領遲延</span>
+    <ol>
+      <li>甲方能證明乙方受領遲延者，關於乙方於受領遲延期間內之車輛的保管，僅就故意或重大過失負其責任。甲方並得請求乙方賠償保管汽車之必要費用。乙方遲延受領後，甲方得定相當期限催告乙方受領標的物，乙方不於所定期限受領者，甲方得解除契約，甲乙雙方應於甲方解除契約後三日內回復原狀。</li>
+      <li>若乙方違約不買或無法於約定期限內付清餘款，經甲方定七日以上期間催告仍不履行時，甲方得通知乙方解除契約並沒收乙方所付之定金；該車如已過戶予乙方或其指定之人，乙方應於解除契約後三日內協同辦理過戶返還甲方並交還車輛。</li>
+    </ol></div>
+
+  <div class="cl"><span class="ct">第八條：權利瑕疵擔保</span>
+    <p>甲方擔保本汽車及選用配備及從物擁有所有權，且無任何第三方得對本汽車主張任何權利。甲方擔保本汽車之全部或一部分非贓車或贓物，且無任何來歷不明、產權糾紛或其他權利瑕疵之情事。</p></div>
+
+  <div class="cl"><span class="ct">第九條：試車責任</span>
+    <p>乙方要求試車時，甲方非有正當理由不得拒絕。甲方不得要求乙方支付定金後方予試車。乙方於締約前試驗行駛車輛而對車輛造成損害時，甲方僅能就可證明歸責於乙方之損害請求賠償。</p></div>
+
+  <div class="cl"><span class="ct">第十條：因不可歸責於雙方當事人之事由致給付不能</span>
+    <p>因不可歸責於雙方當事人之事由，致甲方給付不能者，甲方應返還乙方已付之價金（含定金），及自受領日起至返還日止依法定利率計算之利息。</p></div>
+
+  <div class="cl"><span class="ct">第十一條：危險負擔</span>
+    <p>本汽車之危險負擔於交付之時點移轉於乙方。</p></div>
+
+  <div class="cl"><span class="ct">第十二條：任意解除權</span>
+    <p>乙方支付定金後，如不願受買，得拋棄定金解除契約。甲方如不願賣出，得加倍返還乙方所支付之定金後，解除契約。</p></div>
+
+  <div class="cl"><span class="ct">第十四條：稅費（續）</span>
+    <p>辦理過戶手續前，欠繳之一切稅費，均由甲方負擔。正面第十四條第一款、第二款之勾選，係就該年度尚未屆繳納期限之牌照稅及公路養管費約定其負擔。</p></div>
+
+  <div class="cl"><span class="ct">第十五條：保固責任</span>
+    <p>除本契約所約定之保固責任外，甲方並擔保本件標的物於交車前已完成正常使用檢查，且符合交車時之其他相關法令規定。標的物交付予乙方後，因天然災害、自然耗損或可歸責於乙方之事由致生之損害，甲方不負保固責任。有無約定保固及其範圍，依正面第十五條勾選及填寫內容定之。甲方仍應依民法規定對乙方負瑕疵擔保責任。</p></div>
+
+  <div class="cl"><span class="ct">第十六條：契約之內容及增刪</span>
+    <p>附件一（標的物明細，含配備、出賣人提供之配件及前車主之行車執照影本）、正面勾選之其他附件（如繳款單、交車確認單、約定保固範圍說明、第三方車況鑑定報告等，含簽約後依本契約開立或簽署者）及正面特約事項，均為本契約之一部分。本契約訂立後，若有任何增刪修改，非經甲乙雙方當事人書面同意，不生效力。</p></div>
+
+  <div class="cl"><span class="ct">第十七條：個人資料之保護</span>
+    <p>甲方對乙方個人資料之蒐集、處理及利用，應依個人資料保護法規定，並僅於履行本契約（含辦理過戶、保險、貸款、稅費及保固服務）之必要範圍內為之。</p></div>
+
+  <div class="cl"><span class="ct">第十八條：法律適用與合意管轄法院</span>
+    <p>本契約之解釋適用，以中華民國法律為準據法。因本契約所生之一切爭執，雙方同意以<span class="fill" id="b_court">＿＿＿＿</span>地方法院為第一審管轄法院，但不得排除消費者保護法第四十七條及民事訴訟法第四百三十六條之九規定小額訴訟管轄法院之適用。</p></div>
+
+  <div class="cl"><span class="ct">第十九條：電子簽署及契約收執</span>
+    <p>甲乙雙方同意依電子簽章法以電子文件及電子簽名方式簽署本契約，其效力與書面簽名或蓋章相同。本契約書正本壹式二份，副本零份，由甲乙雙方各持正本一份為憑；正本得以電子檔交付。本契約自雙方簽署完成之日起生效。</p></div>
+
+  <div class="cl"><span class="ct">第二十條：補充規定</span>
+    <p>本契約如有未盡事宜，依民法、消費者保護法及相關法令處理之。各條款如有疑義時，應依消費者保護法第十一條第二項規定，為有利於乙方之解釋。</p></div>
+
+  <div class="foot"><span>合約編號 AAA.<span class="f_no"></span>｜反面</span><span class="f_hash"></span></div>
+</section>
+
+<!-- ================= 附件一 ================= -->
+<section class="page" id="veh">
+  <h1 class="title" style="font-size:15pt;letter-spacing:.3em">附件一　標的物明細</h1>
+  <div class="sub"><span class="note">本附件為中古汽車買賣定型化契約書第一條之一部分</span><span>合約編號 AAA.<span class="f_no"></span>　牌照號碼 <b id="vh_plate"></b></span></div>
+  <div class="lockable">
+  <div class="sec">一、車籍資料</div>
+  <table class="g">
+    <tr><td class="h">牌照號碼</td><td style="width:20%"><span class="mir" data-m="plate"></span></td>
+        <td class="h">廠　牌</td><td><span class="mir" data-m="brand"></span></td>
+        <td class="h">出廠年月</td><td style="width:18%"><span class="mir" data-m="mfg"></span></td></tr>
+    <tr><td class="h">型　式</td><td><span class="mir" data-m="model"></span></td>
+        <td class="h">燃料種類</td><td><input class="t" name="fuel" list="fuelList" maxlength="8"><datalist id="fuelList"><option value="汽油"><option value="柴油"><option value="油電"><option value="電動"></datalist></td>
+        <td class="h">排氣量</td><td><input class="t" name="cc" inputmode="numeric" style="width:4em;display:inline-block">立方公分</td></tr>
+    <tr><td class="h">車身式樣及附加配備</td><td colspan="3"><input class="t l" name="bodyEquip" maxlength="40" placeholder="照行照填，例如 轎式 LED頭燈"></td>
+        <td class="h">產　地</td><td class="grp" data-g="origin"><label class="rd"><input type="radio" name="origin" value="國產">國產</label><label class="rd"><input type="radio" name="origin" value="進口">進口</label></td></tr>
+    <tr><td class="h">引擎號碼</td><td><span class="mir" data-m="engineNo"></span></td>
+        <td class="h">車身號碼</td><td colspan="3" style="letter-spacing:.04em"><span class="mir" data-m="vin"></span></td></tr>
+    <tr><td class="h">載運人數</td><td><input class="t" name="seats" inputmode="numeric" style="width:3em;display:inline-block">人</td>
+        <td class="h">顏　色</td><td><input class="t" name="color"></td>
+        <td class="h">指定檢驗日</td><td style="white-space:nowrap">民國<input class="t w2" name="isY" inputmode="numeric" style="display:inline-block;width:2.4em">年<input class="t w1" name="isM" inputmode="numeric" style="display:inline-block;width:1.8em">月<input class="t w1" name="isD" inputmode="numeric" style="display:inline-block;width:1.8em">日</td></tr>
+  </table>
+
+  <div class="sec" style="margin-top:2mm">二、配備</div>
+  <div class="box">
+    <div class="row">由雙方確認下列現有配備：</div>
+    <div class="row eqs"><label class="rd"><input type="checkbox" name="eq_0" data-eq="冷氣機">冷氣機</label><label class="rd"><input type="checkbox" name="eq_1" data-eq="音響">音響</label><label class="rd"><input type="checkbox" name="eq_2" data-eq="影音播放系統主機">影音播放系統主機</label><label class="rd"><input type="checkbox" name="eq_3" data-eq="皮椅">皮椅</label><label class="rd"><input type="checkbox" name="eq_4" data-eq="鋁圈">鋁圈</label><label class="rd"><input type="checkbox" name="eq_5" data-eq="安全氣囊">安全氣囊</label><label class="rd"><input type="checkbox" name="eq_6" data-eq="防鎖死剎車系統(ABS)">防鎖死剎車系統(ABS)</label><label class="rd"><input type="checkbox" name="eq_7" data-eq="標準備胎">標準備胎</label><label class="rd"><input type="checkbox" name="eq_8" data-eq="緊急備胎">緊急備胎</label><label class="rd"><input type="checkbox" name="eq_9" data-eq="隨車工具">隨車工具</label><label class="rd"><input type="checkbox" name="eq_10" data-eq="安全帶">安全帶</label><label class="rd"><input type="checkbox" name="eq_other">其他配備：</label><input class="t l" name="eqOther" data-auto="eq_other" style="width:16em"></div>
+    <div class="row">出賣人提供之配件<span class="note">（無則填「無」）</span>：<textarea class="t" name="accessories" style="height:2.9em"></textarea></div>
+    <div class="row note">契約未記載者，應依據一般經驗法則及交易習慣決定該配備是否為一般賣車之基本配備。</div>
+  </div>
+
+  <div class="sec" style="margin-top:2mm">三、過戶登記人<small>（正面勾選「其他」時填寫）</small></div>
+  <table class="g">
+    <tr><td class="h">姓名／名稱</td><td><input class="t reg" name="reg_name"></td>
+        <td class="h">身分證字號／統編</td><td><input class="t reg" name="reg_id" style="text-transform:uppercase"></td></tr>
+    <tr><td class="h">電　話</td><td><input class="t reg" name="reg_tel" inputmode="tel"></td>
+        <td class="h">行動電話</td><td><input class="t reg" name="reg_mobile" inputmode="tel"></td></tr>
+    <tr><td class="h">地　址</td><td colspan="3"><input class="t reg" name="reg_addr"></td></tr>
+  </table>
+  <p class="note" id="regSame" style="margin:.8mm 0 0"></p>
+  </div>
+
+  <div class="sec" style="margin-top:2mm">四、前車主之行車執照影本</div>
+  <div class="licbox lockable" id="licBox">
+    <img id="licImg" alt="">
+    <div class="lichint no-print"><label class="btn small" style="border:1px solid #ccd">拍照／上傳行照<input type="file" accept="image/*" capture="environment" id="licFile" style="display:none"></label>
+      <button class="btn small" type="button" id="licClear" style="border:1px solid #ccd">移除</button><br><span>請拍攝前車主行車執照（可遮蔽與本車無關之個資）</span></div>
+    <input type="hidden" name="prevLic">
+  </div>
+  <div class="foot"><span>合約編號 AAA.<span class="f_no"></span>｜附件一 標的物明細</span><span class="f_hash"></span></div>
+</section>
+
+</form>
+
 <div id="render" aria-hidden="true"></div>
-<div class="ov" id="ovPdf"><div class="dlg">
-  <h3>申請單 PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br>A4 一頁，給總部歸檔用。<br>
-  <span class="small muted">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
-  <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave">下載</a><a class="btn acc" id="pdfOpen" target="_blank" rel="noopener">開啟 PDF</a></div>
+
+<div class="ov no-print" id="ovConfirm"><div class="dlg" style="max-width:440px">
+  <h3 id="cTitle">確認</h3><p id="cMsg" style="margin:0;line-height:1.6"></p>
+  <div class="acts"><button class="btn" type="button" id="cNo">取消</button><button class="btn primary" type="button" id="cYes">確定</button></div>
 </div></div>
-<div class="ov" id="busy"><div class="dlg" style="width:auto"><p id="busyMsg" style="margin:0">處理中…</p></div></div>
-<div id="loading">讀取資料中…</div>
-<div id="toast"></div>
+<div class="ov no-print" id="busy"><div class="dlg" style="max-width:360px"><p id="busyMsg" style="margin:6px 0">處理中…</p></div></div>
+<div class="ov no-print" id="ovDone"><div class="dlg" style="max-width:460px;text-align:center">
+  <h3 style="color:#1e7b4a">✅ 簽約完成</h3><p id="doneMsg" style="line-height:1.7;margin:0"></p>
+  <div class="acts" style="justify-content:center"><a class="btn primary" href="index.html" style="text-decoration:none">回合約列表</a></div>
+</div></div>
+<div class="ov no-print" id="ovPdf"><div class="dlg" style="max-width:480px">
+  <h3>列印 PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br>共 8 頁（第一聯、第二聯各 4 頁，第 4 頁是繳款單或空白頁）。請用<b>雙面列印、長邊翻頁</b>，A4、實際大小（不要縮放）。<br>
+  <span style="color:#666;font-size:13px">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
+  <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave" style="text-decoration:none">下載</a><a class="btn primary" id="pdfOpen" target="_blank" rel="noopener" style="text-decoration:none">開啟 PDF</a></div>
+</div></div>
+<div id="loading" class="no-print" style="position:fixed;inset:0;background:#e8e6e1;z-index:90;display:flex;align-items:center;justify-content:center;font-size:16px;color:#444;padding:20px;text-align:center">讀取資料中…</div>
+<div id="toast" class="no-print"></div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -124,130 +523,638 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
 <script>
 (function(){
 "use strict";
-// ===== 設定（跟 index.html、contract.html 一樣）=====
-const LIFF_ID = '2012275132-Rf1eHEcV';      // 合約系統的 LIFF ID
+// ===== 設定（跟 index.html 一樣）=====
+const LIFF_ID = '2012275132-Rf1eHEcV';      // 合約系統的 LIFF ID（例如 2012275132-xxxxxxxx）
 const API_URL = 'https://script.google.com/macros/s/AKfycby_vI567ooErkHa1ay1hhoM9KjoTuelECq1w-qJB8yX_j2XvsuQZ2xR6M7fke8dFZSg/exec';      // 合約系統 Apps Script 部署後的網址（…/exec）
+// 簽約方式：每份合約鎖定後由業務選 'paper' 印出親簽（實際蓋章）或 'online' 平板線上簽名
+let signMode='paper';
+const isPaper=()=>signMode!=='online';
 
-const $=s=>document.querySelector(s);
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const F=document.getElementById('f');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money=n=>Number(n||0).toLocaleString('en-US');
-const qs=new URLSearchParams(location.search), KID=qs.get('k')||'';
-let D=null, selId='', WM='';
-function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3500);}
-function busy(m){const b=$('#busy');if(m===false){b.classList.remove('show');return;}$('#busyMsg').textContent=m;b.classList.add('show');}
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const qs=new URLSearchParams(location.search);
+let state='edit', signedAt=null, hash='', INIT=null, CAR=null, KID=qs.get('id')||'', KNO='';
+// 空白合約：blank=1 線上填寫（非公司車，車輛資料自己填）；blank=print 列印完全空白的紙本手寫
+const BLANK=qs.get('blank')||'', PRINT=BLANK==='print';
+let profiles=[];
+const draftKey=()=>'yc_contract_draft_'+(KID||(BLANK?'blank':'car_'+(qs.get('car')||'')));
+
+/* ---------- API ---------- */
 function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
 function tokenOk(){try{const t=liff.getDecodedIDToken();return !!(t&&t.exp*1000>Date.now()+60000);}catch(e){return false;}}
 async function api(payload){
   if(!tokenOk()){relogin();throw new Error('relogin');}
   const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({idToken:liff.getIDToken()},payload))});
-  const j=await res.json();if(j.authError){toast('登入已過期，重新登入中…');setTimeout(relogin,1200);}return j;
+  const j=await res.json();
+  if(j.authError){toast('登入已過期，重新登入中…');setTimeout(relogin,1200);}
+  return j;
 }
-const ST={待核准:'p2',已核准:'p1',已領取:'p3',作廢:'p0'};
-const pending=()=>D.docs.find(r=>r['狀態']==='待核准');
-const canCreate=()=>{const m=D.me;return (m.isBoss||m.isOffice||D.contract.seller===m.en)&&!pending();};
-function twId(id){id=String(id||'').toUpperCase();if(!/^[A-Z][12890]\d{8}$/.test(id))return false;const map='ABCDEFGHJKLMNPQRSTUVXYWZIO';const code=map.indexOf(id[0])+10;
-  let sum=Math.floor(code/10)+(code%10)*9;const w=[8,7,6,5,4,3,2,1,1];for(let i=1;i<10;i++)sum+=(+id[i])*w[i-1];return sum%10===0;}
-function twTax(t){if(!/^\d{8}$/.test(t))return false;const w=[1,2,1,2,1,2,4,1];let s=0;for(let i=0;i<8;i++){const p=+t[i]*w[i];s+=Math.floor(p/10)+p%10;}return s%5===0||(t[6]==='7'&&(s+1)%5===0);}
 
-function renderHead(){
-  const k=D.contract,left=k.price-k.paid;
-  $('#ttl').textContent=`證件申請・${k.no}`;
-  $('#head').innerHTML=`<div class="kv">
-    <div><span>合約編號</span>${esc(k.no)}</div><div><span>車輛</span>${esc(k.car)} <span class="muted small">${esc(k.plate)}</span></div>
-    <div><span>客戶</span>${esc(k.buyer)}</div><div><span>業務</span>${esc(k.seller)}</div>
-    <div><span>預計過戶日</span>${esc(k.transfer)||'—'}</div><div><span>預計交車日</span>${esc(k.eta)||'—'}</div>
-    <div><span>車價已收</span><b class="mono">${money(k.paid)}</b> / ${money(k.price)}</div><div><span>尚未支付尾款</span><b class="mono" style="color:${left>0?'var(--accent)':'var(--ok)'}">${left>0?money(left):'已付清'}</b></div></div>
-    ${left>0?'<p class="small muted" style="margin:8px 0 0">尾款未付清也可以申請（貸款通常過戶後才撥款）。</p>':''}`;
+/* ---------- 甲方公司（從合約系統「公司設定」來）---------- */
+function mapCompany(c){return {id:c['編號'],name:c['公司名稱'],rep:c['代表人'],repId:c['代表人身分證'],tax:c['統一編號'],addr:c['地址'],phone:c['電話'],
+  mobile:c['行動電話'],email:c['電子信箱'],court:c['管轄法院'],sealBig:c.sealBig||'',sealSmall:c.sealSmall||''};}
+function renderCompanySelect(){const sel=$('#company'),cur=sel.value;
+  sel.innerHTML='<option value="">請選擇公司</option>'+profiles.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');sel.value=cur;}
+function curProfile(){const id=$('#company').value;return profiles.find(p=>p.id===id)||null;}
+/* ---------- 浮水印：甲方公司名稱＋合約編號，斜向鋪滿每一頁（印出來、PDF 都有）---------- */
+let WM='';
+function makeWatermark(){
+  const p=curProfile();
+  if(!p){WM='';}else{
+    const c=document.createElement('canvas'),S=2,TW=330,TH=230;c.width=TW*S;c.height=TH*S;
+    const x=c.getContext('2d');x.scale(S,S);x.translate(TW/2,TH/2);x.rotate(-28*Math.PI/180);
+    x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(150,25,25,.075)';
+    const ff='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+    let fs=21;x.font=`700 ${fs}px ${ff}`;while(x.measureText(p.name).width>300&&fs>12){fs--;x.font=`700 ${fs}px ${ff}`;}
+    x.fillText(p.name,0,-9);
+    x.font=`500 11px ${ff}`;x.fillText((KNO?'合約編號 '+KNO+'・':'')+'本公司專用合約',0,14);
+    WM=c.toDataURL('image/png');
+  }
+  $$('.page').forEach(pg=>{pg.style.backgroundImage=WM?`url(${WM})`:'';pg.style.backgroundSize=WM?'330px 230px':'';pg.style.backgroundRepeat='repeat';});
 }
-function renderHist(){
-  const ds=D.docs.slice().reverse();
-  $('#hist').innerHTML=`<h2>申請紀錄</h2>${ds.length?`<div class="tw"><table class="t"><thead><tr><th>申請單號</th><th>申請時間</th><th>過戶對象</th><th>領取項目</th><th>狀態</th><th></th></tr></thead><tbody>
-    ${ds.map(r=>`<tr class="${r['編號']===selId?'sel':''} ${r['狀態']==='作廢'?'void':''}"><td><b>${esc(r['申請單號'])}</b></td><td class="mono">${esc(r['申請時間'])}</td>
-      <td>${esc(r['過戶對象'])}（${esc(r['過戶對象類型'])}）</td><td class="small" style="white-space:normal;max-width:320px">${esc(r.items.join('、'))}${r['其他項目']?'、'+esc(r['其他項目']):''}</td>
-      <td><span class="pill ${ST[r['狀態']]}" title="${esc(r['作廢原因']||'')}">${esc(r['狀態'])}</span></td><td><button class="btn" data-sel="${r['編號']}">${r['編號']===selId?'預覽中':'預覽／匯出'}</button></td></tr>`).join('')}</tbody></table></div>
-    <p class="small muted" style="margin:6px 0 0">核准、已領取、作廢請到合約列表的「證件申請」頁處理。</p>`:'<p class="muted" style="margin:0">還沒有申請紀錄。</p>'}`;
+function showProfile(){
+  makeWatermark();
+  const p=curProfile()||{};
+  $('#p_rep').textContent=p.rep||''; $('#p_tax').textContent=p.tax||''; $('#p_addr').textContent=p.addr||''; $('#p_phone').textContent=p.phone||'';
+  $('#p_mobile').textContent=p.mobile?'／'+p.mobile:''; $('#p_email').textContent=p.email||''; $('#p_repId').textContent=p.repId?'（身分證 '+p.repId+'）':'';
+  $('#b_court').textContent=p.court?p.court.replace(/地方法院$/,''):'＿＿＿＿';
+  [['sealBig','#sealBig','#sealBigImg'],['sealSmall','#sealSmall','#sealSmallImg']].forEach(([k,box,im])=>{const img=$(im);if(p[k]&&!isPaper()){img.src=p[k];$(box).classList.add('has');}else{img.removeAttribute('src');$(box).classList.remove('has');}$(box).classList.remove('err');});
 }
-function form(){const items=[...document.querySelectorAll('#items input:checked')].map(i=>i.value).filter(v=>v!=='全部');
-  return {items,otherItems:$('#f-other').value.trim(),date:$('#f-date').value.replace(/-/g,'/'),keys:$('#f-keys').value.trim(),newPlate:$('#f-plate').value.trim().toUpperCase(),
-    type:$('#f-type').value,toName:$('#f-name').value.trim(),toId:$('#f-id').value.trim().toUpperCase(),note:$('#f-note').value.trim()};}
-function check(){
-  const f=form(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
-  if(!f.items.length&&!f.otherItems)E('items','請勾選要領取的資料');
-  if(!f.toName)E('f-name','請填過戶對象');
-  if(f.type==='客戶'){if(!f.toId)W('f-id','過戶對象身分證字號／統一編號未填');else if(!twId(f.toId)&&!twTax(f.toId))E('f-id',/^\d{8}$/.test(f.toId)?'統一編號不正確':'身分證字號格式或檢查碼不正確');}
-  else{if(!f.toId)W('f-id','同業統一編號未填');else if(!twTax(f.toId))E('f-id','統一編號不正確');}
-  if(f.keys&&!/^\d{1,2}$/.test(f.keys))E('f-keys','鑰匙數量請填數字');
-  if(f.items.includes('鑰匙')&&!f.keys)E('f-keys','勾了鑰匙，請填鑰匙數量');
-  if(!f.date)W('f-date','預計領取日未填');
-  document.querySelectorAll('.form input,.form select').forEach(i=>i.classList.toggle('err',out.some(o=>o.l==='E'&&o.id===i.id)));
-  $('#msgs').innerHTML=out.map(o=>`<div class="${o.l}">${o.l==='E'?'✕ ':'！'}${esc(o.m)}</div>`).join('')||'<div class="O">✓ 檢查通過，可以送出</div>';
-  return out.filter(o=>o.l==='E');
+/* ---------- 收訂業務 ---------- */
+function SELLER(){return INIT&&INIT.me.isSales?INIT.me.en:$('#seller').value;}
+function setupSeller(){
+  const me=INIT.me,staff=INIT.staff||[];
+  if(me.isSales){$('#sellBox').hidden=true;return;}
+  const opts=[{en:'公司',label:'公司車'}].concat(staff.filter(s=>s.isSales).map(s=>({en:s.en,label:s.en+'（'+s.name+'）'})));
+  $('#seller').innerHTML='<option value="">請選擇</option>'+opts.map(o=>`<option value="${esc(o.en)}">${esc(o.label)}</option>`).join('');
+  $('#sellBox').hidden=false;
 }
-function draftRecord(){const f=form();return {'申請單號':D.contract.no+'-D'+(D.docs.length+1),'申請時間':D.today,'預計領取日':f.date,'過戶對象類型':f.type,'過戶對象':f.toName,'過戶對象證號':f.toId,
-  items:f.items,'其他項目':f.otherItems,'鑰匙數量':f.keys,'新領車號':f.newPlate,'備註':f.note,'申請人':D.me.en,'申請人名':D.me.name,'狀態':''};}
-function renderPreview(){
-  const sel=D.docs.find(r=>r['編號']===selId),r=sel||(canCreate()?draftRecord():null);
-  $('#pvTitle').textContent=sel?`預覽・${sel['申請單號']}（${sel['狀態']}）`:(r?'預覽・新申請（尚未送出）':'預覽');
-  $('#print').hidden=!sel||sel['狀態']==='作廢';
-  const pv=$('#preview');pv.innerHTML='';if(!r){pv.innerHTML='<p class="muted" style="margin:6px">請在上方選一張申請預覽。</p>';pv.style.height='';return;}
-  const pg=RC.docPage(r,D,WM);pv.appendChild(pg);
-  const w=pv.clientWidth-20,pw=210*96/25.4,z=Math.min(1,w/pw);pg.style.transform=`scale(${z})`;pv.style.height=(297*96/25.4*z+20)+'px';
+function fillSalesRep(){
+  const staff=INIT.staff||[],en=SELLER();
+  const s=staff.find(x=>x.en===en)||(en==='公司'?staff.find(x=>x.en===INIT.me.en):null);
+  if(s){if(!v('salesName'))el('salesName').value=s.name;if(!v('salesPhone'))el('salesPhone').value=s.phone||'';}
 }
-function renderAll(){renderHead();renderHist();$('#newBox').hidden=!canCreate();if(canCreate())check();renderPreview();}
+const price0=()=>{const n=num('price');return n&&!isNaN(n)?n:0;};
 
-document.addEventListener('click',async e=>{
-  const t=e.target.closest('button');if(!t)return;
-  if(t.dataset.sel){selId=selId===t.dataset.sel?'':t.dataset.sel;renderHist();renderPreview();$('#preview').scrollIntoView({behavior:'smooth',block:'start'});return;}
-  if(t.id==='submit'){selId='';const errs=check();renderPreview();if(errs.length){toast('還有 '+errs.length+' 項要修正');return;}
-    busy('送出中…');
-    try{const r=await api({action:'docCreate',id:KID,form:form()});busy(false);toast(r.message||(r.ok?'完成':'失敗'),5000);
-      if(r.ok){await load();selId=r.id;renderAll();}}
-    catch(x){busy(false);if(x.message!=='relogin')toast('連線失敗，請再試一次');}return;}
-  if(t.id==='print'){await makePdf();return;}
-  if(t.id==='pdfClose'){$('#ovPdf').classList.remove('show');return;}
-});
-document.addEventListener('input',e=>{if(!D||!e.target.closest('#newBox'))return;
-  if(e.target.value==='全部'&&e.target.type==='checkbox')document.querySelectorAll('#items input').forEach(i=>i.checked=e.target.checked);
-  else if(e.target.closest('#items'))$('#items input[value="全部"]').checked=[...document.querySelectorAll('#items input')].filter(i=>i.value!=='全部').every(i=>i.checked);
-  if(e.target.id==='f-type'){const c=e.target.value==='同業';$('#l-name').firstChild.textContent=c?'同業公司名稱':'過戶對象姓名／公司名稱';$('#l-id').firstChild.textContent=c?'統一編號':'身分證字號／統一編號';}
-  check();renderPreview();});
-window.addEventListener('resize',()=>{if(D)renderPreview();});
+function el(n){return F.elements[n];}
+function v(n){const e=el(n);if(!e)return '';if(typeof RadioNodeList!=='undefined'&&e instanceof RadioNodeList)return e.value;if(e.type==='checkbox')return e.checked;return (e.value||'').trim();}
+function num(n){const s=String(v(n)).replace(/[,\s]/g,'');if(s==='')return null;if(!/^\d+$/.test(s))return NaN;return +s;}
+function rocDate(p){
+  const y=v(p+'Y'),m=v(p+'M'),d=v(p+'D');
+  if(!y&&!m&&!d) return null;
+  if(!/^\d{2,3}$/.test(y)||!/^\d{1,2}$/.test(m)||!/^\d{1,2}$/.test(d)) return 'bad';
+  const dt=new Date(+y+1911,+m-1,+d);
+  if(dt.getMonth()!==+m-1||dt.getDate()!==+d) return 'bad';
+  return dt;
+}
+function fmtRoc(dt){return `${dt.getFullYear()-1911}年${dt.getMonth()+1}月${dt.getDate()}日`;}
+function addDays(dt,n){const x=new Date(dt);x.setDate(x.getDate()+n);return x;}
+function cnAmount(n){
+  if(n==null||isNaN(n))return '';
+  if(n===0)return '零元整';
+  const D='零壹貳參肆伍陸柒捌玖',U=['','拾','佰','仟'],B=['','萬','億','兆'];
+  const grp=x=>{let r='',z=false;const s=String(x).padStart(4,'0');for(let k=0;k<4;k++){const c=+s[k];if(c===0){z=true;}else{if(z&&r)r+='零';z=false;r+=D[c]+U[3-k];}}return r;};
+  const parts=[];let t=n;while(t>0){parts.unshift(t%10000);t=Math.floor(t/10000);}
+  let out='',needZ=false;
+  parts.forEach((g,i)=>{const bi=parts.length-1-i;if(g===0){needZ=true;return;}if(out&&(needZ||g<1000))out+='零';out+=grp(g)+B[bi];needZ=false;});
+  return out+'元整';
+}
+function renderAmt(key,n){
+  const box=document.querySelector(`.amt[data-for="${key}"]`);if(!box)return;
+  const U=['仟','佰','拾','萬','仟','佰','拾','元'],D='零壹貳參肆伍陸柒捌玖';
+  let ds=null;if(n!=null&&!isNaN(n)&&n>=0&&n<=99999999)ds=String(n).padStart(8,'0');
+  const first=ds?ds.search(/[1-9]/):-1;
+  box.innerHTML=U.map((u,i)=>{let c='\u3000';if(ds){if(first===-1)c=(i===7?'零':'╳');else c=i<first?'╳':D[+ds[i]];}return `<span class="d">${c}</span>${u}`;}).join('');
+}
+function updateLic(){const d=v('prevLic');const img=$('#licImg');if(d){img.src=d;$('#licBox').classList.add('has');}else{img.removeAttribute('src');$('#licBox').classList.remove('has');}}
+function rocToday(){const t=new Date();return [t.getFullYear()-1911,t.getMonth()+1,t.getDate()];}
+function parseRowDate(sx){const m=String(sx).trim().match(/^(\d{2,3})[\/.\-](\d{1,2})[\/.\-](\d{1,2})$/);if(!m)return null;const dt=new Date(+m[1]+1911,+m[2]-1,+m[3]);if(dt.getMonth()!==+m[2]-1)return null;return dt;}
+function fmtMoney(n){return n==null||isNaN(n)?'':n.toLocaleString('en-US');}
+function twId(id){
+  id=id.toUpperCase();
+  if(!/^[A-Z][12890]\d{8}$/.test(id))return false;
+  const map='ABCDEFGHJKLMNPQRSTUVXYWZIO';const code=map.indexOf(id[0])+10;
+  let sum=Math.floor(code/10)+(code%10)*9;const w=[8,7,6,5,4,3,2,1,1];
+  for(let i=1;i<10;i++)sum+=(+id[i])*w[i-1];
+  return sum%10===0;
+}
+function twTax(t){
+  if(!/^\d{8}$/.test(t))return false;
+  const w=[1,2,1,2,1,2,4,1];let s=0;
+  for(let i=0;i<8;i++){const p=(+t[i])*w[i];s+=Math.floor(p/10)+p%10;}
+  if(s%5===0)return true;
+  if(t[6]==='7'&&(s+1)%5===0)return true;
+  return false;
+}
+function phoneOk(p){const d=p.replace(/\D/g,'');return /^09\d{8}$/.test(d)||/^0[2-8]\d{7,8}$/.test(d);}
+function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3200);}
+function ask(title,msg){return new Promise(res=>{$('#cTitle').textContent=title;$('#cMsg').textContent=msg;const o=$('#ovConfirm');o.classList.add('show');
+  const done=r=>{o.classList.remove('show');$('#cYes').onclick=$('#cNo').onclick=null;res(r);};$('#cYes').onclick=()=>done(true);$('#cNo').onclick=()=>done(false);});}
+function calc(){
+  const price=num('price'),dep=num('deposit');
+  renderAmt('price',price);renderAmt('deposit',dep);
+  let bal=null;
+  if(price!=null&&!isNaN(price)&&dep!=null&&!isNaN(dep))bal=price-dep;
+  $('#balance').textContent=bal!=null?fmtMoney(bal):'　';
+  renderAmt('balance',bal!=null&&bal>=0?bal:null);
+  const pct=$('#depPct');
+  if(price&&dep!=null&&!isNaN(dep)&&!isNaN(price)){const r=dep/price*100;pct.textContent=` 目前 ${r.toFixed(1)}%`;pct.style.color=r>10?'#d93025':'#1e7b4a';pct.classList.add('no-print');}
+  else pct.textContent='';
+  const no=v('no');$$('.f_no').forEach(s=>s.textContent=no||'＿＿＿＿');
+  const rd=num('remindDays');$('#b_remind').textContent=rd&&!isNaN(rd)?rd:'＿';
+  const td=num('trDays');$('#b_trDays').textContent=td&&!isNaN(td)?td:'＿';
+  $('#vh_plate').textContent=v('plate').toUpperCase();
+  // 乙方自然人／法人：證號欄位、代表人、簽署欄樣式跟著換
+  const corp=v('buyerType')==='法人';
+  $('#lb_buyerId').textContent=corp?'統一編號':'身分證字號';$('#lb_tel').textContent=corp?'代表人':'市　話';
+  const lbP=el('buyerPhone').closest('td').previousElementSibling;if(lbP)lbP.textContent=corp?'電　話':'行動電話';
+  el('buyerTel').style.display=corp?'none':'';el('buyerRep').style.display=corp?'':'none';
+  el('buyerName').placeholder=corp?'公司名稱':'';
+  // 法人：紙本＝實際用印（大小章欄）；線上＝代表人在平板簽名＋上傳用印照片（輔助）
+  $('#buyerSignBox').style.display=corp&&isPaper()?'none':'';$('#buyerSeals').style.display=corp&&isPaper()?'':'none';$('#corpPhotoBox').style.display=corp&&!isPaper()?'':'none';
+  $('#sig_review .cap').textContent=(corp?(isPaper()?'乙方簽章':'乙方代表人簽名'):'乙方簽名')+(isPaper()?'（親筆）':'');
+  $('#sig_buyer .cap').textContent=corp?'乙方（法人）代表人簽名':'乙方（買方）'+(isPaper()?'親筆':'')+'簽名';
+  const cs=v('corpSeal');$('#corpPhotoImg').style.display=cs?'':'none';if(cs)$('#corpPhotoImg').src=cs;$('#corpPhotoCap').style.display=cs?'none':'';
+  // 附件一車籍資料：跟正面第一條同步顯示（照行照的順序）
+  const mir={plate:v('plate').toUpperCase(),brand:v('brand'),model:v('model'),engineNo:v('engineNo').toUpperCase(),vin:v('vin').toUpperCase(),mfg:v('mfgY')?v('mfgY')+(v('mfgM')?'.'+String(v('mfgM')).padStart(2,'0'):''):''};
+  $$('.mir').forEach(x=>x.textContent=mir[x.dataset.m]||'');
+  const same=v('regOwner')!=='其他';document.body.classList.toggle('reg-same',same);
+  $('#regSame').textContent=same?`過戶登記人同乙方：${v('buyerName')||'＿＿＿'}`:'';
+  $('#regName').textContent=!same&&v('reg_name')?'：'+v('reg_name'):'';
+  updateLic();
+  return bal;
+}
 
-async function makePdf(){
-  const sel=D.docs.find(r=>r['編號']===selId);if(!sel)return;
-  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路後重新整理',5000);return;}
-  busy('正在產生 PDF…');
-  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-    const host=$('#render');host.innerHTML='';const pg=RC.docPage(sel,D,WM);host.appendChild(pg);
-    const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});const img=await RC.jpeg(cv);host.innerHTML='';busy(false);
-    const url=URL.createObjectURL(RC.pdf([img])),name=`車籍資料申請單_${sel['申請單號']}_${sel['車牌']}.pdf`;
-    $('#pdfName').textContent=name;$('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;$('#ovPdf').classList.add('show');
-  }catch(x){busy(false);$('#render').innerHTML='';toast('產生 PDF 失敗：'+(x&&x.message||x),5000);}
+F.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('[data-money]')){const n=num(e.target.name);if(n!=null&&!isNaN(n))e.target.value=fmtMoney(n);}},true);
+F.addEventListener('input',e=>{const au=e.target.dataset&&e.target.dataset.auto;if(au&&e.target.value.trim())el(au).checked=true;
+  const ar=e.target.dataset&&e.target.dataset.autoR;if(ar&&e.target.value.trim()){const [n,val]=ar.split(':');Array.from(document.getElementsByName(n)).forEach(r=>r.checked=r.value===val);}
+  if(e.target.classList)e.target.classList.remove('err','warnf');const g=e.target.closest&&e.target.closest('.grp');if(g)g.classList.remove('err');calc();save();});
+F.addEventListener('change',e=>{if(e.target.id==='company'){showProfile();}if(e.target.name==='plateFee')el('sp_plate').checked=true;
+  if(e.target.name==='accident'&&e.target.value==='依第三方鑑定報告為準')el('att_inspect').checked=true;
+  if(e.target.id==='agree'){$('#agreeRow').classList.remove('err');updatePads();}calc();save();});
+
+const pads={};
+function makePad(id){
+  const box=document.getElementById(id);
+  const c=document.createElement('canvas');const W=box.classList.contains('sm')?520:760, H=box.classList.contains('sm')?110:box.classList.contains('big')?330:170;
+  c.width=W;c.height=H;box.appendChild(c);
+  const veil=document.createElement('div');veil.className='veil no-print';box.appendChild(veil);
+  const clr=document.createElement('button');clr.type='button';clr.className='btn small clr no-print';clr.textContent='清除';box.appendChild(clr);
+  const ctx=c.getContext('2d');ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0b1f4d';
+  const pad={box,c,ctx,veil,clr,empty:true,enabled:false,at:null};
+  let drawing=false,last=null;
+  const pos=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height,p:e.pressure||.5};};
+  c.addEventListener('pointerdown',e=>{if(!pad.enabled)return;e.preventDefault();drawing=true;last=pos(e);c.setPointerCapture(e.pointerId);});
+  c.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineWidth=3.2+(p.p-.5)*2;ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;if(pad.empty){pad.empty=false;box.classList.remove('err');}});
+  const end=()=>{if(drawing){drawing=false;pad.at=new Date().toISOString();save();}};
+  c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('pointerleave',end);
+  clr.addEventListener('click',()=>{if(!pad.enabled)return;clearPad(pad);save();});
+  pads[id]=pad;return pad;
 }
-async function load(){const r=await api({action:'docInit',id:KID});if(!r.ok)throw new Error(r.message||'讀取失敗');D=r;WM=RC.watermark(D.company.name,D.contract.no);}
-function fillForm(){
-  $('#apName').textContent=D.approverEn;
-  // 依車源表帶入：鑰匙（數量）、出廠證（廠證 V）、鑑定報告（認證 TSI／GOO）；其他預設勾選
-  const c=D.car,src={鑰匙:c.keys?{on:true,t:`車源表 ${c.keys} 把`}:{on:false,t:'車源表沒有鑰匙數量'},
-    出廠證:c.fc==='V'?{on:true,t:'車源表 廠證 V'}:{on:false,t:'車源表 廠證 '+(c.fc||'未填')},
-    鑑定報告:/^(TSI|GOO)/.test(c.cert)?{on:true,t:'車源表 認證 '+c.cert}:{on:false,t:'車源表 認證 '+(c.cert||'未填')}};
-  $('#items').innerHTML=['全部'].concat(D.items).map(x=>{const s=src[x]||{on:true,t:''};return `<label title="${esc(s.t)}"><input type="checkbox" value="${esc(x)}" ${s.on?'checked':''}>${esc(x)}${s.t?`<span class="small muted">（${esc(s.t.replace('車源表 ',''))}）</span>`:''}</label>`;}).join('');
-  $('#items input[value="全部"]').checked=D.items.every(x=>(src[x]||{on:true}).on);
-  $('#srcNote').textContent=Object.values(src).some(s=>!s.on)?'沒勾的項目是依車源表判斷車上沒有；實際有的話請自己勾起來，也記得回業務系統更新車源表。':'';
-  $('#f-date').value=(D.contract.transfer&&D.contract.transfer>=D.today?D.contract.transfer:D.today).replace(/\//g,'-');
-  $('#f-keys').value=D.car.keys||'';$('#f-plate').value=D.newPlate||'';$('#f-name').value=D.transferTo.name;$('#f-id').value=D.transferTo.id;
-  $('#f-type').value='客戶';$('#f-type').dispatchEvent(new Event('input',{bubbles:true}));
+function clearPad(p){p.ctx.clearRect(0,0,p.c.width,p.c.height);p.empty=true;p.at=null;}
+function padData(p){return p.empty?'':p.c.toDataURL('image/png');}
+function loadPad(p,data,at){if(!data)return;const img=new Image();img.onload=()=>{p.ctx.drawImage(img,0,0,p.c.width,p.c.height);};img.src=data;p.empty=false;p.at=at||null;}
+function updatePads(){
+  const agree=v('agree');
+  const set=(p,on,msg)=>{p.enabled=on;p.veil.style.display=on?'none':'flex';p.veil.textContent=msg;p.clr.style.display=on?'':'none';p.box.classList.toggle('active',on);};
+  const lockedMsg='請先按「檢查內容並鎖定」';
+  if(state==='edit'){Object.values(pads).forEach(p=>set(p,false,lockedMsg));}
+  else if(state==='locked'){
+    const m='請乙方先勾選上方確認欄';
+    set(pads.sig_review,!!agree,m);set(pads.sig_buyer,!!agree,m);
+  }else{Object.values(pads).forEach(p=>set(p,false,''));Object.values(pads).forEach(p=>p.veil.style.display='none');}
+  const sn=(id,p)=>{$(id).textContent=p.at?'簽署時間：'+new Date(p.at).toLocaleString('zh-TW',{hour12:false}):'';};
+  sn('#sn_buyer',pads.sig_buyer);
 }
-(async function main(){
+function collect(){
+  const d={};
+  Array.from(F.elements).forEach(e=>{if(!e.name)return;if(e.type==='radio'){if(e.checked)d[e.name]=e.value;else if(!(e.name in d))d[e.name]='';}else if(e.type==='checkbox')d[e.name]=e.checked;else d[e.name]=e.value;});
+  return d;
+}
+const LBL={no:'合約編號',brand:'廠牌',model:'型式',year:'年份',vin:'車身號碼',plate:'牌照號碼',mileage:'定車時之里程數',price:'現金交易總價',deposit:'定金金額',salesName:'業務代表姓名',salesPhone:'業務代表電話',buyerName:'乙方姓名',buyerId:'乙方身分證字號',buyerPhone:'乙方電話',buyerAddr:'乙方地址'};
+function validate(){
+  const out=[];const E=(f,m)=>out.push({l:'E',f,m}),W=(f,m)=>out.push({l:'W',f,m});
+  const req=(n,label)=>{if(!v(n)){E(n,`「${label||LBL[n]}」未填寫`);return false;}return true;};
+  const reqR=(n,label)=>{if(!v(n)){E('@'+n,`「${label}」尚未勾選`);return false;}return true;};
+  const reqD=(p,label)=>{const d=rocDate(p);if(d===null){E(p+'Y',`「${label}」未填寫`);return null;}if(d==='bad'){E(p+'Y',`「${label}」日期不正確（請用民國年／月／日）`);return null;}return d;};
+  const companyCheck=(field)=>{const p=curProfile();
+    if(!p){E(field,'尚未選擇甲方公司');return;}
+    const miss=[['rep','負責人'],['tax','統一編號'],['addr','地址'],['phone','電話'],['court','管轄法院'],].concat(isPaper()?[]:[['sealBig','公司大章圖檔'],['sealSmall','負責人小章圖檔']]).filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
+    if(miss.length)E(field,`「${p.name}」公司資料缺少：${miss.join('、')}（請管理員或行政到合約系統「公司設定」補齊）`);
+    const soft=[['mobile','行動電話'],['repId','代表人身分證字號']].filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
+    if(soft.length)W(field,`「${p.name}」公司資料未填：${soft.join('、')}（官方規定應記載，建議補齊）`);
+    if(p.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.email))E(field,`「${p.name}」電子信箱格式不正確`);
+    if(p.tax&&!twTax(p.tax))E(field,`「${p.name}」統一編號 ${p.tax} 檢查碼不正確`);};
+  // review & sign dates
+  const rv=reqD('rv','攜回審閱日期');
+  const rvDays=num('rvDays');
+  if(rvDays==null)E('rvDays','「審閱日數」未填寫');else if(isNaN(rvDays)||rvDays<3)E('rvDays','審閱日數不得少於三日');
+  const sg=reqD('sg','簽約日期');
+  if(rv&&sg&&rvDays>=3){const earliest=addDays(rv,rvDays);if(sg<earliest)E('sgY',`依契約記載「攜回審閱${rvDays}日」，最早可簽約日為民國${fmtRoc(earliest)}，請確認日期`);}
+  if(rv&&sg&&rv>sg)E('rvY','攜回審閱日期不可晚於簽約日期');
+
+  // company
+  companyCheck('company');
+
+  if(CAR&&price0()&&+CAR['底價']&&price0()<+CAR['底價'])W('price',`成交價低於底價 ${fmtMoney(+CAR['底價'])} 元，可以簽約，簽約後會通知 Leo 核定`);
+  if(!SELLER())E('company','請在上方選擇「收訂業務」');
+  // 第一條
+  req('brand');req('model');
+  if(req('year','年份')&&!/^(19|20)\d{2}$/.test(v('year')))E('year','年份請填西元四碼，例如 2016');
+  const my=v('mfgY'),mm=v('mfgM');
+  if(!my||!mm)E('mfgY','「出廠年月」未填寫');else{if(!/^(19|20)\d{2}$/.test(my))E('mfgY','出廠年請填西元四碼');if(!/^\d{1,2}$/.test(mm)||+mm<1||+mm>12)E('mfgM','出廠月份不正確');}
+  if(req('vin')){const vin=v('vin').toUpperCase().replace(/\s/g,'');if(vin.length!==17)W('vin',`車身號碼為 ${vin.length} 碼，一般為 17 碼，請再核對`);else if(/[IOQ]/.test(vin))W('vin','車身號碼通常不含 I、O、Q，請核對是否為 1、0');}
+  if(req('plate')&&!/^[A-Z0-9]{2,4}-[A-Z0-9]{2,4}$/i.test(v('plate')))W('plate','牌照號碼格式看起來不正確（例：BTN-8337），請核對');
+  if(!v('engineNo'))W('engineNo','引擎號碼未填寫（建議填寫）');
+  if(reqR('engine','甲方說明本車引擎')&&v('engine')==='不知')W('@engine','引擎勾選「不知」，請確認已向乙方說明');
+  const mil=num('mileage');if(mil==null)E('mileage','「定車時之里程數」未填寫');else if(isNaN(mil))E('mileage','里程數只能填數字');
+  if(reqR('mileGuar','里程數擔保／不擔保')&&v('mileGuar')==='不擔保')W('@mileGuar','里程數勾選「不擔保」，請確認已向乙方說明');
+  if(reqR('usage','原使用情形')&&v('usage')==='其他'&&!v('usageOther'))E('usageOther','原使用情形勾選「其他」，請填寫說明');
+  if(v('owners')==='二手以上中古汽車'&&!v('ownerCount'))W('ownerCount','勾選「二手以上」，建議填寫轉手次數；不可考請勾「不知」');
+  // 附件一
+  const A='附件一：';
+  reqR('origin','產地（國產／進口）');
+  const cc=num('cc');if(cc==null)E('cc',A+'「排氣量」未填寫');else if(isNaN(cc)||cc<=0)E('cc',A+'排氣量只能填數字（立方公分）');
+  if(!v('color'))E('color',A+'「顏色」未填寫');
+  if((v('isY')||v('isM')||v('isD'))&&rocDate('is')==='bad')E('isY',A+'指定檢驗日日期不正確（請用民國年／月／日）');
+  if(v('seats')&&!/^\d{1,2}$/.test(v('seats')))E('seats',A+'載運人數請填數字');
+  if(!Array.from(F.querySelectorAll('[data-eq],[name=eq_other]')).some(x=>x.checked))W('eq_0',A+'配備沒有勾選任何項目，請與乙方逐項確認');
+  if(v('eq_other')&&!v('eqOther'))E('eqOther',A+'勾選「其他配備」，請填寫內容');
+  if(!v('accessories'))W('accessories',A+'「出賣人提供之配件」未填寫，沒有請填「無」');
+  if(!v('prevLic'))E('prevLic',A+'尚未上傳前車主之行車執照影本（官方規定之附件）');
+
+  // 第二條
+  const price=num('price'),dep=num('deposit');
+  if(price==null)E('price','「現金交易總價」未填寫');else if(isNaN(price)||price<=0)E('price','現金交易總價金額不正確');else if(price>99999999)E('price','金額超過合約欄位上限（仟萬位）');
+  if(dep==null)E('deposit','「定金金額」未填寫（未收定金請填 0）');else if(isNaN(dep))E('deposit','定金金額只能填數字');
+  if(price>0&&dep!=null&&!isNaN(dep)){
+    if(dep>price)E('deposit','定金不可大於總價');
+    else if(dep>price*0.1)E('deposit',`定金 ${fmtMoney(dep)} 元超過總價百分之十（上限 ${fmtMoney(Math.floor(price*0.1))} 元）`);
+  }
+  let dp=null;
+  if(dep>0)dp=reqD('dp','定金收受日');
+  const bal=price>0&&dep!=null&&!isNaN(dep)?price-dep:null;
+  let bp=null;
+  if(bal>0)bp=reqD('bp','餘款付清期限');
+  if(!v('att_payment'))W('att_payment','附件未勾選「繳款單」，付款方式將無從查核，建議勾選');
+
+  // 第三條
+  if(reqR('accident','曾否發生重大事故')){
+    if(v('accident')==='是'&&!v('accidentDesc'))E('accidentDesc','重大事故勾選「是」，請填寫受損狀況');
+    if(v('accident')==='依第三方鑑定報告為準'&&!v('att_inspect'))E('att_inspect','重大事故勾選「依第三方鑑定報告為準」，附件欄必須勾選「第三方車況鑑定報告」並將報告交付乙方');
+  }
+  if(reqR('flood','是否為泡水車')&&v('flood')!=='否')W('@flood',`已勾選「${v('flood')}」，請確認已向乙方充分說明`);
+
+  // 第四、五條
+  const dl=reqD('dl','預計交車日期');
+  const hh=v('dlH'),mi=v('dlMin');
+  if(hh&&(!/^\d{1,2}$/.test(hh)||+hh>23))E('dlH','預計交車時間（時）不正確');
+  if(mi&&(!/^\d{1,2}$/.test(mi)||+mi>59))E('dlMin','預計交車時間（分）不正確');
+  const rd=num('remindDays');if(rd==null||isNaN(rd)||rd<5)E('remindDays','甲方逾期交車之催告期間不得少於五日');
+  const tr=reqD('tr','預計過戶日期');
+  const trDays=num('trDays');
+  if(trDays==null)E('trDays','過戶期限「締約日之翌日起＿日內」未填寫');else if(isNaN(trDays)||trDays<1||trDays>3)E('trDays','過戶期限須為 1～3 日（不得逾三日）');
+  if(sg&&dl&&dl<sg)E('dlY','預計交車日期不可早於簽約日期');
+  if(sg&&tr&&tr<sg)E('trY','預計過戶日期不可早於簽約日期');
+  if(tr&&dl&&tr>dl)E('trY','預計過戶日期晚於預計交車日期（契約約定交車前應辦妥過戶）');
+  if(sg&&tr&&trDays>=1&&trDays<=3&&tr>addDays(sg,trDays)&&!v('sp_plate'))W('trY',`預計過戶日期超過約定期限（最晚民國${fmtRoc(addDays(sg,trDays))}），除非有正當事由，請調整`);
+  if(bp&&dl&&bp>dl)W('bpY','餘款付清期限晚於預計交車日期，請確認');
+
+  // 13, 14
+  if(reqR('fines','欠繳罰鍰')&&v('fines')==='有'){const fa=num('finesAmt');if(!fa||isNaN(fa))E('finesAmt','欠繳罰鍰勾選「有」，請填寫合計金額');}
+  if(!/^\d{2,3}$/.test(v('taxYear1')))E('taxYear1','牌照稅年度未填寫');
+  if(!/^\d{2,3}$/.test(v('taxYear2')))E('taxYear2','公路養管費年度未填寫');
+  reqR('licTax','牌照稅負擔方');reqR('fuelFee','公路養管費負擔方');reqR('transferFee','過戶手續費負擔方');reqR('insurance','強制險負擔方');
+
+  // 15 + attachments
+  if(reqR('warranty','保固責任')){
+    if(v('warranty')==='約定保固'){if(!v('warrantyScope'))E('warrantyScope','勾選「約定保固範圍」，請填寫保固範圍');
+      else if(/附件/.test(v('warrantyScope'))&&!v('att_warranty'))W('att_warranty','保固範圍寫「附件」，但附件欄未勾選「保固範圍說明」');}
+    else if(v('warrantyScope'))W('warrantyScope','已勾選「無保固」，但保固範圍欄有填寫內容，請確認');
+  }
+  if(v('att_other')&&!v('attOther'))E('attOther','附件勾選「其他」，請填寫附件名稱');
+  if(v('sp_plate')){if(!v('plateFee'))E('@plateFee','特約事項勾選「選號」，請勾選選號規費由誰負擔');if(!v('sp_plateNo'))W('sp_plateNo','選號號碼未填寫（尚未決定可留白）');}
+  if(v('sp_other')&&!v('special'))E('special','特約事項勾選「其他」，請填寫內容');
+  if(!v('sp_other')&&v('special'))W('special','特約事項「其他」有填內容但未勾選，未勾選視為無');
+  if(v('sp_plate')&&v('plateFee')==='甲方')W('@plateFee','選號規費由甲方負擔，請確認');
+
+  // parties
+  req('salesName');
+  if(req('salesPhone')&&!phoneOk(v('salesPhone')))E('salesPhone','業務代表電話格式不正確');
+  const corpB=v('buyerType')==='法人';
+  if(!v('buyerType'))E('@buyerType','請勾選乙方是「自然人」或「法人」');
+  if(!v('buyerName'))E('buyerName',corpB?'乙方公司名稱未填寫':'乙方姓名未填寫');
+  if(corpB){const id=v('buyerId');if(!id)E('buyerId','乙方統一編號未填寫');else if(!twTax(id))E('buyerId','乙方統一編號不正確（8 碼數字，檢查碼不符）');if(!v('buyerRep'))E('buyerRep','法人請填代表人姓名');}
+  else if(req('buyerId')){const id=v('buyerId').toUpperCase();if(!twId(id)){if(/^[A-Z]{2}\d{8}$/.test(id))W('buyerId','此為舊式居留證號，請再核對證件');else E('buyerId','身分證字號格式或檢查碼不正確');}}
+  if(req('buyerPhone','乙方電話')&&!phoneOk(v('buyerPhone')))E('buyerPhone','乙方電話格式不正確（手機 09 開頭 10 碼，市話請含區碼）');
+  if(!corpB&&v('buyerTel')&&!phoneOk(v('buyerTel')))E('buyerTel','乙方市話格式不正確（請含區碼）');
+  if(v('buyerEmail')&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('buyerEmail')))E('buyerEmail','乙方電子信箱格式不正確');
+  if(reqR('regOwner','過戶登記人')&&v('regOwner')==='其他'){
+    [['reg_name','姓名／名稱'],['reg_id','身分證字號／統編'],['reg_addr','地址']].forEach(([n,l])=>{if(!v(n))E(n,`附件一：過戶登記人「${l}」未填寫`);});
+    const rid=v('reg_id').toUpperCase();if(rid&&!twId(rid)&&!twTax(rid))E('reg_id','附件一：過戶登記人身分證字號／統編不正確');
+    if(!v('reg_mobile')&&!v('reg_tel'))E('reg_mobile','附件一：過戶登記人電話或行動電話至少填一項');
+  }
+  if(req('buyerAddr')&&v('buyerAddr').length<8)W('buyerAddr','乙方地址看起來不完整，請確認');
+  return out;
+}
+function findTarget(f){
+  if(!f)return null;if(f==='company')return $('#company');if(f==='prevLic')return $('#licBox');
+  if(f.startsWith('@')){const r=el(f.slice(1));const first=r&&r.length?r[0]:r;return first?first.closest('.grp')||first:null;}
+  const e=el(f);return e&&e.length&&!e.tagName?e[0]:e;
+}
+function showIssues(list,title){
+  $$('.err').forEach(x=>x.classList.remove('err'));$$('.warnf').forEach(x=>x.classList.remove('warnf'));
+  const box=$('#issues');
+  if(!list.length){box.style.display='none';box.innerHTML='';return;}
+  list.forEach(i=>{const t=findTarget(i.f);if(t)t.classList.add(i.l==='E'?'err':'warnf');});
+  const nE=list.filter(i=>i.l==='E').length,nW=list.length-nE;
+  box.innerHTML=`<h3>${title||'檢查結果'}：${nE?`<span style="color:#d93025">${nE} 項必須修正</span>`:'<span class="okmsg">必填項目都已完成</span>'}${nW?`，${nW} 項提醒`:''}</h3><ul>`+
+    list.sort((a,b)=>a.l===b.l?0:a.l==='E'?-1:1).map((i,k)=>`<li class="${i.l}" data-k="${k}"><b>${i.l==='E'?'✕ 必修':'！提醒'}</b>${esc(i.m)}</li>`).join('')+'</ul>';
+  box.style.display='block';
+  box.querySelectorAll('li').forEach((li,k)=>li.onclick=()=>{const t=findTarget(list[k].f);if(t){t.scrollIntoView({behavior:'smooth',block:'center'});if(t.focus)setTimeout(()=>t.focus({preventScroll:true}),350);}});
+}
+async function digest(s){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+  catch(e){let h1=0x811c9dc5,h2=0x01000193;for(let i=0;i<s.length;i++){h1^=s.charCodeAt(i);h1=Math.imul(h1,16777619)>>>0;h2=Math.imul(h2^s.charCodeAt(i),2246822519)>>>0;}return (h1.toString(16)+h2.toString(16)).padStart(16,'0');}
+}
+function buildStatic(ids){
+  const host=$('#render');host.innerHTML='';
+  (ids||['front','back']).forEach(id=>{
+    const src=document.getElementById(id), cl=src.cloneNode(true);cl.removeAttribute('id');
+    const sIn=src.querySelectorAll('input,select,textarea,canvas'), cIn=cl.querySelectorAll('input,select,textarea,canvas');
+    cIn.forEach((c,i)=>{const s=sIn[i];let r;
+      if(s.type==='hidden'||s.type==='file'){c.remove();return;}
+      if(s.tagName==='CANVAS'){r=document.createElement('img');r.src=s.toDataURL('image/png');r.style.cssText='position:absolute;inset:0;width:100%;height:100%';}
+      else if(s.type==='radio'||s.type==='checkbox'){r=document.createElement('span');r.className='bx'+(s.checked?' on':'');}
+      else if(s.tagName==='TEXTAREA'){r=document.createElement('div');r.className='ta';r.textContent=s.value;}
+      else{r=document.createElement('span');r.className=s.className.replace(/\b(err|warnf)\b/g,'');r.style.cssText=s.getAttribute('style')||'';
+        r.className=r.className.replace(/\bsync(-prev)?\b/g,'');
+        r.textContent=s.tagName==='SELECT'?(s.value===''?'':s.options[s.selectedIndex].text):s.value;if(!r.textContent)r.innerHTML='&nbsp;';
+        if(s.name==='buyerId'||s.name==='plate'||s.name==='vin')r.textContent=s.value.toUpperCase();
+        if(s.hasAttribute('data-money')){const n=+String(s.value).replace(/[,\s]/g,'');if(s.value&&!isNaN(n))r.textContent=n.toLocaleString('en-US');}}
+      c.replaceWith(r);});
+    cl.querySelectorAll('.no-print,.veil,.clr').forEach(x=>x.remove());
+    cl.querySelectorAll('.err,.warnf,.active').forEach(x=>x.classList.remove('err','warnf','active'));
+    cl.querySelectorAll('.sig').forEach(x=>x.style.borderColor='#bbb');
+    host.appendChild(cl);
+  });
+  return Array.from(host.children);
+}
+function jpegPdf(imgs){
+  const enc=new TextEncoder(),parts=[],off=[];let len=0;
+  const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};
+  push(new Uint8Array([0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+  const n=2+imgs.length*3, W=595.28, H=841.89;
+  const obj=(k,fn)=>{off[k]=len;push(k+' 0 obj\n');fn();push('\nendobj\n');};
+  obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>push('<< /Type /Pages /Kids ['+imgs.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] /Count '+imgs.length+' >>'));
+  imgs.forEach((im,i)=>{const p=3+i*3;
+    obj(p,()=>push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${p+1} 0 R >> >> /Contents ${p+2} 0 R >>`));
+    obj(p+1,()=>{push(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.data.length} >>\nstream\n`);push(im.data);push('\nendstream');});
+    const cs=`q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;obj(p+2,()=>push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+  });
+  const x=len;let xr='xref\n0 '+(n+1)+'\n0000000000 65535 f \n';for(let k=1;k<=n;k++)xr+=String(off[k]).padStart(10,'0')+' 00000 n \n';
+  push(xr+'trailer\n<< /Size '+(n+1)+' /Root 1 0 R >>\nstartxref\n'+x+'\n%%EOF\n');
+  return new Blob(parts,{type:'application/pdf'});
+}
+function canvasJpeg(cv){return new Promise((res,rej)=>{cv.toBlob(b=>{if(!b)return rej(new Error('toBlob failed'));b.arrayBuffer().then(a=>res({data:new Uint8Array(a),w:cv.width,h:cv.height}));},'image/jpeg',0.9);});}
+
+/* ---------- save / restore（草稿存在這台裝置，避免意外關掉頁面）---------- */
+function save(){
+  if(PRINT)return;
+  const d=collect();
+  const sig={};Object.entries(pads).forEach(([k,p])=>sig[k]={data:padData(p),at:p.at});
+  store.set(draftKey(),{d,sig,state:state==='done'?'edit':state,seller:$('#seller').value,KID,KNO,signMode});
+}
+function applyFields(obj){
+  Object.entries(obj||{}).forEach(([k,val])=>{const e=el(k);if(!e)return;
+    if(typeof RadioNodeList!=='undefined'&&e instanceof RadioNodeList){Array.from(e).forEach(r=>{if(r.type==='radio')r.checked=(r.value===val);});}
+    else if(e.type==='checkbox')e.checked=!!val;else e.value=val;});
+}
+function restoreDraft(){
+  const s=store.get(draftKey());if(!s)return false;
+  applyFields(s.d);
+  Object.entries(s.sig||{}).forEach(([k,o])=>{if(pads[k]&&o&&o.data)loadPad(pads[k],o.data,o.at);});
+  if(s.seller)$('#seller').value=s.seller;
+  if(s.signMode)signMode=s.signMode;
+  if(s.KID&&!KID){KID=s.KID;KNO=s.KNO||'';}
+  state=s.state==='locked'&&KID?'locked':'edit';
+  return true;
+}
+function setDefaults(){
+  const t=new Date();el('sgY').value=t.getFullYear()-1911;el('sgM').value=t.getMonth()+1;el('sgD').value=t.getDate();
+  el('taxYear1').value=el('taxYear2').value=t.getFullYear()-1911;
+  el('att_payment').checked=true;el('att_delivery').checked=true;
+  Array.from(document.getElementsByName('owners')).forEach(r=>r.checked=r.value==='不知');
+  Array.from(document.getElementsByName('regOwner')).forEach(r=>r.checked=r.value==='同乙方');
+  Array.from(document.getElementsByName('buyerType')).forEach(r=>r.checked=r.value==='自然人');
+}
+// 從車源表帶入（只填空白欄位，業務改過的不會被蓋掉）
+function fillFromCar(c){
+  const put=(n,val)=>{const e=el(n);if(e&&!e.value&&val)e.value=val;};
+  const yr=String(c['年份']||''),m=yr.match(/^(\d{4})(?:[.\/\-](\d{1,2}))?/);
+  put('brand',c['廠牌']);put('model',c['車型']);put('plate',c['車牌']);
+  if(m){put('year',m[1]);put('mfgY',m[1]);if(m[2])put('mfgM',String(+m[2]));}
+  put('vin',c['車身號碼']);put('engineNo',c['引擎號碼']);put('cc',c['排氣量']);put('color',c['顏色']);
+  if(c['產地']&&!v('origin'))Array.from(document.getElementsByName('origin')).forEach(r=>r.checked=r.value===c['產地']);
+  const dd=(p,s)=>{const x=String(s||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);if(x&&!v(p+'Y')){el(p+'Y').value=+x[1]-1911;el(p+'M').value=+x[2];el(p+'D').value=+x[3];}};
+  dd('is',c['指定檢驗日']);
+  put('bodyEquip',c['車身式樣及附加配備']);put('seats',c['載運人數']);put('fuel',c['燃料種類']);
+  if(c.lic&&!v('prevLic'))el('prevLic').value=c.lic;
+  if(!v('price')&&c['開價']){el('price').value=Number(c['開價']).toLocaleString('en-US');}
+  const km=String(c['里程']||'');if(km&&!v('mileage'))el('mileage').placeholder='車源表 '+km;
+}
+function summary(){
+  const d=pfx=>{const x=rocDate(pfx);return x&&x!=='bad'?`${x.getFullYear()}/${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`:'';};
+  return {company:$('#company').value,seller:SELLER(),buyerType:v('buyerType')||'自然人',buyerRep:v('buyerRep'),buyer:v('buyerName'),buyerId:v('buyerId').toUpperCase(),buyerPhone:v('buyerPhone'),buyerAddr:v('buyerAddr'),
+    price:num('price'),deposit:num('deposit')||0,signDate:d('sg'),eta:d('dl'),transfer:d('tr')};
+}
+// 送到伺服器的欄位：不含照片（行照另外傳）
+function fieldsForServer(){const d=collect();delete d.prevLic;delete d.agree;delete d.corpSeal;return d;}
+function carDocsForServer(){
+  const d=pfx=>{const x=rocDate(pfx);return x&&x!=='bad'?`${x.getFullYear()}/${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`:'';};
+  const o={vin:v('vin').toUpperCase(),engineNo:v('engineNo').toUpperCase(),cc:v('cc'),origin:v('origin'),
+    bodyEquip:v('bodyEquip'),seats:v('seats'),inspDate:d('is'),fuel:v('fuel')};
+  if(v('prevLic')&&CAR&&!CAR.lic)o.lic=v('prevLic');
+  return o;
+}
+
+/* ---------- state ---------- */
+function applyState(){
+  document.body.classList.toggle('locked',state!=='edit');
+  $$('#bar .step').forEach(s=>{const order=['edit','locked','done'];const i=order.indexOf(s.dataset.s),c=order.indexOf(state);s.classList.toggle('on',i===c);s.classList.toggle('done',i<c);});
+  $('#bCheck').style.display=state==='edit'?'':'none';
+  $('#bUnlock').style.display=state==='locked'?'':'none';
+  $('#bFinish').style.display=state==='locked'&&!isPaper()?'':'none';
+  $('#bPrint').style.display=state==='locked'&&isPaper()?'':'none';
+  $('#bPay').style.display=state==='locked'&&KID?'':'none';
+  $('#bOnline').style.display=state==='locked'&&!PRINT?'':'none';$('#bOnline').textContent=isPaper()?'改用線上簽名（平板）':'改回印出親簽';if(KID)$('#bPay').href='payment.html?k='+encodeURIComponent(KID)+'&from=contract';
+  $('#bPay').textContent=INIT&&INIT.receipt?'繳款單（'+INIT.receipt['繳款單編號']+'）':'簽約收款・繳款單';
+  $('#agree').disabled=isPaper()||state!=='locked';
+  $('#seller').disabled=state!=='edit';
+  F.querySelectorAll('.lockable input.t,.lockable textarea.t').forEach(i=>i.readOnly=state!=='edit');
+  el('no').readOnly=true;
+  $$('.f_hash').forEach(s=>s.textContent=state==='done'&&hash?`簽署完成：${new Date(signedAt).toLocaleString('zh-TW',{hour12:false})}｜文件驗證碼 ${hash.slice(0,16).toUpperCase()}`:'');
+  $('#hint').textContent={edit:'業務填寫正面及附件一（車源表有的資料已自動帶入）→ 按「檢查內容並鎖定」取得合約編號。紅色＝必須修正，黃色＝提醒確認。',
+    locked:isPaper()?'內容已鎖定（'+(KNO||'')+'）。簽約當天有收款，先按「簽約收款・繳款單」開立（會印在每聯第 4 頁）。按「匯出列印 PDF」→ 用「雙面列印（長邊翻頁）」印出兩聯 → 客人在兩聯的確認欄打勾、審閱簽名、立約簽名，公司蓋大小章 → 簽好後到合約列表按「已簽約」上傳第一聯。'
+      :'內容已鎖定（'+(KNO||'')+'）。請乙方閱讀正反兩面及附件 → 勾選確認欄 → 審閱簽名與立約簽名 → 按「完成簽署・上傳合約」。',
+    done:'簽約完成，合約已上傳。'}[state];
+  if(PRINT){['#bCheck','#bUnlock','#bFinish','#bPay','#bOnline'].forEach(x=>$(x).style.display='none');$('#bPrint').style.display='';$('#bPrint').textContent='列印空白合約（一式兩聯）';$('#sellBox').hidden=true;
+    $('#step2').parentElement.style.display='none';$('#hint').textContent='空白合約：可以先選甲方公司（會印上公司資料和浮水印），其他欄位全部空白，印出來手寫。用 A4 雙面列印（長邊翻頁）。';}
+  else if(INIT&&INIT.blank&&state==='edit')$('#hint').textContent='空白合約（非公司車）：車輛資料請照行照自己填寫，登記「已簽約」時會在業務系統車源表新增這台車並成立訂單。紅色＝必須修正，黃色＝提醒確認。';
+  updatePads();
+}
+$('#bCheck').onclick=async()=>{
+  calc();const list=validate();const nE=list.filter(i=>i.l==='E').length;
+  showIssues(list);
+  if(nE){toast(`還有 ${nE} 項必須修正，請看上方清單`);window.scrollTo({top:0,behavior:'smooth'});return;}
+  busy('鎖定中，取得合約編號…');
+  try{
+    const r=await api({action:'contractLock',id:KID,carId:CAR['編號']||'',blank:!!(INIT&&INIT.blank),summary:summary(),fields:fieldsForServer(),car:carDocsForServer()});
+    if(r.ok&&r.licSaved)CAR.lic=v('prevLic');
+    busy(false);
+    if(!r.ok){toast(r.message||'鎖定失敗',5000);return;}
+    KID=r.id;KNO=r.no;el('no').value=String(r.no).replace(/^AAA\./,'');calc();makeWatermark();
+    try{history.replaceState(null,'','?id='+encodeURIComponent(KID));}catch(e){}
+    state='locked';applyState();save();
+    toast((list.length?'已鎖定，仍有提醒事項請確認。':'檢查通過，已鎖定。')+'合約編號 '+r.no+(r.below?'（低於底價，簽約後會通知 Leo 核定）':''),5000);
+    if(!list.length)$('#issues').style.display='none';
+  }catch(e){busy(false);if(e.message!=='relogin')toast('連線失敗，請再試一次');}
+};
+$('#bUnlock').onclick=async()=>{
+  const hasSig=Object.values(pads).some(p=>!p.empty);
+  if(hasSig){const ok=await ask('解除鎖定','解除鎖定後，所有簽名會被清除，修改完需重新簽名（合約編號不變）。確定要解除嗎？');if(!ok)return;}
+  Object.values(pads).forEach(clearPad);el('agree').checked=false;state='edit';applyState();save();
+};
+$('#bFinish').onclick=async()=>{
+  const miss=[];
+  if(!v('agree')){miss.push('乙方尚未勾選「確認正面及附件各項記載無誤」');$('#agreeRow').classList.add('err');}
+  if(pads.sig_review.empty){miss.push('乙方「審閱簽名」尚未簽');pads.sig_review.box.classList.add('err');}
+  if(pads.sig_buyer.empty){miss.push('乙方「立約簽名」尚未簽');pads.sig_buyer.box.classList.add('err');}
+  const p=curProfile();
+  if(!p||!p.sealBig||!p.sealSmall){miss.push('甲方大小章圖檔不完整（請到公司設定上傳）');$('#sealBig').classList.add('err');}
+  if(miss.length){showIssues(miss.map(m=>({l:'E',f:'',m})),'尚未完成簽署');toast('簽署尚未完成');return;}
+  if(v('buyerType')==='法人'&&!v('corpSeal')){const ok=await ask('沒有用印照片','乙方是法人，還沒有上傳用印照片。確定只用代表人簽名完成簽署嗎？（建議拍一張實際蓋在紙上的大小章照片上傳）');if(!ok)return;}
+  $('#issues').style.display='none';
+  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路連線後重新整理頁面',5000);return;}
+  const prev={signedAt,hash};
+  signedAt=new Date().toISOString();
+  hash=await digest(JSON.stringify({d:fieldsForServer(),c:p.id,s:Object.fromEntries(Object.entries(pads).map(([k,x])=>[k,padData(x)])),signedAt}));
+  state='done';applyState();
+  busy('正在產生合約 PDF…');
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const pages=buildStatic(['front','back','veh']);const imgs=[];
+    if(INIT&&INIT.receipt&&window.RC){const co=curProfile()||{};const rp=RC.page(INIT.receipt,{name:co.name,tax:co.tax},'',WM);$('#render').appendChild(rp);pages.push(rp);}
+    for(const pg of pages){const cv=await html2canvas(pg,{scale:1.8,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await canvasJpeg(cv));}
+    $('#render').innerHTML='';
+    const blob=jpegPdf(imgs);
+    const custUrl=URL.createObjectURL(blob),custName=`合約_${KNO}_${(v('plate')||'').toUpperCase()}_${v('buyerName')||''}.pdf`;
+    const dataUrl=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blob);});
+    busy('上傳合約中，請稍候…');
+    const r=await api({action:'contractSubmit',id:KID,pdf:dataUrl.replace(/^data:[^;]*;/,'data:application/pdf;'),data:{fields:fieldsForServer(),summary:summary(),car:carDocsForServer()}});
+    busy(false);
+    if(!r.ok){state='locked';signedAt=prev.signedAt;hash=prev.hash;applyState();toast(r.message||'上傳失敗，請再按一次',6000);return;}
+    store.del(draftKey());
+    $('#doneMsg').innerHTML=`合約 <b>${esc(r.no||KNO)}</b> 已存到公司雲端，業務系統的訂單也已成立。<br>客人的那一份可以按下面「下載合約 PDF」傳給客人（LINE 或 Email）。<br><a class="btn" href="${custUrl}" download="${esc(custName)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-block">下載合約 PDF</a>`;
+    $('#ovDone').classList.add('show');
+  }catch(e){busy(false);$('#render').innerHTML='';state='locked';signedAt=prev.signedAt;hash=prev.hash;applyState();
+    if(e.message!=='relogin')toast('產生或上傳失敗：'+(e&&e.message||e)+'，請再按一次',6000);}
+};
+/* ---------- 紙本：匯出列印 PDF（一式兩聯，每聯 4 頁：正面、反面、附件一、空白頁，方便雙面列印）---------- */
+$('#bPrint').onclick=async()=>{
+  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路連線後重新整理頁面',5000);return;}
+  busy('正在產生列印 PDF…');
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const imgs=[];
+    for(const copy of ['第一聯　公司留底聯','第二聯　客戶留底聯']){
+      const pages=buildStatic(['front','back','veh']);
+      // 第 4 頁：有繳款單就放最新版繳款單，沒有就是空白頁（雙面列印時兩聯才不會印在同一張紙）
+      const rc=INIT&&INIT.receipt;let p4;
+      if(rc&&window.RC){const co=curProfile()||{};p4=RC.page(rc,{name:co.name,tax:co.tax},copy,WM);}
+      else{p4=document.createElement('section');p4.className='page blank';p4.innerHTML='（本頁空白）';if(WM){p4.style.backgroundImage=`url(${WM})`;p4.style.backgroundSize='330px 230px';}
+        const ft=pages[0].querySelector('.foot').cloneNode(true);ft.querySelector('span').textContent='合約編號 '+KNO;p4.appendChild(ft);}
+      $('#render').appendChild(p4);pages.push(p4);
+      pages.slice(0,3).forEach(pg=>pg.querySelectorAll('.f_hash').forEach(x=>{x.className='f_copy';x.textContent=copy;}));
+      for(const pg of pages){const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await canvasJpeg(cv));}
+    }
+    $('#render').innerHTML='';busy(false);
+    const blob=jpegPdf(imgs);
+    const name=PRINT?`空白合約_${(curProfile()||{}).name||''}.pdf`:`合約_${KNO}_${(v('plate')||'').toUpperCase()}_${v('buyerName')||''}_列印版.pdf`;
+    const url=URL.createObjectURL(blob);
+    $('#pdfName').textContent=name;$('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;
+    $('#ovPdf').classList.add('show');
+  }catch(e){busy(false);$('#render').innerHTML='';console.error(e);toast('產生 PDF 失敗：'+(e&&e.message||e),5000);}
+};
+$('#pdfClose').onclick=()=>$('#ovPdf').classList.remove('show');
+$('#bOnline').onclick=async()=>{
+  if(isPaper()){
+    const p=curProfile();
+    if(!p||!p.sealBig||!p.sealSmall){toast('線上簽名要先在「公司設定」上傳甲方的大小章圖檔（'+((p&&p.name)||'甲方公司')+'）',6000);return;}
+    signMode='online';
+  }else{
+    if(Object.values(pads).some(x=>!x.empty)){const ok=await ask('改回印出親簽','改回印出親簽後，平板上的簽名會清除。確定嗎？');if(!ok)return;}
+    Object.values(pads).forEach(clearPad);el('agree').checked=false;signMode='paper';
+  }
+  applyMode();calc();applyState();save();
+  toast(isPaper()?'已改回印出親簽：請匯出 PDF 印出，客人親簽、公司實際蓋章':'已改用線上簽名：請客人閱讀合約後勾選確認欄，並在平板上簽名',5000);
+};
+document.addEventListener('change',e=>{if(e.target.id!=='corpPhotoFile'||!e.target.files[0])return;
+  const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{const k=Math.min(1,1200/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);el('corpSeal').value=c.toDataURL('image/jpeg',0.85);calc();save();};img.src=rd.result;};rd.readAsDataURL(e.target.files[0]);e.target.value='';});
+function busy(msg){const b=$('#busy');if(msg===false){b.classList.remove('show');return;}$('#busyMsg').textContent=msg;b.classList.add('show');}
+$('#seller').addEventListener('change',()=>{el('salesName').value='';el('salesPhone').value='';fillSalesRep();save();});
+
+/* ---------- zoom to fit ---------- */
+function fit(){const pw=210*96/25.4+28;const z=Math.min(1,(window.innerWidth-6)/pw);document.documentElement.style.setProperty('--z',z.toFixed(3));}
+window.addEventListener('resize',fit);
+
+/* ---------- 行照 upload ---------- */
+$('#licFile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f||state!=='edit')return;
+  const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{const s=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    el('prevLic').value=c.toDataURL('image/jpeg',0.82);$('#licBox').classList.remove('err');updateLic();save();};img.onerror=()=>toast('圖片讀取失敗，請重拍');img.src=rd.result;};rd.readAsDataURL(f);});
+$('#licClear').onclick=()=>{if(state!=='edit')return;el('prevLic').value='';updateLic();save();};
+
+/* ---------- init ---------- */
+['sig_review','sig_buyer'].forEach(makePad);
+function applyMode(){
+  const pp=isPaper();document.body.classList.toggle('paper',pp);
+  $('#agreeTxt').textContent=pp?'乙方確認正面及附件各項記載無誤。':'乙方確認正面及附件各項記載無誤，並同意依電子簽章法以電子簽名方式簽署本契約。';
+  $('#step2').textContent=pp?'② 鎖定・印出簽名':'② 鎖定・乙方線上簽名';$('#step3').textContent=pp?'③ 已簽約':'③ 完成';
+  showProfile();
+}
+applyMode();
+fit();
+async function main(){
   if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
   try{
     await liff.init({liffId:LIFF_ID});
     if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
     if(!tokenOk()){relogin();return;}
-    if(!KID){$('#loading').innerHTML='沒有指定合約。<br><a href="index.html">回合約列表</a>';return;}
-    await load();selId=qs.get('v')||'';$('#loading').remove();fillForm();renderAll();
-  }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML=esc(e.message||e)+'<br><br><a href="index.html">回合約列表</a>';}
-})();
+    if(!KID&&!qs.get('car')&&!BLANK){$('#loading').innerHTML='沒有指定車輛。<br><a href="index.html">回合約列表選車</a>';return;}
+    const r=await api({action:'contractInit',id:KID,carId:qs.get('car')||'',blank:!!BLANK&&!KID});
+    if(!r.ok){$('#loading').innerHTML=esc(r.message||'讀取失敗')+'<br><br><a href="index.html">回合約列表</a>';return;}
+    INIT=r;CAR=r.car;profiles=(r.companies||[]).map(mapCompany);
+    renderCompanySelect();setupSeller();
+    if(r.contract){KID=r.contract.id;KNO=r.contract.no;}
+    const had=PRINT?false:restoreDraft();
+    applyMode();
+    if(!had&&r.contract&&r.contract.data){applyFields(r.contract.data);state='locked';}
+    if(!had&&!(r.contract&&r.contract.data)&&!PRINT)setDefaults();
+    if(PRINT)state='locked';
+    if(KNO)el('no').value=String(KNO).replace(/^AAA\./,'');
+    if(!$('#company').value&&profiles.length===1)$('#company').value=profiles[0].id;
+    fillFromCar(CAR);fillSalesRep();
+    showProfile();calc();applyState();
+    document.title=PRINT?'空白合約（列印）':(KNO?KNO+' ':'')+(CAR['車牌']||(v('plate')||'非公司車'))+' 合約';
+    $('#loading').remove();
+  }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML='無法連線：'+esc(e&&e.message||e)+'<br>請關閉頁面重新開啟。';}
+}
+window.__test={collect,validate,summary,buildStatic,jpegPdf,canvasJpeg};
+main();
 })();
 </script>
 </body>
