@@ -67,6 +67,7 @@
     const fee = Number(r['代辦已收']) || 0, left = Number(r['剩餘尾款']) || 0;
     const sec = document.createElement('section'); sec.className = 'page rcp';
     if (wm) { sec.style.backgroundImage = `url(${wm})`; sec.style.backgroundSize = '330px 230px'; }
+    const isCo = /公司/.test(copy || '');
     const prevNo = ver > 1 ? r['合約編號'] + '-' + ('0' + (ver - 1)).slice(-2) : '';
     sec.innerHTML = `
       <h1>繳款單</h1>
@@ -99,14 +100,46 @@
         <li>本繳款單列載截至${rocLong(r['開立日'])}止之全部收款紀錄${ver > 1 ? `，並取代先前開立之繳款單（${esc(prevNo)}）` : ''}；各期款項以最新版本為準。如與先前繳款單記載不符，請於收受本單之日起七日內通知甲方。</li>
         <li>本繳款單經甲方用印及經手人簽名後生效。</li>
       </ol>
-      <div class="signs">
-        <div class="sbox" style="width:38mm;height:38mm"><span class="cap">甲方收款用印</span></div>
+      ${isCo ? coSigns(r) : `<div class="signs">
+        <div class="sbox" style="width:38mm;height:38mm"><span class="cap">甲方收款用印</span>${co.stamp && r['狀態'] === '已核准' ? `<img src="${co.stamp}" alt="" style="position:absolute;left:4mm;top:4mm;width:30mm;height:30mm;object-fit:contain">` : ''}</div>
         <div style="flex:1;display:flex;flex-direction:column;gap:2mm">
           <div class="sbox" style="height:14mm"><span class="cap">經手人簽名（業務 ${esc(r['業務'])}）</span></div>
           <div class="sbox" style="flex:1"><span class="cap">乙方確認簽名（確認上列「本次」款項已交付）</span></div></div>
-      </div>
+      </div>`}
       <div class="foot"><span>繳款單 ${esc(r['繳款單編號'])}｜合約 ${esc(r['合約編號'])} 附件</span><span class="cp">${esc(copy || '')}</span></div>`;
     return sec;
+  }
+  // 公司留底聯的內部簽核欄：經手人／會計（行政核對）／財務經辦（核准）／主管簽核；系統簽核後自動帶入姓名與時間
+  function coSigns(r) {
+    const t = s => String(s || '').slice(0, 16);
+    const cell = (name, when) => `<td style="height:24mm;vertical-align:middle;text-align:center"><div style="font-size:11pt;font-weight:700">${esc(name || '')}</div><div class="note">${esc(t(when))}</div></td>`;
+    const n = Number(r.proofCount) || 0;
+    return `<div class="sec" style="margin-top:3mm">內部簽核${n ? `<span class="note" style="font-weight:400">　繳款單據 ${n} 張，附於次頁</span>` : ''}</div>
+      <table><tr class="th"><td style="width:25%">經手人</td><td style="width:25%">會計</td><td style="width:25%">財務經辦</td><td style="width:25%">主管簽核</td></tr>
+        <tr>${cell(r['經手人名'], r['建立時間'])}${cell(r['會計名'], r['核對時間'])}${cell(r['財務名'], r['核准時間'])}${cell(r['主管名'], r['主管簽核時間'])}</tr></table>`;
+  }
+  // 繳款單據頁（附在公司留底聯後面）：每頁 2 張憑證
+  function proofPages(r, co, imgs, wm) {
+    css();
+    const out = [], per = 2, total = Math.ceil(imgs.length / per);
+    for (let p = 0; p < total; p++) {
+      const sec = document.createElement('section'); sec.className = 'page rcp';
+      if (wm) { sec.style.backgroundImage = `url(${wm})`; sec.style.backgroundSize = '330px 230px'; }
+      const list = imgs.slice(p * per, p * per + per);
+      sec.innerHTML = `
+      <h1>繳款單據</h1>
+      <div class="sub"><span class="note">繳款單 ${esc(r['繳款單編號'])} 附件${total > 1 ? `（${p + 1}／${total}）` : ''}</span><span class="no">No. ${esc(r['繳款單編號'])}</span></div>
+      <table>
+        <tr><td class="h">收款公司</td><td>${esc(co.name)}</td><td class="h">合約編號</td><td>${esc(r['合約編號'])}</td><td class="h">開立日期</td><td>${roc(r['開立日'])}</td></tr>
+        <tr><td class="h">乙方（買方）</td><td>${esc(r['客戶'])}</td><td class="h">牌照號碼</td><td>${esc(r['車牌'])}</td><td class="h">本次收款</td><td>NT$ ${money(r['本次收款'])}</td></tr>
+      </table>
+      ${list.map((u, i) => `<div style="margin-top:3mm;border:1px solid #2b2b2b;height:${list.length > 1 ? 112 : 228}mm;display:flex;flex-direction:column">
+        <div style="padding:.8mm 1.6mm;border-bottom:1px solid #2b2b2b;background:rgba(120,105,80,.09);font-size:8.5pt">單據 ${p * per + i + 1}</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2mm;min-height:0"><img src="${u}" alt="" style="max-width:100%;max-height:100%;object-fit:contain"></div></div>`).join('')}
+      <div class="foot"><span>繳款單 ${esc(r['繳款單編號'])}｜繳款單據</span><span class="cp">第一聯　公司留底聯</span></div>`;
+      out.push(sec);
+    }
+    return out;
   }
   // 簡易 PDF：每張圖一頁 A4
   function pdf(imgs) {
@@ -324,5 +357,5 @@
     sec.innerHTML = half('第一聯　公司留底聯') + `<div style="border-top:1px dashed #888;margin:3.5mm -11mm 4mm;position:relative"><span style="position:absolute;left:50%;top:-2.2mm;transform:translateX(-50%);background:#fff;padding:0 2mm;font-size:7pt;color:#888">✂ 沿虛線裁開</span></div>` + half('第二聯　客戶收執聯');
     return sec;
   }
-  window.RC = { css, page, docPage, dlvPage, outPage, agentPage, agentSheet, photoPdf, watermark, zh, pdf, jpeg, roc, money };
+  window.RC = { css, page, proofPages, docPage, dlvPage, outPage, agentPage, agentSheet, photoPdf, watermark, zh, pdf, jpeg, roc, money };
 })();
