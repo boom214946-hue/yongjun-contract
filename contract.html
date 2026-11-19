@@ -191,6 +191,7 @@ body.paper .sig{pointer-events:none}
   <button class="btn primary" id="bCheck" type="button">檢查內容並鎖定</button>
   <button class="btn primary" id="bFinish" type="button">完成簽署・上傳合約</button>
   <a class="btn" id="bPay" style="text-decoration:none">簽約收款・繳款單</a>
+  <button class="btn" id="bOnline" type="button">改用線上簽名</button>
   <button class="btn primary" id="bPrint" type="button">匯出列印 PDF（一式兩聯）</button>
 </div>
 
@@ -359,6 +360,10 @@ body.paper .sig{pointer-events:none}
           <div class="seals"><div class="seal big" id="sealBig"><span class="cap">公司大章</span><img id="sealBigImg" alt=""></div>
           <div class="scol"><div class="sealcap">甲方<br>用印</div><div class="seal small" id="sealSmall"><span class="cap">負責人小章</span><img id="sealSmallImg" alt=""></div></div></div></div>
         <div style="flex:1" id="buyerSignBox"><div class="sig big" id="sig_buyer"><span class="cap">乙方（買方）簽名</span></div><div class="signote" id="sn_buyer"></div></div>
+        <div class="sealbox" id="corpPhotoBox" style="display:none;width:46mm;flex:none;text-align:center">
+          <div class="sealcap">乙方用印照片（輔助）</div><div class="seal" id="corpPhotoWrap" style="width:42mm;height:30mm;margin:1mm auto 0;display:flex;align-items:center;justify-content:center"><img id="corpPhotoImg" alt="" style="max-width:100%;max-height:100%;display:none"><span class="cap" id="corpPhotoCap">未上傳</span></div>
+          <label class="btn no-print" style="font-size:11px;padding:3px 8px;margin-top:1mm;display:inline-block" id="corpPhotoBtn">上傳用印照片<input type="file" accept="image/*" id="corpPhotoFile" style="display:none"></label>
+          <input type="hidden" name="corpSeal"></div>
         <div class="sealbox" id="buyerSeals" style="display:none;flex:1">
           <div class="seals" style="justify-content:flex-end"><div class="scol" style="justify-content:flex-start"><div class="sealcap">乙方（法人）用印</div></div><div class="seal big"><span class="cap">公司大章</span></div>
           <div class="scol"><div class="sealcap">&nbsp;</div><div class="seal small"><span class="cap">負責人小章</span></div></div></div></div>
@@ -521,9 +526,9 @@ body.paper .sig{pointer-events:none}
 // ===== 設定（跟 index.html 一樣）=====
 const LIFF_ID = '2012275132-Rf1eHEcV';      // 合約系統的 LIFF ID（例如 2012275132-xxxxxxxx）
 const API_URL = 'https://script.google.com/macros/s/AKfycby_vI567ooErkHa1ay1hhoM9KjoTuelECq1w-qJB8yX_j2XvsuQZ2xR6M7fke8dFZSg/exec';      // 合約系統 Apps Script 部署後的網址（…/exec）
-// 簽約方式：'paper' = 印出紙本，客人親簽、公司實際蓋章；'online' = 平板線上簽名（之後成熟再改）
-const SIGN_MODE = 'paper';
-const PAPER=SIGN_MODE!=='online';
+// 簽約方式：每份合約鎖定後由業務選 'paper' 印出親簽（實際蓋章）或 'online' 平板線上簽名
+let signMode='paper';
+const isPaper=()=>signMode!=='online';
 
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const F=document.getElementById('f');
@@ -575,7 +580,7 @@ function showProfile(){
   $('#p_rep').textContent=p.rep||''; $('#p_tax').textContent=p.tax||''; $('#p_addr').textContent=p.addr||''; $('#p_phone').textContent=p.phone||'';
   $('#p_mobile').textContent=p.mobile?'／'+p.mobile:''; $('#p_email').textContent=p.email||''; $('#p_repId').textContent=p.repId?'（身分證 '+p.repId+'）':'';
   $('#b_court').textContent=p.court?p.court.replace(/地方法院$/,''):'＿＿＿＿';
-  [['sealBig','#sealBig','#sealBigImg'],['sealSmall','#sealSmall','#sealSmallImg']].forEach(([k,box,im])=>{const img=$(im);if(p[k]&&!PAPER){img.src=p[k];$(box).classList.add('has');}else{img.removeAttribute('src');$(box).classList.remove('has');}$(box).classList.remove('err');});
+  [['sealBig','#sealBig','#sealBigImg'],['sealSmall','#sealSmall','#sealSmallImg']].forEach(([k,box,im])=>{const img=$(im);if(p[k]&&!isPaper()){img.src=p[k];$(box).classList.add('has');}else{img.removeAttribute('src');$(box).classList.remove('has');}$(box).classList.remove('err');});
 }
 /* ---------- 收訂業務 ---------- */
 function SELLER(){return INIT&&INIT.me.isSales?INIT.me.en:$('#seller').value;}
@@ -667,8 +672,11 @@ function calc(){
   const lbP=el('buyerPhone').closest('td').previousElementSibling;if(lbP)lbP.textContent=corp?'電　話':'行動電話';
   el('buyerTel').style.display=corp?'none':'';el('buyerRep').style.display=corp?'':'none';
   el('buyerName').placeholder=corp?'公司名稱':'';
-  $('#buyerSignBox').style.display=corp?'none':'';$('#buyerSeals').style.display=corp?'':'none';
-  $('#sig_review .cap').textContent=corp?'乙方簽章':'乙方簽名';
+  // 法人：紙本＝實際用印（大小章欄）；線上＝代表人在平板簽名＋上傳用印照片（輔助）
+  $('#buyerSignBox').style.display=corp&&isPaper()?'none':'';$('#buyerSeals').style.display=corp&&isPaper()?'':'none';$('#corpPhotoBox').style.display=corp&&!isPaper()?'':'none';
+  $('#sig_review .cap').textContent=(corp?(isPaper()?'乙方簽章':'乙方代表人簽名'):'乙方簽名')+(isPaper()?'（親筆）':'');
+  $('#sig_buyer .cap').textContent=corp?'乙方（法人）代表人簽名':'乙方（買方）'+(isPaper()?'親筆':'')+'簽名';
+  const cs=v('corpSeal');$('#corpPhotoImg').style.display=cs?'':'none';if(cs)$('#corpPhotoImg').src=cs;$('#corpPhotoCap').style.display=cs?'none':'';
   // 附件一車籍資料：跟正面第一條同步顯示（照行照的順序）
   const mir={plate:v('plate').toUpperCase(),brand:v('brand'),model:v('model'),engineNo:v('engineNo').toUpperCase(),vin:v('vin').toUpperCase(),mfg:v('mfgY')?v('mfgY')+(v('mfgM')?'.'+String(v('mfgM')).padStart(2,'0'):''):''};
   $$('.mir').forEach(x=>x.textContent=mir[x.dataset.m]||'');
@@ -733,7 +741,7 @@ function validate(){
   const reqD=(p,label)=>{const d=rocDate(p);if(d===null){E(p+'Y',`「${label}」未填寫`);return null;}if(d==='bad'){E(p+'Y',`「${label}」日期不正確（請用民國年／月／日）`);return null;}return d;};
   const companyCheck=(field)=>{const p=curProfile();
     if(!p){E(field,'尚未選擇甲方公司');return;}
-    const miss=[['rep','負責人'],['tax','統一編號'],['addr','地址'],['phone','電話'],['court','管轄法院'],].concat(PAPER?[]:[['sealBig','公司大章圖檔'],['sealSmall','負責人小章圖檔']]).filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
+    const miss=[['rep','負責人'],['tax','統一編號'],['addr','地址'],['phone','電話'],['court','管轄法院'],].concat(isPaper()?[]:[['sealBig','公司大章圖檔'],['sealSmall','負責人小章圖檔']]).filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
     if(miss.length)E(field,`「${p.name}」公司資料缺少：${miss.join('、')}（請管理員或行政到合約系統「公司設定」補齊）`);
     const soft=[['mobile','行動電話'],['repId','代表人身分證字號']].filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
     if(soft.length)W(field,`「${p.name}」公司資料未填：${soft.join('、')}（官方規定應記載，建議補齊）`);
@@ -918,7 +926,7 @@ function save(){
   if(PRINT)return;
   const d=collect();
   const sig={};Object.entries(pads).forEach(([k,p])=>sig[k]={data:padData(p),at:p.at});
-  store.set(draftKey(),{d,sig,state:state==='done'?'edit':state,seller:$('#seller').value,KID,KNO});
+  store.set(draftKey(),{d,sig,state:state==='done'?'edit':state,seller:$('#seller').value,KID,KNO,signMode});
 }
 function applyFields(obj){
   Object.entries(obj||{}).forEach(([k,val])=>{const e=el(k);if(!e)return;
@@ -930,6 +938,7 @@ function restoreDraft(){
   applyFields(s.d);
   Object.entries(s.sig||{}).forEach(([k,o])=>{if(pads[k]&&o&&o.data)loadPad(pads[k],o.data,o.at);});
   if(s.seller)$('#seller').value=s.seller;
+  if(s.signMode)signMode=s.signMode;
   if(s.KID&&!KID){KID=s.KID;KNO=s.KNO||'';}
   state=s.state==='locked'&&KID?'locked':'edit';
   return true;
@@ -963,7 +972,7 @@ function summary(){
     price:num('price'),deposit:num('deposit')||0,signDate:d('sg'),eta:d('dl'),transfer:d('tr')};
 }
 // 送到伺服器的欄位：不含照片（行照另外傳）
-function fieldsForServer(){const d=collect();delete d.prevLic;delete d.agree;return d;}
+function fieldsForServer(){const d=collect();delete d.prevLic;delete d.agree;delete d.corpSeal;return d;}
 function carDocsForServer(){
   const d=pfx=>{const x=rocDate(pfx);return x&&x!=='bad'?`${x.getFullYear()}/${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`:'';};
   const o={vin:v('vin').toUpperCase(),engineNo:v('engineNo').toUpperCase(),cc:v('cc'),origin:v('origin'),
@@ -978,20 +987,21 @@ function applyState(){
   $$('#bar .step').forEach(s=>{const order=['edit','locked','done'];const i=order.indexOf(s.dataset.s),c=order.indexOf(state);s.classList.toggle('on',i===c);s.classList.toggle('done',i<c);});
   $('#bCheck').style.display=state==='edit'?'':'none';
   $('#bUnlock').style.display=state==='locked'?'':'none';
-  $('#bFinish').style.display=state==='locked'&&!PAPER?'':'none';
-  $('#bPrint').style.display=state==='locked'&&PAPER?'':'none';
-  $('#bPay').style.display=state==='locked'&&KID?'':'none';if(KID)$('#bPay').href='payment.html?k='+encodeURIComponent(KID)+'&from=contract';
+  $('#bFinish').style.display=state==='locked'&&!isPaper()?'':'none';
+  $('#bPrint').style.display=state==='locked'&&isPaper()?'':'none';
+  $('#bPay').style.display=state==='locked'&&KID?'':'none';
+  $('#bOnline').style.display=state==='locked'&&!PRINT?'':'none';$('#bOnline').textContent=isPaper()?'改用線上簽名（平板）':'改回印出親簽';if(KID)$('#bPay').href='payment.html?k='+encodeURIComponent(KID)+'&from=contract';
   $('#bPay').textContent=INIT&&INIT.receipt?'繳款單（'+INIT.receipt['繳款單編號']+'）':'簽約收款・繳款單';
-  $('#agree').disabled=PAPER||state!=='locked';
+  $('#agree').disabled=isPaper()||state!=='locked';
   $('#seller').disabled=state!=='edit';
   F.querySelectorAll('.lockable input.t,.lockable textarea.t').forEach(i=>i.readOnly=state!=='edit');
   el('no').readOnly=true;
   $$('.f_hash').forEach(s=>s.textContent=state==='done'&&hash?`簽署完成：${new Date(signedAt).toLocaleString('zh-TW',{hour12:false})}｜文件驗證碼 ${hash.slice(0,16).toUpperCase()}`:'');
   $('#hint').textContent={edit:'業務填寫正面及附件一（車源表有的資料已自動帶入）→ 按「檢查內容並鎖定」取得合約編號。紅色＝必須修正，黃色＝提醒確認。',
-    locked:PAPER?'內容已鎖定（'+(KNO||'')+'）。簽約當天有收款，先按「簽約收款・繳款單」開立（會印在每聯第 4 頁）。按「匯出列印 PDF」→ 用「雙面列印（長邊翻頁）」印出兩聯 → 客人在兩聯的確認欄打勾、審閱簽名、立約簽名，公司蓋大小章 → 簽好後到合約列表按「已簽約」上傳第一聯。'
+    locked:isPaper()?'內容已鎖定（'+(KNO||'')+'）。簽約當天有收款，先按「簽約收款・繳款單」開立（會印在每聯第 4 頁）。按「匯出列印 PDF」→ 用「雙面列印（長邊翻頁）」印出兩聯 → 客人在兩聯的確認欄打勾、審閱簽名、立約簽名，公司蓋大小章 → 簽好後到合約列表按「已簽約」上傳第一聯。'
       :'內容已鎖定（'+(KNO||'')+'）。請乙方閱讀正反兩面及附件 → 勾選確認欄 → 審閱簽名與立約簽名 → 按「完成簽署・上傳合約」。',
     done:'簽約完成，合約已上傳。'}[state];
-  if(PRINT){['#bCheck','#bUnlock','#bFinish','#bPay'].forEach(x=>$(x).style.display='none');$('#bPrint').style.display='';$('#bPrint').textContent='列印空白合約（一式兩聯）';$('#sellBox').hidden=true;
+  if(PRINT){['#bCheck','#bUnlock','#bFinish','#bPay','#bOnline'].forEach(x=>$(x).style.display='none');$('#bPrint').style.display='';$('#bPrint').textContent='列印空白合約（一式兩聯）';$('#sellBox').hidden=true;
     $('#step2').parentElement.style.display='none';$('#hint').textContent='空白合約：可以先選甲方公司（會印上公司資料和浮水印），其他欄位全部空白，印出來手寫。用 A4 雙面列印（長邊翻頁）。';}
   else if(INIT&&INIT.blank&&state==='edit')$('#hint').textContent='空白合約（非公司車）：車輛資料請照行照自己填寫，登記「已簽約」時會在業務系統車源表新增這台車並成立訂單。紅色＝必須修正，黃色＝提醒確認。';
   updatePads();
@@ -1026,6 +1036,7 @@ $('#bFinish').onclick=async()=>{
   const p=curProfile();
   if(!p||!p.sealBig||!p.sealSmall){miss.push('甲方大小章圖檔不完整（請到公司設定上傳）');$('#sealBig').classList.add('err');}
   if(miss.length){showIssues(miss.map(m=>({l:'E',f:'',m})),'尚未完成簽署');toast('簽署尚未完成');return;}
+  if(v('buyerType')==='法人'&&!v('corpSeal')){const ok=await ask('沒有用印照片','乙方是法人，還沒有上傳用印照片。確定只用代表人簽名完成簽署嗎？（建議拍一張實際蓋在紙上的大小章照片上傳）');if(!ok)return;}
   $('#issues').style.display='none';
   if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路連線後重新整理頁面',5000);return;}
   const prev={signedAt,hash};
@@ -1036,16 +1047,18 @@ $('#bFinish').onclick=async()=>{
   try{
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
     const pages=buildStatic(['front','back','veh']);const imgs=[];
+    if(INIT&&INIT.receipt&&window.RC){const co=curProfile()||{};const rp=RC.page(INIT.receipt,{name:co.name,tax:co.tax},'',WM);$('#render').appendChild(rp);pages.push(rp);}
     for(const pg of pages){const cv=await html2canvas(pg,{scale:1.8,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await canvasJpeg(cv));}
     $('#render').innerHTML='';
     const blob=jpegPdf(imgs);
+    const custUrl=URL.createObjectURL(blob),custName=`合約_${KNO}_${(v('plate')||'').toUpperCase()}_${v('buyerName')||''}.pdf`;
     const dataUrl=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blob);});
     busy('上傳合約中，請稍候…');
     const r=await api({action:'contractSubmit',id:KID,pdf:dataUrl.replace(/^data:[^;]*;/,'data:application/pdf;'),data:{fields:fieldsForServer(),summary:summary(),car:carDocsForServer()}});
     busy(false);
     if(!r.ok){state='locked';signedAt=prev.signedAt;hash=prev.hash;applyState();toast(r.message||'上傳失敗，請再按一次',6000);return;}
     store.del(draftKey());
-    $('#doneMsg').innerHTML=`合約 <b>${esc(r.no||KNO)}</b> 已存到公司雲端，業務系統的訂單也已成立。<br>需要 PDF 時，到合約列表按「開啟 PDF」。`;
+    $('#doneMsg').innerHTML=`合約 <b>${esc(r.no||KNO)}</b> 已存到公司雲端，業務系統的訂單也已成立。<br>客人的那一份可以按下面「下載合約 PDF」傳給客人（LINE 或 Email）。<br><a class="btn" href="${custUrl}" download="${esc(custName)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-block">下載合約 PDF</a>`;
     $('#ovDone').classList.add('show');
   }catch(e){busy(false);$('#render').innerHTML='';state='locked';signedAt=prev.signedAt;hash=prev.hash;applyState();
     if(e.message!=='relogin')toast('產生或上傳失敗：'+(e&&e.message||e)+'，請再按一次',6000);}
@@ -1077,6 +1090,21 @@ $('#bPrint').onclick=async()=>{
   }catch(e){busy(false);$('#render').innerHTML='';console.error(e);toast('產生 PDF 失敗：'+(e&&e.message||e),5000);}
 };
 $('#pdfClose').onclick=()=>$('#ovPdf').classList.remove('show');
+$('#bOnline').onclick=async()=>{
+  if(isPaper()){
+    const p=curProfile();
+    if(!p||!p.sealBig||!p.sealSmall){toast('線上簽名要先在「公司設定」上傳甲方的大小章圖檔（'+((p&&p.name)||'甲方公司')+'）',6000);return;}
+    signMode='online';
+  }else{
+    if(Object.values(pads).some(x=>!x.empty)){const ok=await ask('改回印出親簽','改回印出親簽後，平板上的簽名會清除。確定嗎？');if(!ok)return;}
+    Object.values(pads).forEach(clearPad);el('agree').checked=false;signMode='paper';
+  }
+  applyMode();calc();applyState();save();
+  toast(isPaper()?'已改回印出親簽：請匯出 PDF 印出，客人親簽、公司實際蓋章':'已改用線上簽名：請客人閱讀合約後勾選確認欄，並在平板上簽名',5000);
+};
+document.addEventListener('change',e=>{if(e.target.id!=='corpPhotoFile'||!e.target.files[0])return;
+  const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{const k=Math.min(1,1200/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);el('corpSeal').value=c.toDataURL('image/jpeg',0.85);calc();save();};img.src=rd.result;};rd.readAsDataURL(e.target.files[0]);e.target.value='';});
 function busy(msg){const b=$('#busy');if(msg===false){b.classList.remove('show');return;}$('#busyMsg').textContent=msg;b.classList.add('show');}
 $('#seller').addEventListener('change',()=>{el('salesName').value='';el('salesPhone').value='';fillSalesRep();save();});
 
@@ -1092,7 +1120,13 @@ $('#licClear').onclick=()=>{if(state!=='edit')return;el('prevLic').value='';upda
 
 /* ---------- init ---------- */
 ['sig_review','sig_buyer'].forEach(makePad);
-if(PAPER){document.body.classList.add('paper');$('#agreeTxt').textContent='乙方確認正面及附件各項記載無誤。';$('#step2').textContent='② 鎖定・印出簽名';$('#step3').textContent='③ 已簽約';$$('.sig .cap').forEach(c=>c.textContent=c.textContent.replace('簽名','親筆簽名'));}
+function applyMode(){
+  const pp=isPaper();document.body.classList.toggle('paper',pp);
+  $('#agreeTxt').textContent=pp?'乙方確認正面及附件各項記載無誤。':'乙方確認正面及附件各項記載無誤，並同意依電子簽章法以電子簽名方式簽署本契約。';
+  $('#step2').textContent=pp?'② 鎖定・印出簽名':'② 鎖定・乙方線上簽名';$('#step3').textContent=pp?'③ 已簽約':'③ 完成';
+  showProfile();
+}
+applyMode();
 fit();
 async function main(){
   if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
@@ -1107,7 +1141,8 @@ async function main(){
     renderCompanySelect();setupSeller();
     if(r.contract){KID=r.contract.id;KNO=r.contract.no;}
     const had=PRINT?false:restoreDraft();
-    if(!had&&r.contract&&r.contract.data){applyFields(r.contract.data);if(PAPER)state='locked';}
+    applyMode();
+    if(!had&&r.contract&&r.contract.data){applyFields(r.contract.data);state='locked';}
     if(!had&&!(r.contract&&r.contract.data)&&!PRINT)setDefaults();
     if(PRINT)state='locked';
     if(KNO)el('no').value=String(KNO).replace(/^AAA\./,'');
