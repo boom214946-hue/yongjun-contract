@@ -183,7 +183,7 @@ function renderContracts() {
       <td class="mono" style="text-align:right">${money(+k['成交價'])}</td><td>${st(k)}</td>
       <td class="small">${k['核定狀態'] === '待核定' ? '<span class="pill stale">待核定</span>' : k['核定狀態'] === '已核定' ? `<span class="pill ready" title="${esc(k['核定備註'])}">${esc(k['核定人'])} 已核定</span>` : '<span class="muted">—</span>'}</td>
       <td><div class="row" style="gap:6px;flex-wrap:nowrap">
-        ${k['狀態'] === '簽署中' ? (PAPER() ? `<a class="btn" href="contract.html?id=${encodeURIComponent(k['編號'])}">開啟／列印</a><button class="btn acc" data-ksign="${k['編號']}">已簽約</button>`
+        ${k['狀態'] === '簽署中' ? (PAPER() ? `<a class="btn" href="contract.html?id=${encodeURIComponent(k['編號'])}">開啟／簽署</a><button class="btn acc" data-ksign="${k['編號']}">已簽約</button>`
           : `<a class="btn acc" href="contract.html?id=${encodeURIComponent(k['編號'])}">繼續簽約</a>`) + `<button class="btn danger" data-kvoid="${k['編號']}">作廢</button>` : ''}
         ${['簽署中', '已簽約'].includes(k['狀態']) ? `<a class="btn" href="payment.html?k=${encodeURIComponent(k['編號'])}">繳款單${payCount(k['編號']) ? ' ' + payCount(k['編號']) : ''}</a>` : ''}
         ${k['狀態'] === '已簽約' ? `<a class="btn" href="docs.html?k=${encodeURIComponent(k['編號'])}">證件申請</a><a class="btn" href="delivery.html?k=${encodeURIComponent(k['編號'])}">交車</a>` : ''}
@@ -191,7 +191,7 @@ function renderContracts() {
         ${k.hasPdf ? `<button class="btn" data-kpdf="${k['編號']}">開啟 PDF</button>` : ''}
         ${isBoss() && k['核定狀態'] === '待核定' ? `<button class="btn pri" data-kok="${k['編號']}">核定</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有合約</td></tr>'}</tbody>
   </table></div></section>
-  <p class="small muted" style="margin:0">${PAPER() ? '「待簽約」是已取得合約編號、印出來但還沒登記簽好的合約。客人簽好、公司蓋好章後，按「已簽約」上傳第一聯（公司留底聯），業務系統訂單才會成立。' : '「簽署中」是已鎖定、取得合約編號但客戶還沒簽完的合約。'}不簽了請按「作廢」，號碼不會重複使用。PDF 在 LINE 裡打不開時，請點右上角選「用預設瀏覽器開啟」。</p>`;
+  <p class="small muted" style="margin:0">${PAPER() ? '「待簽約」是已取得合約編號、還沒簽好的合約。印出親簽的：客人簽好、公司蓋好章後按「已簽約」上傳第一聯；線上簽名的：按「開啟／簽署」在平板上簽完就自動完成。業務系統訂單在簽好時才成立。' : '「簽署中」是已鎖定、取得合約編號但客戶還沒簽完的合約。'}不簽了請按「作廢」，號碼不會重複使用。PDF 在 LINE 裡打不開時，請點右上角選「用預設瀏覽器開啟」。</p>`;
 }
 function b64Blob(dataUrl) {
   const [h, b] = dataUrl.split(','), mime = h.match(/data:([^;]+)/)[1], bin = atob(b), u = new Uint8Array(bin.length);
@@ -212,42 +212,44 @@ async function openPdf(id, btn) {
 
 // ===== 繳款單 =====
 const payCount = kid => (D.pays || []).filter(p => p['合約ID'] === kid && p['狀態'] !== '作廢').length;
-const PST = { 待核對: 'active', 待核准: 'stale', 已核准: 'ready', 作廢: 'done' };
-function myPayTodo() { const m = D.me; return (D.pays || []).filter(p => (p['狀態'] === '待核對' && (m.isOffice || m.isBoss)) || (p['狀態'] === '待核准' && D.canPayApprove)); }
+const PST = { 待核對: 'active', 待核准: 'stale', 待主管簽核: 'stale', 已核准: 'ready', 作廢: 'done' };
+const pState = p => p['狀態'] === '已核准' && !p['主管簽核人'] ? '待主管簽核' : p['狀態'];
+function myPayTodo() { const m = D.me; return (D.pays || []).filter(p => (p['狀態'] === '待核對' && (m.isOffice || m.isBoss)) || (p['狀態'] === '待核准' && D.canPayApprove) || (pState(p) === '待主管簽核' && D.canPaySign)); }
 function renderPays() {
   const all = (D.pays || []).slice().sort((a, b) => String(b['建立時間']).localeCompare(String(a['建立時間'])));
   if (!pFilter) pFilter = myPayTodo().length ? '待我處理' : '全部';
   const todo = myPayTodo();
-  const groups = { 待我處理: p => todo.includes(p), 待核對: p => p['狀態'] === '待核對', 待核准: p => p['狀態'] === '待核准', 已核准: p => p['狀態'] === '已核准', 作廢: p => p['狀態'] === '作廢', 全部: () => true };
+  const groups = { 待我處理: p => todo.includes(p), 待核對: p => p['狀態'] === '待核對', 待核准: p => p['狀態'] === '待核准', 待主管簽核: p => pState(p) === '待主管簽核', 已核准: p => pState(p) === '已核准', 作廢: p => p['狀態'] === '作廢', 全部: () => true };
   const list = all.filter(groups[pFilter]);
   return `
-  <section><h2 style="font-size:18px">繳款單</h2><div class="small muted">流程：業務開立 → 行政（Bella）核對 → ${esc(D.payApproverEn || 'Yvonne')} 核准。開立新繳款單請到「合約列表」按該合約的「繳款單」。</div></section>
+  <section><h2 style="font-size:18px">繳款單</h2><div class="small muted">流程：業務開立（經手人）→ 行政（Bella）核對（會計）→ ${esc(D.payApproverEn || 'Yvonne')} 核准（財務經辦）→ ${esc(D.paySupervisorEn || 'Leo')} 主管簽核（知會入帳）。核准後客戶聯自動蓋收款章。開立新繳款單請到「合約列表」按該合約的「繳款單」。</div></section>
   ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張繳款單等你處理</b></div>` : ''}
   <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-pf="${g}" aria-pressed="${pFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
   <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:900px;font-size:13.5px">
     <thead><tr><th>繳款單編號</th><th>開立日</th><th>車輛</th><th>客戶</th><th>業務</th><th style="text-align:right">本次收款</th><th style="text-align:right">車價累計</th><th style="text-align:right">剩餘尾款</th><th>狀態</th><th></th></tr></thead>
     <tbody>${list.map(p => `<tr><td class="mono"><b>${esc(p['繳款單編號'])}</b></td><td class="mono">${md(p['開立日'])}</td><td>${esc(p['車款'])} <span class="mono small muted">${esc(p['車牌'])}</span></td>
       <td>${esc(p['客戶'])}</td><td>${esc(p['業務'])}</td><td class="mono" style="text-align:right"><b>${money(+p['本次收款'])}</b></td><td class="mono" style="text-align:right">${money(+p['車價已收'])}</td><td class="mono" style="text-align:right">${money(+p['剩餘尾款'])}</td>
-      <td><span class="pill ${PST[p['狀態']]}">${esc(p['狀態'])}</span></td><td><button class="btn ${todo.includes(p) ? 'pri' : ''}" data-pview="${p['編號']}">${todo.includes(p) ? (p['狀態'] === '待核對' ? '核對' : '核准') : '查看'}</button></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有繳款單</td></tr>'}</tbody>
+      <td><span class="pill ${PST[pState(p)]}">${esc(pState(p))}</span></td><td><button class="btn ${todo.includes(p) ? 'pri' : ''}" data-pview="${p['編號']}">${todo.includes(p) ? (p['狀態'] === '待核對' ? '核對' : p['狀態'] === '待核准' ? '核准' : '簽核') : '查看'}</button></td></tr>`).join('') || '<tr><td colspan="10" class="muted">沒有繳款單</td></tr>'}</tbody>
   </table></div></section>`;
 }
 function payModal(p, imgs) {
   const m = D.me, todo = myPayTodo().includes(p);
   const canVoid = p['狀態'] !== '作廢' && (m.isBoss || m.isOffice || (p['建立人'] === m.en && p['狀態'] === '待核對'));
-  openModal(`<h3>繳款單 ${esc(p['繳款單編號'])} <span class="pill ${PST[p['狀態']]}">${esc(p['狀態'])}</span></h3>
+  openModal(`<h3>繳款單 ${esc(p['繳款單編號'])} <span class="pill ${PST[pState(p)]}">${esc(pState(p))}</span></h3>
     <div class="calc">${esc(p['車款'])} <span class="mono">${esc(p['車牌'])}</span>・客戶 ${esc(p['客戶'])}・業務 ${esc(p['業務'])}<br>成交價 <b class="mono">${money(+p['成交價'])}</b>・合約定金 ${money(+p['合約定金'])}・車價累計 <b class="mono">${money(+p['車價已收'])}</b>・剩餘尾款 <b class="mono">${money(+p['剩餘尾款'])}</b></div>
     <div class="tbl-wrap"><table style="font-size:13px"><thead><tr><th>版次</th><th>日期</th><th>款項</th><th>方式</th><th style="text-align:right">金額</th><th>帳戶／備註</th></tr></thead><tbody>
       ${p.lines.map(l => `<tr style="${l.ver == p['版次'] ? 'font-weight:700' : 'color:var(--muted)'}"><td>${l.ver == p['版次'] ? '本次' : ('0' + l.ver).slice(-2)}</td><td class="mono">${md(l.date)}</td><td>${esc(l.type)}</td><td>${esc(l.method)}</td><td class="mono" style="text-align:right">${money(l.amount)}</td><td class="small">${esc([l.account, l.note].filter(Boolean).join('・'))}</td></tr>`).join('')}</tbody></table></div>
     ${p['備註'] ? `<div class="small">備註：${esc(p['備註'])}</div>` : ''}
     <div><div class="label">匯款證明・簽單（${p.proofCount} 張）</div><div class="row" id="pimgs" style="gap:6px">${p.proofCount ? (imgs ? imgs.map(u => `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="憑證" style="width:96px;height:96px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></a>`).join('') : '<span class="small muted">讀取中…</span>') : '<span class="small muted">沒有上傳</span>'}</div></div>
-    <div class="small muted">開立 ${esc(p['建立人'])} ${esc(p['建立時間'])}${p['核對人'] ? `・核對 ${esc(p['核對人'])} ${esc(p['核對時間'])}` : ''}${p['核准人'] ? `・核准 ${esc(p['核准人'])} ${esc(p['核准時間'])}` : ''}${p['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(p['作廢原因'])}（${esc(p['作廢人'])}）</span>` : ''}</div>
+    <div class="small muted">開立 ${esc(p['建立人'])} ${esc(p['建立時間'])}${p['核對人'] ? `・核對 ${esc(p['核對人'])} ${esc(p['核對時間'])}` : ''}${p['核准人'] ? `・核准 ${esc(p['核准人'])} ${esc(p['核准時間'])}` : ''}${p['主管簽核人'] ? `・主管簽核 ${esc(p['主管簽核人'])} ${esc(p['主管簽核時間'])}` : ''}${p['作廢原因'] ? `<br><span style="color:var(--warn)">作廢：${esc(p['作廢原因'])}（${esc(p['作廢人'])}）</span>` : ''}</div>
     ${canVoid ? `<div class="row" id="pvoidBox" hidden><input type="text" id="pvoid-reason" placeholder="作廢原因（必填），例如 金額打錯、客戶退訂" style="flex:1"><button class="btn danger" data-pvoidgo="${p['編號']}">確認作廢</button></div>` : ''}
     <div class="row" style="justify-content:flex-end">
       ${canVoid ? `<button class="btn danger" data-pvoid>作廢</button>` : ''}
       <a class="btn" href="payment.html?k=${encodeURIComponent(p['合約ID'])}&v=${encodeURIComponent(p['編號'])}">預覽／列印</a>
       <button class="btn" data-mclose>關閉</button>
       ${todo && p['狀態'] === '待核對' ? `<button class="btn pri" data-pcheck="${p['編號']}">核對無誤</button>` : ''}
-      ${todo && p['狀態'] === '待核准' ? `<button class="btn pri" data-papprove="${p['編號']}">核准</button>` : ''}</div>`);
+      ${todo && p['狀態'] === '待核准' ? `<button class="btn pri" data-papprove="${p['編號']}">核准</button>` : ''}
+      ${todo && pState(p) === '待主管簽核' ? `<button class="btn pri" data-psign="${p['編號']}">主管簽核</button>` : ''}</div>`);
 }
 
 // ===== 證件申請 =====
@@ -347,8 +349,8 @@ function renderAgents() {
   const groups = { 待我處理: r => todo.includes(r), 待確認收款: r => r['狀態'] === '待確認收款', 已收款: r => r['狀態'] === '已收款', 作廢: r => r['狀態'] === '作廢', 全部: () => true };
   const list = all.filter(groups[aFilter]);
   return `
-  <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">代辦費用（代收代付明細）</h2><div class="small muted">過戶規費、保養、配件、烤漆等代客收款、轉付廠商的費用；不是合約附件。有合約的請到「合約列表」按「代辦費用」，沒有合約的（例如老客人保養）按右邊新增。</div></div>
-    <a class="btn acc" href="agent.html">＋ 新增（不綁合約）</a></section>
+  <section class="row" style="justify-content:space-between"><div><h2 style="font-size:18px">代辦費用（代收代付明細）</h2><div class="small muted">過戶規費、保養、配件、烤漆等代客收款、轉付廠商的費用；不是合約附件。按「＋ 新增」挑一份合約開立；沒有合約的（例如老客人保養）在新增視窗下方選「不綁合約」。</div></div>
+    <button class="btn acc" data-anew>＋ 新增</button></section>
   ${todo.length ? `<div class="panel" style="border-color:var(--accent)"><b>${todo.length} 張代收明細等你確認收款</b></div>` : ''}
   <nav class="filters">${Object.keys(groups).map(g => `<button class="chip" data-af="${g}" aria-pressed="${aFilter === g}">${g} ${all.filter(groups[g]).length}</button>`).join('')}</nav>
   <section class="panel" style="padding:0"><div class="tbl-wrap"><table class="kt" style="min-width:860px;font-size:13.5px">
@@ -360,6 +362,22 @@ function renderAgents() {
       <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ${can ? 'pri' : ''}" data-aview="${r['編號']}">${can ? '確認收款' : '查看'}</button>
         <a class="btn" href="agent.html?${r['合約ID'] ? 'k=' + encodeURIComponent(r['合約ID']) + '&' : ''}v=${encodeURIComponent(r['編號'])}">預覽／列印</a></div></td></tr>`; }).join('') || '<tr><td colspan="9" class="muted">沒有代收明細</td></tr>'}</tbody>
   </table></div></section>`;
+}
+function agentPick(q) {
+  const ks = (D.contracts || []).filter(k => ['簽署中', '已簽約', '已交車'].includes(k['狀態'])).sort((a, b) => String(b['建立時間']).localeCompare(String(a['建立時間'])));
+  const kw = String(q || '').trim().toUpperCase();
+  const list = kw ? ks.filter(k => [k['合約編號'], k['乙方姓名'], k['車牌'], k['車款'], k['業務']].some(v => String(v || '').toUpperCase().includes(kw))) : ks;
+  return list.slice(0, 50).map(k => `<a class="btn" style="display:flex;justify-content:space-between;gap:8px;text-align:left" href="agent.html?k=${encodeURIComponent(k['編號'])}">
+      <span><b class="mono">${esc(k['合約編號'])}</b>　${esc(k['乙方姓名'])}<br><span class="small muted">${esc(k['車款'])} <span class="mono">${esc(k['車牌'])}</span>・業務 ${esc(k['業務'])}</span></span>
+      <span class="pill ${k['狀態'] === '已簽約' ? 'ready' : 'stale'}">${esc(k['狀態'])}</span></a>`).join('') || '<div class="muted small">沒有符合的合約（只列簽署中、已簽約、已交車的合約）</div>';
+}
+function agentNewModal() {
+  openModal(`<h3>新增代辦費用：選擇合約</h3>
+    <input type="search" id="apick-q" placeholder="搜尋合約編號、客戶、車牌、車款" autocomplete="off">
+    <div id="apick" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto">${agentPick('')}</div>
+    <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:10px">
+      <a class="small" href="agent.html">沒有合約？開不綁合約的代收明細 →</a><button class="btn" data-mclose>取消</button></div>`);
+  const q = $('#apick-q'); q.addEventListener('input', () => { $('#apick').innerHTML = agentPick(q.value); }); q.focus();
 }
 function agentModal(r) {
   const m = D.me, can = myAgentTodo().includes(r), canVoid = r['狀態'] !== '作廢' && (m.isBoss || m.isOffice || (r['經手人'] === m.en && r['狀態'] === '待確認收款'));
@@ -395,7 +413,8 @@ function renderSettings() {
       <div class="small muted">${esc(c['地址']) || '<span class="need">地址未填</span>'}・管轄法院 ${esc(c['管轄法院']) || '<span class="need">未填</span>'}</div></div>
       <button class="btn" data-coedit="${c['編號']}">修改</button></div>
     <div class="sealprev"><div><div class="label">公司大章</div><div class="sb big">${c.sealBig ? `<img src="${c.sealBig}" alt="大章">` : '<span class="need">未上傳</span>'}</div></div>
-      <div><div class="label">負責人小章</div><div class="sb small">${c.sealSmall ? `<img src="${c.sealSmall}" alt="小章">` : '<span class="need">未上傳</span>'}</div></div></div>
+      <div><div class="label">負責人小章</div><div class="sb small">${c.sealSmall ? `<img src="${c.sealSmall}" alt="小章">` : '<span class="need">未上傳</span>'}</div></div>
+      <div><div class="label">收款專用章</div><div class="sb big">${c.sealPay ? `<img src="${c.sealPay}" alt="收款專用章">` : '<span class="muted small">未上傳</span>'}</div></div></div>
   </section>`).join('') || '<div class="panel">還沒有公司資料，請按「新增公司」。</div>'}
   <section class="panel sec"><h3 style="font-size:16px">收款帳戶</h3>
     <div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>顯示名稱</th><th>公司</th><th>銀行／分行</th><th>帳號</th><th>戶名</th><th>狀態</th><th></th></tr></thead>
@@ -414,7 +433,8 @@ function companyForm(c) {
     <div class="full sealprev">
       <label class="drop" for="co-big" style="width:140px">公司大章<div class="sb big" id="co-bigp" style="margin:6px auto 0">${c.sealBig ? `<img src="${c.sealBig}" alt="">` : '上傳'}</div><input id="co-big" type="file" accept="image/*"></label>
       <label class="drop" for="co-small" style="width:110px">負責人小章<div class="sb small" id="co-smallp" style="margin:6px auto 0">${c.sealSmall ? `<img src="${c.sealSmall}" alt="">` : '上傳'}</div><input id="co-small" type="file" accept="image/*"></label>
-      <p class="small muted" style="margin:0;flex:1;min-width:160px">${PAPER() ? '目前是紙本簽約（實際蓋章），大小章圖檔之後改線上簽署才會用到，可以先不上傳。' : ''}印章蓋在白紙上拍照，裁切到只剩印章再上傳，白色背景會自動去除。合約上大章 3×3 公分、小章 1.5×1.5 公分。</p></div>
+      <label class="drop" for="co-pay" style="width:140px">收款專用章<div class="sb big" id="co-payp" style="margin:6px auto 0">${c.sealPay ? `<img src="${c.sealPay}" alt="">` : '上傳'}</div><input id="co-pay" type="file" accept="image/*"></label>
+      <p class="small muted" style="margin:0;flex:1;min-width:160px">${PAPER() ? '目前是紙本簽約（實際蓋章），大小章圖檔之後改線上簽署才會用到，可以先不上傳。' : ''}印章蓋在白紙上拍照，裁切到只剩印章再上傳，白色背景會自動去除。合約上大章 3×3 公分、小章 1.5×1.5 公分。收款專用章會在繳款單核准（財務經辦）後，自動印在客戶聯的「甲方收款用印」。</p></div>
     <label class="full" style="flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-weight:400"><input type="checkbox" id="co-active" ${c['啟用'] === '停用' ? '' : 'checked'}> 使用中（停用後簽合約時不能選）</label>
     <div class="full row" style="justify-content:flex-end"><button type="button" class="btn" data-mclose>取消</button><button class="btn acc" type="submit">儲存</button></div></form>`;
 }
@@ -503,6 +523,7 @@ document.addEventListener('click', async e => {
   if (ds.df) { dFilter = ds.df; render(); return; }
   if (ds.tf) { tFilter = ds.tf; render(); return; }
   if (ds.af) { aFilter = ds.af; render(); return; }
+  if ('anew' in ds) { agentNewModal(); return; }
   if (ds.aview) { agentModal(D.agents.find(x => x['編號'] === ds.aview)); return; }
   if (ds.avoid !== undefined) { $('#avoidBox').hidden = false; $('#avoid-reason').focus(); return; }
   if (ds.avoidgo) { const reason = $('#avoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'agentVoid', id: ds.avoidgo, reason }, t); return; }
@@ -522,6 +543,7 @@ document.addEventListener('click', async e => {
   if (ds.pvoidgo) { const reason = $('#pvoid-reason').value.trim(); if (!reason) { toast('請填作廢原因'); return; } await act({ action: 'payVoid', id: ds.pvoidgo, reason }, t); return; }
   if (ds.pcheck) { await act({ action: 'payCheck', id: ds.pcheck }, t); return; }
   if (ds.papprove) { await act({ action: 'payApprove', id: ds.papprove }, t); return; }
+  if (ds.psign) { await act({ action: 'paySign', id: ds.psign }, t); return; }
   if (ds.kpdf) { await openPdf(ds.kpdf, t); return; }
   if (ds.kvoid) { if (confirm('作廢這份簽署中的合約？合約編號不會再使用。')) await act({ action: 'contractVoid', id: ds.kvoid }, t); return; }
   if (ds.kok) { const k = D.contracts.find(x => x['編號'] === ds.kok); openModal(`<h3>核定・${esc(k['合約編號'])}</h3><div class="calc">${esc(k['車款'])} ${esc(k['車牌'])}・客戶 ${esc(k['乙方姓名'])}・業務 ${esc(k['業務'])}・成交價 <b class="mono">${money(+k['成交價'])}</b>（低於底價）</div>
@@ -547,8 +569,8 @@ document.addEventListener('input', e => {
 document.addEventListener('change', async e => {
   const id = e.target.id;
   if (id === 'ks-file') { signFiles = signFiles.concat(Array.from(e.target.files)); e.target.value = ''; showSignFiles(); return; }
-  if ((id === 'co-big' || id === 'co-small') && e.target.files[0]) {
-    try { const u = await sealToPng(e.target.files[0]); sealEdit[id === 'co-big' ? 'big' : 'small'] = u; $('#' + id + 'p').innerHTML = `<img src="${u}" alt="">`; } catch (x) { toast('圖片讀取失敗'); }
+  if ((id === 'co-big' || id === 'co-small' || id === 'co-pay') && e.target.files[0]) {
+    try { const u = await sealToPng(e.target.files[0]); sealEdit[{ 'co-big': 'big', 'co-small': 'small', 'co-pay': 'pay' }[id]] = u; $('#' + id + 'p').innerHTML = `<img src="${u}" alt="">`; } catch (x) { toast('圖片讀取失敗'); }
   }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -567,7 +589,7 @@ document.addEventListener('submit', async e => {
   if (f.id === 'cof') {
     const company = { name: g('co-name'), short: g('co-short'), tax: g('co-tax'), rep: g('co-rep'), repId: g('co-repid'), addr: g('co-addr'), phone: g('co-phone'),
       mobile: g('co-mobile'), email: g('co-email'), court: g('co-court'), active: $('#co-active').checked };
-    if (sealEdit.big) company.sealBig = sealEdit.big; if (sealEdit.small) company.sealSmall = sealEdit.small;
+    if (sealEdit.big) company.sealBig = sealEdit.big; if (sealEdit.small) company.sealSmall = sealEdit.small; if (sealEdit.pay) company.sealPay = sealEdit.pay;
     const r = await act({ action: 'saveCompany', id: f.dataset.id, company }, btn); if (r && r.ok) await loadSettings();
   }
   if (f.id === 'acf') {
