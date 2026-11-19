@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>合約系統｜代辦費用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F4;--surface:#fff;--surface2:#E6EAEF;--fg:#1C2733;--muted:#5B6878;--line:#D3D9E0;--navy:#1d3557;--accent:#B4611A;--accent-soft:#F6E7D8;
+  --ok:#2E7D4F;--ok-soft:#DFF0E5;--warn:#B3261E;--warn-soft:#F8E1DF;--amber:#8a5a00;--amber-soft:#fff4d6}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55;padding-bottom:60px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+#bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#bar .ttl{font-weight:700;margin-right:auto}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:700;font-size:13.5px;white-space:nowrap;text-decoration:none;color:var(--fg);display:inline-block}
+.btn.pri{background:#f4b942;border-color:#f4b942;color:#1b1b1b}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.wrap{max-width:1100px;margin:12px auto 0;padding:0 12px;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.panel h2{font-size:16px;margin:0 0 8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.mono{font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px}
+.kv div span{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.prog{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;background:var(--ok)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.p1{background:var(--accent-soft);color:var(--accent)}.pill.p2{background:var(--amber-soft);color:var(--amber)}.pill.p3{background:var(--ok-soft);color:var(--ok)}.pill.p0{background:var(--surface2);color:var(--muted)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th,table.t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+table.t th{font-size:12px;color:var(--muted)}
+table.t tr.sel td{background:#f3f6fb}
+table.t tr.void td{color:var(--muted);text-decoration:line-through}
+table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decoration:none}
+.tw{overflow-x:auto}
+.lines{display:flex;flex-direction:column;gap:8px}
+.ln{display:grid;grid-template-columns:28px 140px 120px 130px 110px 1fr 1fr 34px;gap:6px;align-items:center}
+.ln input,.ln select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0}
+.ln .no{font-weight:700;color:var(--muted);text-align:center}
+.ln.err input,.ln.err select{border-color:var(--warn)}
+.ln .x{border:0;background:none;font-size:18px;color:var(--muted)}
+.lnh{font-size:12px;color:var(--muted);font-weight:700}
+@media (max-width:860px){.ln{grid-template-columns:1fr 1fr;padding:8px;border:1px solid var(--line);border-radius:10px}.ln .no{grid-column:1/-1;text-align:left}.lnh{display:none}}
+.msgs{display:flex;flex-direction:column;gap:5px;font-size:14px}
+.msgs div{padding:6px 10px;border-radius:8px}
+.msgs .E{background:var(--warn-soft)}.msgs .W{background:var(--amber-soft)}.msgs .O{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.sumline{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;background:var(--surface2);border-radius:8px;padding:8px 12px}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:13px;display:block;cursor:pointer}
+.drop input{display:none}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}.thumbs div{position:relative}.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.thumbs button{position:absolute;top:-6px;right:-6px;border:0;border-radius:99px;background:#333;color:#fff;width:20px;height:20px;font-size:12px;line-height:20px;padding:0}
+#preview{overflow:hidden;background:#d9d6d0;border-radius:10px;padding:10px}
+#preview .page{margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.18);transform-origin:top left}
+#render{position:fixed;left:-10000px;top:0}
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+.ov.show{display:flex}
+.dlg{background:#fff;border-radius:14px;padding:18px;width:min(480px,100%);display:flex;flex-direction:column;gap:12px}
+.dlg h3{margin:0}.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:120;display:none;max-width:90vw;pointer-events:none}
+#loading{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;color:#444;padding:20px;text-align:center}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.form input,.form select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;font-weight:400;color:var(--fg)}
+.chk{display:flex;flex-wrap:wrap;gap:8px}
+.chk label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;background:#fff}
+.chk label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.err{border-color:var(--warn)!important}
+.ln{display:grid;grid-template-columns:28px 120px 1.4fr 120px 1fr 34px;gap:6px;align-items:center}
+.ln input,.ln select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0}
+.ln .no{font-weight:700;color:var(--muted);text-align:center}.ln.err input,.ln.err select{border-color:var(--warn)}
+.ln .x{border:0;background:none;font-size:18px;color:var(--muted)}
+@media (max-width:760px){.ln{grid-template-columns:1fr 1fr;padding:8px;border:1px solid var(--line);border-radius:10px}.ln .no{grid-column:1/-1;text-align:left}}
+.lines{display:flex;flex-direction:column;gap:8px}
+</style>
+</head>
+<body>
+<div id="bar">
+  <a class="btn ghost" href="index.html">← 合約列表</a>
+  <span class="ttl" id="ttl">代辦費用</span>
+</div>
+<div class="wrap">
+  <section class="panel" id="head"></section>
+  <section class="panel" id="hist" hidden></section>
+  <section class="panel" id="newBox">
+    <h2>開立代收代付明細</h2>
+    <p class="small muted" style="margin:0 0 10px">代客收取、之後轉付廠商的費用（過戶規費、保養、配件、烤漆等）。<b>不是合約附件</b>，也不會出現在繳款單和交車確認單。開立後由行政確認收款。</p>
+    <div class="form">
+      <label>客戶姓名<input id="f-cust" maxlength="30"></label>
+      <label>電話<input id="f-phone" maxlength="20" inputmode="tel"></label>
+      <label>車牌<input id="f-plate" maxlength="10" style="text-transform:uppercase"></label>
+      <label>車款<input id="f-car" maxlength="40"></label>
+    </div>
+    <div class="lnh" style="margin:14px 0 6px">代收項目</div>
+    <div class="lines" id="lines"></div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" type="button" id="addLine">＋ 再加一筆</button>
+      <label class="small muted" id="prBox" hidden style="display:flex;gap:6px;align-items:center">比例分攤的交車日<input type="date" id="f-prdate" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px"></label></div>
+    <div class="form" style="margin-top:12px">
+      <label>付款方式<select id="f-method"><option value="">請選擇</option><option>現金</option><option>匯款</option><option>刷卡</option></select></label>
+      <label style="grid-column:span 3">備註（選填，會印在明細上）<input id="f-note" maxlength="60"></label>
+    </div>
+    <div class="msgs" id="msgs" style="margin-top:10px"></div>
+    <div class="acts" style="margin-top:10px"><button class="btn acc" type="button" id="submit">開立代收明細</button></div>
+  </section>
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0" id="pvTitle">預覽</h2>
+      <button class="btn pri" type="button" id="print" hidden>匯出 PDF（上下兩聯）</button></div>
+    <div id="preview"></div>
+  </section>
+</div>
+<div id="render" aria-hidden="true"></div>
+<div class="ov" id="ovPdf"><div class="dlg">
+  <h3>PDF 已產生</h3><p style="margin:0;line-height:1.7"><b id="pdfName"></b><br><span id="pdfDesc"></span><br>
+  <span class="small muted">在 LINE 裡打不開時，請按右上角選「用預設瀏覽器開啟」，或改用電腦開合約系統。</span></p>
+  <div class="acts"><button class="btn" type="button" id="pdfClose">關閉</button><a class="btn" id="pdfSave">下載</a><a class="btn acc" id="pdfOpen" target="_blank" rel="noopener">開啟 PDF</a></div>
+</div></div>
+<div class="ov" id="busy"><div class="dlg" style="width:auto"><p id="busyMsg" style="margin:0">處理中…</p></div></div>
+<div id="loading">讀取資料中…</div>
+<div id="toast"></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="receipt.js"></script>
+<script>
+(function(){
+"use strict";
+// ===== 設定（跟 index.html、contract.html 一樣）=====
+const LIFF_ID = '2012275132-Rf1eHEcV';      // 合約系統的 LIFF ID
+const API_URL = 'https://script.google.com/macros/s/AKfycby_vI567ooErkHa1ay1hhoM9KjoTuelECq1w-qJB8yX_j2XvsuQZ2xR6M7fke8dFZSg/exec';      // 合約系統 Apps Script 部署後的網址（…/exec）
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>Number(n||0).toLocaleString('en-US');
+const amt=v=>{const n=Number(String(v||'').replace(/[,\s]/g,''));return isFinite(n)&&n>0?Math.round(n):0;};
+const qs=new URLSearchParams(location.search), KID=qs.get('k')||'';
+let D=null, selId='', lines=[];
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||3500);}
+function busy(m){const b=$('#busy');if(m===false){b.classList.remove('show');return;}$('#busyMsg').textContent=m;b.classList.add('show');}
+function relogin(){try{liff.logout();}catch(e){}liff.login({redirectUri:location.href});}
+function tokenOk(){try{const t=liff.getDecodedIDToken();return !!(t&&t.exp*1000>Date.now()+60000);}catch(e){return false;}}
+async function api(payload){
+  if(!tokenOk()){relogin();throw new Error('relogin');}
+  const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({idToken:liff.getIDToken()},payload))});
+  const j=await res.json();if(j.authError){toast('登入已過期，重新登入中…');setTimeout(relogin,1200);}return j;
+}
+const ST={待確認收款:'p2',已收款:'p3',作廢:'p0'};
+const blank=()=>({cat:'',name:'',amount:'',annual:''});
+const rule=n=>(D.rules||{})[n]||null;
+function prorate(annual,dateStr){
+  if(!annual||!dateStr)return {share:0,days:0,total:0};
+  const d=new Date(dateStr+'T00:00:00'),y=d.getFullYear(),end=new Date(y,11,31),total=((y%4===0&&y%100!==0)||y%400===0)?366:365;
+  const days=Math.round((end-d)/864e5)+1;return {share:Math.round(annual*days/total),days,total};
+}
+// 過戶規費的牌照稅、公路養管費，合約約定「依交車日比例分攤」時，填年度稅額自動算
+function isPr(l){return D.contract&&l.cat==='過戶規費'&&rule(l.name)&&rule(l.name).prorate;}
+function items(){return lines.map(l=>{if(isPr(l)){const p=prorate(amt(l.annual),$('#f-prdate').value);return {cat:l.cat,name:l.name,amount:p.share,note:amt(l.annual)?`年度 ${money(amt(l.annual))} 元 × ${p.days}/${p.total} 天`:''};}
+  return {cat:l.cat,name:l.name.trim(),amount:amt(l.amount),note:''};});}
+function renderHead(){
+  const k=D.contract;
+  $('#ttl').textContent=k?`代辦費用・${k.no}`:'代辦費用（不綁合約）';
+  $('#head').innerHTML=k?`<div class="kv"><div><span>合約編號</span>${esc(k.no)}</div><div><span>車輛</span>${esc(k.car)} <span class="muted small">${esc(k.plate)}</span></div><div><span>客戶</span>${esc(k.buyer)}</div><div><span>業務</span>${esc(k.seller)}</div></div>
+    <p class="small muted" style="margin:8px 0 0">過戶規費會依合約判斷誰負擔：合約約定甲方負擔的項目不能向客人收。</p>`
+    :`<p style="margin:0">不綁合約的代收明細（例如交車後老客人保養、裝配件）。請自己填客戶和車輛資料。</p>`;
+}
+function renderHist(){
+  const ds=(D.agents||[]).slice().reverse(),h=$('#hist');
+  if(!ds.length&&!selId){h.hidden=true;return;}h.hidden=false;
+  h.innerHTML=`<h2>${D.contract?'這份合約的代收明細':'代收明細'}</h2><div class="tw"><table class="t"><thead><tr><th>單號</th><th>開立日</th><th>項目</th><th style="text-align:right">合計</th><th>狀態</th><th></th></tr></thead><tbody>
+    ${ds.map(r=>`<tr class="${r['編號']===selId?'sel':''} ${r['狀態']==='作廢'?'void':''}"><td><b>${esc(r['單號'])}</b></td><td class="mono">${esc(r['開立日'])}</td><td class="small" style="white-space:normal">${esc(r.items.map(x=>x.name).join('、'))}</td>
+      <td class="mono" style="text-align:right">${money(r['合計'])}</td><td><span class="pill ${ST[r['狀態']]}" title="${esc(r['作廢原因']||'')}">${esc(r['狀態'])}</span></td><td><button class="btn" data-sel="${r['編號']}">${r['編號']===selId?'預覽中':'預覽／列印'}</button></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin:6px 0 0">確認收款、作廢請到首頁「代辦費用」頁。</p>`;
+}
+function renderLines(){
+  const feeOpts=D.fees.map(n=>`<option value="${esc(n)}">`).join('');
+  $('#lines').innerHTML=lines.map((l,i)=>{const r=D.contract&&l.cat==='過戶規費'?rule(l.name):null,pr=isPr(l),p=pr?prorate(amt(l.annual),$('#f-prdate').value):null;
+    return `<div class="ln" data-i="${i}"><span class="no">${i+1}</span>
+    <select data-f="cat" aria-label="類別"><option value="">類別</option>${D.cats.map(c=>`<option${c===l.cat?' selected':''}>${c}</option>`).join('')}</select>
+    <input data-f="name" value="${esc(l.name)}" placeholder="${l.cat==='過戶規費'?'例：強制險（可從選單挑）':'項目說明，例：機油更換'}" ${l.cat==='過戶規費'?'list="feeList"':''} maxlength="40" aria-label="項目">
+    ${pr?`<input data-f="annual" inputmode="numeric" value="${amt(l.annual)?money(amt(l.annual)):''}" placeholder="年度稅額" aria-label="年度稅額">`:`<input data-f="amount" inputmode="numeric" value="${amt(l.amount)?money(amt(l.amount)):''}" placeholder="金額" aria-label="金額">`}
+    <span class="small ${r&&r.who==='甲方'?'':'muted'}" style="${r&&r.who==='甲方'?'color:var(--warn)':''}">${r?(r.who==='甲方'?'✕ '+esc(r.why)+'，不能收':pr?(amt(l.annual)&&p.days?`乙方負擔 ${money(p.share)} 元（${p.days}/${p.total} 天）`:'依交車日比例分攤'):esc(r.why)):''}</span>
+    <button class="x" type="button" data-del="${i}" title="刪除" ${lines.length<2?'hidden':''}>✕</button></div>`;}).join('')+`<datalist id="feeList">${feeOpts}</datalist>`;
+  $('#prBox').hidden=!lines.some(isPr);
+}
+function form(){return {customer:$('#f-cust').value.trim(),phone:$('#f-phone').value.trim(),plate:$('#f-plate').value.trim().toUpperCase(),car:$('#f-car').value.trim(),
+  items:items(),method:$('#f-method').value,note:$('#f-note').value.trim()};}
+function check(){
+  const f=form(),out=[],E=(id,m)=>out.push({l:'E',id,m});
+  if(!f.customer)E('f-cust','請填客戶姓名');
+  lines.forEach((l,i)=>{const n=`第 ${i+1} 筆`,it=f.items[i];if(!l.cat)E(i,n+'：請選類別');if(!it.name)E(i,n+'：請填項目');
+    if(isPr(l)){if(!amt(l.annual))E(i,n+'：請填年度稅額');else if(!$('#f-prdate').value)E('f-prdate','比例分攤請填交車日');}else if(!it.amount)E(i,n+'：請填金額');
+    const r=D.contract&&l.cat==='過戶規費'?rule(l.name):null;if(r&&r.who==='甲方')E(i,`${n}：${l.name}依合約由甲方負擔，不能向客人收`);});
+  if(!f.method)E('f-method','請選付款方式');
+  document.querySelectorAll('.ln').forEach(el=>el.classList.toggle('err',out.some(o=>o.id===+el.dataset.i)));
+  document.querySelectorAll('.form input,.form select').forEach(i=>i.classList.toggle('err',out.some(o=>o.id===i.id)));
+  const tot=f.items.reduce((a,x)=>a+x.amount,0);
+  $('#msgs').innerHTML=(out.map(o=>`<div class="E">✕ ${esc(o.m)}</div>`).join('')||'<div class="O">✓ 檢查通過，可以開立</div>')+`<div class="W">合計 <b>${money(tot)}</b> 元${f.items.length>8?'（超過 8 筆，會改成每聯一整頁）':''}</div>`;
+  return out;
+}
+function draftRecord(){const f=form(),k=D.contract,n=(D.agents||[]).length+1;
+  return {'單號':k?k.no+'-A'+n:'（開立後產生）','開立日':D.today,'客戶':f.customer,'電話':f.phone,'車牌':f.plate,'車款':f.car,'合約編號':k?k.no:'',items:f.items.filter(x=>x.name||x.amount),'付款方式':f.method,'備註':f.note,'經手人名':D.me.name,'收款人':'','收款時間':''};}
+function pagesFor(r){return (r.items||[]).length>8?[RC.agentPage(r,D.company,'第一聯　公司留底聯'),RC.agentPage(r,D.company,'第二聯　客戶收執聯')]:[RC.agentSheet(r,D.company)];}
+function renderPreview(){
+  const sel=(D.agents||[]).find(r=>r['編號']===selId),r=sel||draftRecord();
+  $('#pvTitle').textContent=sel?`預覽・${sel['單號']}（${sel['狀態']}）`:'預覽・新代收明細（尚未開立）';
+  $('#print').hidden=!sel||sel['狀態']==='作廢';
+  const pv=$('#preview');pv.innerHTML='';const pages=pagesFor(r);
+  const w=pv.clientWidth-20,pw=210*96/25.4,ph=297*96/25.4,z=Math.min(1,w/pw);
+  pages.forEach((pg,i)=>{pg.style.transform=`scale(${z})`;pg.style.transformOrigin='top left';pg.style.position='absolute';pg.style.top=(10+i*(ph*z+12))+'px';pg.style.left=((pv.clientWidth-pw*z)/2)+'px';pv.appendChild(pg);});
+  pv.style.position='relative';pv.style.height=(pages.length*(ph*z+12)+10)+'px';
+}
+function renderAll(){renderHead();renderHist();renderLines();check();renderPreview();}
+
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.sel){selId=selId===t.dataset.sel?'':t.dataset.sel;renderHist();renderPreview();$('#preview').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(t.dataset.del){lines.splice(+t.dataset.del,1);renderLines();check();renderPreview();return;}
+  if(t.id==='addLine'){lines.push(blank());renderLines();check();return;}
+  if(t.id==='submit'){selId='';const errs=check();renderPreview();if(errs.length){toast('還有 '+errs.length+' 項要修正');return;}
+    busy('開立中…');
+    try{const r=await api({action:'agentCreate',id:KID,form:form()});busy(false);toast(r.message||(r.ok?'完成':'失敗'),5000);
+      if(r.ok){await load();selId=r.id;lines=[blank()];$('#f-method').value='';$('#f-note').value='';renderAll();}}
+    catch(x){busy(false);if(x.message!=='relogin')toast('連線失敗，請再試一次');}return;}
+  if(t.id==='print'){await makePdf();return;}
+  if(t.id==='pdfClose'){$('#ovPdf').classList.remove('show');return;}
+});
+$('#lines').addEventListener('input',e=>{const el=e.target.closest('[data-f]');if(!el)return;const i=+el.closest('.ln').dataset.i,f=el.dataset.f;lines[i][f]=el.value;
+  if(f==='cat'||(f==='name'&&D.contract&&lines[i].cat==='過戶規費'&&e.inputType!=='insertText')){renderLines();}check();renderPreview();});
+$('#lines').addEventListener('change',e=>{const el=e.target;if(el.dataset.f==='name'&&D.contract){renderLines();check();renderPreview();}
+  if((el.dataset.f==='amount'||el.dataset.f==='annual')&&amt(el.value))el.value=money(amt(el.value));});
+document.addEventListener('input',e=>{if(!D)return;if(e.target.closest('.form')||e.target.id==='f-prdate'){if(e.target.id==='f-prdate')renderLines();check();renderPreview();}});
+window.addEventListener('resize',()=>{if(D)renderPreview();});
+
+async function makePdf(){
+  const sel=(D.agents||[]).find(r=>r['編號']===selId);if(!sel)return;
+  if(typeof html2canvas!=='function'){toast('PDF 元件載入失敗，請確認網路後重新整理',5000);return;}
+  busy('正在產生 PDF…');
+  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const host=$('#render');host.innerHTML='';const imgs=[];
+    for(const pg of pagesFor(sel)){host.appendChild(pg);const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true});imgs.push(await RC.jpeg(cv));}
+    host.innerHTML='';busy(false);
+    const url=URL.createObjectURL(RC.pdf(imgs)),name=`代收代付明細_${sel['單號']}_${sel['客戶']}.pdf`;
+    $('#pdfName').textContent=name;$('#pdfDesc').textContent=imgs.length>1?'共 2 頁：第一聯公司留底、第二聯客戶收執。':'A4 一張，上下兩聯（上：公司留底聯，下：客戶收執聯），印出後沿虛線裁開，客人簽收。';
+    $('#pdfOpen').href=url;$('#pdfSave').href=url;$('#pdfSave').download=name;$('#ovPdf').classList.add('show');
+  }catch(x){busy(false);$('#render').innerHTML='';toast('產生 PDF 失敗：'+(x&&x.message||x),5000);}
+}
+async function load(){
+  const r=await api({action:'agentInit',id:KID});if(!r.ok)throw new Error(r.message||'讀取失敗');D=r;
+  // 不綁合約的代收明細：從首頁資料裡找自己開的（或指定那一張）
+  if(!KID){const a=await api({action:'all'});const v=qs.get('v');D.agents=a.ok?(a.agents||[]).filter(x=>!x['合約ID']&&(v?x['編號']===v:x['經手人']===D.me.en)):[];}
+}
+(async function main(){
+  if(!LIFF_ID||!API_URL){$('#loading').textContent='合約系統還沒設定 LIFF_ID 和 API_URL（請看安裝說明）';return;}
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
+    if(!tokenOk()){relogin();return;}
+    await load();
+    selId=qs.get('v')||'';
+    const k=D.contract;
+    if(k){$('#f-cust').value=k.buyer;$('#f-phone').value=k.phone||'';$('#f-plate').value=k.plate||'';$('#f-car').value=k.car||'';$('#f-prdate').value=(k.eta&&k.eta>=D.today?k.eta:D.today).replace(/\//g,'-');}
+    else $('#f-prdate').value=D.today.replace(/\//g,'-');
+    lines=[blank()];$('#loading').remove();renderAll();
+  }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML=esc(e.message||e)+'<br><br><a href="index.html">回首頁</a>';}
+})();
+})();
+</script>
+</body>
+</html>
