@@ -146,6 +146,16 @@ body.locked .lockable input.t,body.locked .lockable select.t,body.locked .lockab
 /* overlays */
 .ov{position:fixed;inset:0;background:rgba(20,24,33,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
 .ov.show{display:flex}
+#ovSig .dlg{width:min(96vw,1100px);max-width:none;padding:14px 16px;background:#fff;border-radius:12px}
+#sigHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+#sigTitle{font-size:18px;font-weight:700}
+#sigArea{position:relative;border:2px solid #1d6fd6;border-radius:8px;background:#fff;touch-action:none}
+#sigArea canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#sigArea .base{position:absolute;left:6%;right:6%;bottom:22%;border-bottom:1px dashed #b9c3d3;pointer-events:none}
+#sigArea .ph{position:absolute;left:0;right:0;top:40%;text-align:center;color:#b9c3d3;font-size:22px;pointer-events:none}
+#sigBtns{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
+#sigBtns .btn{font-size:16px;padding:10px 20px}
+.sig.active canvas{cursor:pointer}
 .dlg{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px;font-size:14px}
 .dlg h3{margin:0 0 10px}
 .dlg .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
@@ -212,12 +222,11 @@ body.paper .sig{pointer-events:none}
   </div>
 
   <div class="box lockable">
-    <div class="row">一、本契約訂定前，甲方（出賣人）已將本契約書之正本及相關附件交付乙方（買受人）攜回審閱，未經乙方攜回審閱，乙方得主張不受本契約之拘束。</div>
-    <div class="row flex">
-      <span>二、本契約於民國
-      <input class="t w2" name="rvY" inputmode="numeric" placeholder="115">年<input class="t w1" name="rvM" inputmode="numeric">月<input class="t w1" name="rvD" inputmode="numeric">日經乙方攜回審閱
-      <input class="t w1" name="rvDays" inputmode="numeric" value="3">日。</span>
-      <span>乙方審閱簽名：<span class="sig sm" id="sig_review"><span class="cap">乙方簽名</span></span></span>
+    <div class="row"><b>雙方聲明事項</b>　一、本契約訂定前，甲方（出賣人）已將本契約書之正本及相關附件交付乙方（買受人）攜回審閱，未經乙方攜回審閱，乙方得主張不受本契約之拘束。</div>
+    <div class="row flex" style="flex-wrap:nowrap;align-items:center">
+      <span style="flex:1;min-width:0">二、本契約於民國
+      <input class="t w2" name="rvY" inputmode="numeric" placeholder="115">年<input class="t w1" name="rvM" inputmode="numeric">月<input class="t w1" name="rvD" inputmode="numeric">日經乙方攜回審閱三日（含）以上，乙方已詳閱並充分了解全部條款內容，雙方同意受本契約條款之拘束。</span>
+      <span style="flex:none;white-space:nowrap">乙方審閱簽名：<span class="sig sm" id="sig_review"><span class="cap">乙方簽名</span></span></span>
     </div>
   </div>
 
@@ -327,9 +336,8 @@ body.paper .sig{pointer-events:none}
     </div>
     <div class="row">本契約附件：<label class="rd"><span class="bx on"></span>附件一</label>
       <label class="rd"><input type="checkbox" name="att_payment">繳款單</label>
-      <label class="rd"><input type="checkbox" name="att_delivery">交車確認單</label>
       <label class="rd"><input type="checkbox" name="att_warranty">保固範圍說明</label>
-      <label class="rd"><input type="checkbox" name="att_inspect">第三方鑑定報告</label>
+      <label class="rd"><input type="checkbox" name="att_proxy">交車委託書</label>
       <label class="rd"><input type="checkbox" name="att_other">其他：</label><input class="t l" name="attOther" style="width:6em"></div>
   </div>
   </div><!-- /lockable -->
@@ -500,6 +508,11 @@ body.paper .sig{pointer-events:none}
 
 <div id="render" aria-hidden="true"></div>
 
+<div class="ov no-print" id="ovSig"><div class="dlg">
+  <div id="sigHead"><span id="sigTitle">簽名</span><span class="note">請在框內簽名，簽完按「確定」</span></div>
+  <div id="sigArea"><div class="base"></div><div class="ph" id="sigPh">請在此簽名</div><canvas id="sigCv"></canvas></div>
+  <div id="sigBtns"><button class="btn" type="button" id="sigClear">重簽</button><button class="btn" type="button" id="sigCancel">取消</button><button class="btn primary" type="button" id="sigOk">確定</button></div>
+</div></div>
 <div class="ov no-print" id="ovConfirm"><div class="dlg" style="max-width:440px">
   <h3 id="cTitle">確認</h3><p id="cMsg" style="margin:0;line-height:1.6"></p>
   <div class="acts"><button class="btn" type="button" id="cNo">取消</button><button class="btn primary" type="button" id="cYes">確定</button></div>
@@ -692,7 +705,6 @@ F.addEventListener('input',e=>{const au=e.target.dataset&&e.target.dataset.auto;
   const ar=e.target.dataset&&e.target.dataset.autoR;if(ar&&e.target.value.trim()){const [n,val]=ar.split(':');Array.from(document.getElementsByName(n)).forEach(r=>r.checked=r.value===val);}
   if(e.target.classList)e.target.classList.remove('err','warnf');const g=e.target.closest&&e.target.closest('.grp');if(g)g.classList.remove('err');calc();save();});
 F.addEventListener('change',e=>{if(e.target.id==='company'){showProfile();}if(e.target.name==='plateFee')el('sp_plate').checked=true;
-  if(e.target.name==='accident'&&e.target.value==='依第三方鑑定報告為準')el('att_inspect').checked=true;
   if(e.target.id==='agree'){$('#agreeRow').classList.remove('err');updatePads();}calc();save();});
 
 const pads={};
@@ -704,21 +716,68 @@ function makePad(id){
   const clr=document.createElement('button');clr.type='button';clr.className='btn small clr no-print';clr.textContent='清除';box.appendChild(clr);
   const ctx=c.getContext('2d');ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0b1f4d';
   const pad={box,c,ctx,veil,clr,empty:true,enabled:false,at:null};
-  let drawing=false,last=null;
-  const pos=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height,p:e.pressure||.5};};
-  c.addEventListener('pointerdown',e=>{if(!pad.enabled)return;e.preventDefault();drawing=true;last=pos(e);c.setPointerCapture(e.pointerId);});
-  c.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineWidth=3.2+(p.p-.5)*2;ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;if(pad.empty){pad.empty=false;box.classList.remove('err');}});
-  const end=()=>{if(drawing){drawing=false;pad.at=new Date().toISOString();save();}};
-  c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('pointerleave',end);
-  clr.addEventListener('click',()=>{if(!pad.enabled)return;clearPad(pad);save();});
+  // 點簽名框 → 開啟放大的簽名板，簽完自動縮放放回格子
+  c.addEventListener('click',e=>{if(!pad.enabled)return;e.preventDefault();openSig(pad);});
+  veil.addEventListener('click',e=>{if(!pad.enabled)return;e.preventDefault();openSig(pad);});
+  clr.addEventListener('click',e=>{e.stopPropagation();if(!pad.enabled)return;clearPad(pad);updatePads();save();});
   pads[id]=pad;return pad;
 }
+// ===== 放大簽名板 =====
+const SIG={pad:null,strokes:[],cur:null};
+function openSig(pad){
+  SIG.pad=pad;SIG.strokes=[];SIG.cur=null;
+  const cap=pad.box.querySelector('.cap');$('#sigTitle').textContent=(cap?cap.textContent:'簽名').replace(/[（(]親筆[）)]/,'');
+  const ov=$('#ovSig');ov.classList.add('show');
+  const area=$('#sigArea'),cv=$('#sigCv');
+  const w=area.clientWidth,h=Math.max(240,Math.min(Math.round(innerHeight*0.6),innerHeight-170));
+  area.style.height=h+'px';
+  const dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  sigRedraw();
+}
+function sigRedraw(){
+  const cv=$('#sigCv'),x=cv.getContext('2d'),k=cv.width/cv.clientWidth;
+  x.clearRect(0,0,cv.width,cv.height);x.lineCap='round';x.lineJoin='round';x.strokeStyle='#0b1f4d';
+  SIG.strokes.forEach(st=>{for(let i=1;i<st.length;i++){x.lineWidth=(4+(st[i].p-.5)*3)*k;x.beginPath();x.moveTo(st[i-1].x*k,st[i-1].y*k);x.lineTo(st[i].x*k,st[i].y*k);x.stroke();}
+    if(st.length===1){x.fillStyle='#0b1f4d';x.beginPath();x.arc(st[0].x*k,st[0].y*k,2.5*k,0,7);x.fill();}});
+  $('#sigPh').style.display=SIG.strokes.length?'none':'';
+}
+(function(){
+  const cv=$('#sigCv');
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top,p:e.pressure||.5};};
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);SIG.cur=[pos(e)];SIG.strokes.push(SIG.cur);sigRedraw();});
+  cv.addEventListener('pointermove',e=>{if(!SIG.cur)return;e.preventDefault();
+    const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];evs.forEach(ev=>SIG.cur.push(pos(ev)));
+    const x=cv.getContext('2d'),k=cv.width/cv.clientWidth,a=SIG.cur[SIG.cur.length-2],b=SIG.cur[SIG.cur.length-1];
+    if(a&&b){x.lineCap='round';x.strokeStyle='#0b1f4d';x.lineWidth=(4+(b.p-.5)*3)*k;x.beginPath();x.moveTo(a.x*k,a.y*k);x.lineTo(b.x*k,b.y*k);x.stroke();}
+    $('#sigPh').style.display='none';});
+  const end=()=>{SIG.cur=null;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  $('#sigClear').onclick=()=>{SIG.strokes=[];sigRedraw();};
+  $('#sigCancel').onclick=()=>{$('#ovSig').classList.remove('show');SIG.pad=null;};
+  $('#sigOk').onclick=()=>{
+    const pad=SIG.pad;if(!pad)return;
+    if(!SIG.strokes.length){toast('還沒有簽名，請在框內簽名');return;}
+    const pts=SIG.strokes.flat();let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    pts.forEach(p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
+    const bw=Math.max(x1-x0,1),bh=Math.max(y1-y0,1),W=pad.c.width,H=pad.c.height;
+    const top=pad.box.classList.contains('sm')?32:34,mx=16,my=8;   // 上方留給「乙方簽名」小字
+    const aw=W-mx*2,ah=H-top-my,sc=Math.min(aw/bw,ah/bh,3);
+    const ox=mx+(aw-bw*sc)/2-x0*sc,oy=top+(ah-bh*sc)/2-y0*sc;
+    const ctx=pad.ctx;ctx.clearRect(0,0,W,H);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0b1f4d';ctx.fillStyle='#0b1f4d';
+    SIG.strokes.forEach(st=>{for(let i=1;i<st.length;i++){ctx.lineWidth=3.2+(st[i].p-.5)*2;ctx.beginPath();ctx.moveTo(st[i-1].x*sc+ox,st[i-1].y*sc+oy);ctx.lineTo(st[i].x*sc+ox,st[i].y*sc+oy);ctx.stroke();}
+      if(st.length===1){ctx.beginPath();ctx.arc(st[0].x*sc+ox,st[0].y*sc+oy,2,0,7);ctx.fill();}});
+    pad.empty=false;pad.at=new Date().toISOString();pad.box.classList.remove('err');
+    $('#ovSig').classList.remove('show');SIG.pad=null;updatePads();save();
+  };
+})();
 function clearPad(p){p.ctx.clearRect(0,0,p.c.width,p.c.height);p.empty=true;p.at=null;}
 function padData(p){return p.empty?'':p.c.toDataURL('image/png');}
 function loadPad(p,data,at){if(!data)return;const img=new Image();img.onload=()=>{p.ctx.drawImage(img,0,0,p.c.width,p.c.height);};img.src=data;p.empty=false;p.at=at||null;}
 function updatePads(){
   const agree=v('agree');
-  const set=(p,on,msg)=>{p.enabled=on;p.veil.style.display=on?'none':'flex';p.veil.textContent=msg;p.clr.style.display=on?'':'none';p.box.classList.toggle('active',on);};
+  const set=(p,on,msg)=>{p.enabled=on;const tap=on&&p.empty;p.veil.style.display=on&&!tap?'none':'flex';p.veil.textContent=tap?'👆 點此簽名（會放大）':msg;
+    p.veil.style.background=tap?'rgba(29,111,214,.06)':'';p.veil.style.color=tap?'#1d6fd6':'';p.veil.style.cursor=tap?'pointer':'';
+    p.clr.style.display=on&&!p.empty?'':'none';p.box.classList.toggle('active',on);};
   const lockedMsg='請先按「檢查內容並鎖定」';
   if(state==='edit'){Object.values(pads).forEach(p=>set(p,false,lockedMsg));}
   else if(state==='locked'){
@@ -749,8 +808,7 @@ function validate(){
     if(p.tax&&!twTax(p.tax))E(field,`「${p.name}」統一編號 ${p.tax} 檢查碼不正確`);};
   // review & sign dates
   const rv=reqD('rv','攜回審閱日期');
-  const rvDays=num('rvDays');
-  if(rvDays==null)E('rvDays','「審閱日數」未填寫');else if(isNaN(rvDays)||rvDays<3)E('rvDays','審閱日數不得少於三日');
+  const rvDays=3;   // 審閱日數固定三日（含）以上
   const sg=reqD('sg','簽約日期');
   if(rv&&sg&&rvDays>=3){const earliest=addDays(rv,rvDays);if(sg<earliest)E('sgY',`依契約記載「攜回審閱${rvDays}日」，最早可簽約日為民國${fmtRoc(earliest)}，請確認日期`);}
   if(rv&&sg&&rv>sg)E('rvY','攜回審閱日期不可晚於簽約日期');
@@ -803,7 +861,7 @@ function validate(){
   // 第三條
   if(reqR('accident','曾否發生重大事故')){
     if(v('accident')==='是'&&!v('accidentDesc'))E('accidentDesc','重大事故勾選「是」，請填寫受損狀況');
-    if(v('accident')==='依第三方鑑定報告為準'&&!v('att_inspect'))E('att_inspect','重大事故勾選「依第三方鑑定報告為準」，附件欄必須勾選「第三方車況鑑定報告」並將報告交付乙方');
+    if(v('accident')==='依第三方鑑定報告為準')W('@accident','重大事故勾選「依第三方鑑定報告為準」，請確認簽約前已讓乙方看過鑑定報告');
   }
   if(reqR('flood','是否為泡水車')&&v('flood')!=='否')W('@flood',`已勾選「${v('flood')}」，請確認已向乙方充分說明`);
 
@@ -946,7 +1004,7 @@ function restoreDraft(){
 function setDefaults(){
   const t=new Date();el('sgY').value=t.getFullYear()-1911;el('sgM').value=t.getMonth()+1;el('sgD').value=t.getDate();
   el('taxYear1').value=el('taxYear2').value=t.getFullYear()-1911;
-  el('att_payment').checked=true;el('att_delivery').checked=true;
+  el('att_payment').checked=true;
   Array.from(document.getElementsByName('owners')).forEach(r=>r.checked=r.value==='不知');
   Array.from(document.getElementsByName('regOwner')).forEach(r=>r.checked=r.value==='同乙方');
   Array.from(document.getElementsByName('buyerType')).forEach(r=>r.checked=r.value==='自然人');
