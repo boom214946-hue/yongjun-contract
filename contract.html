@@ -222,10 +222,8 @@ body.paper .sig{pointer-events:none}
   </div>
 
   <div class="box lockable">
-    <div class="row"><b>雙方聲明事項</b>　一、本契約訂定前，甲方（出賣人）已將本契約書之正本及相關附件交付乙方（買受人）攜回審閱，未經乙方攜回審閱，乙方得主張不受本契約之拘束。</div>
     <div class="row flex" style="flex-wrap:nowrap;align-items:center">
-      <span style="flex:1;min-width:0">二、本契約於民國
-      <input class="t w2" name="rvY" inputmode="numeric" placeholder="115">年<input class="t w1" name="rvM" inputmode="numeric">月<input class="t w1" name="rvD" inputmode="numeric">日經乙方攜回審閱三日（含）以上，乙方已詳閱並充分了解全部條款內容，雙方同意受本契約條款之拘束。</span>
+      <span style="flex:1;min-width:0"><b>雙方聲明事項</b>　<b>乙方確認已於民國<input class="t w2" name="rvY" inputmode="numeric" placeholder="115">年<input class="t w1" name="rvM" inputmode="numeric">月<input class="t w1" name="rvD" inputmode="numeric">日取得本契約，並經三日（含）以上審閱，已詳閱並充分了解契約內容，同意遵守本契約各項約定。</b></span>
       <span style="flex:none;white-space:nowrap">乙方審閱簽名：<span class="sig sm" id="sig_review"><span class="cap">乙方簽名</span></span></span>
     </div>
   </div>
@@ -246,21 +244,19 @@ body.paper .sig{pointer-events:none}
       <label class="rd"><input type="radio" name="engine" value="原裝">原裝</label>
       <label class="rd"><input type="radio" name="engine" value="已更換過原廠新引擎">已更換過原廠新引擎</label>
       <label class="rd"><input type="radio" name="engine" value="已換過原廠中古引擎">已換過原廠中古引擎</label>
-      <label class="rd"><input type="radio" name="engine" value="不知">不知</label></div>
+      <label class="rd"><input type="radio" name="engine" value="未知">未知</label></div>
     <div class="row grp" data-g="mileGuar"><span class="lbl">定車時之里程數：</span><input class="t w5" name="mileage" inputmode="numeric">公里<span class="note">（交車以交車確認單為準）</span>
-      <label class="rd"><input type="radio" name="mileGuar" value="擔保">擔保</label><label class="rd"><input type="radio" name="mileGuar" value="不擔保">不擔保</label>車輛之里程數和現況之里程數一致<span class="note">（未勾選則視為擔保）</span></div>
+      <label class="rd"><input type="radio" name="mileGuar" value="擔保">擔保</label><label class="rd"><input type="radio" name="mileGuar" value="不擔保">不擔保</label>車輛之里程數和現況之里程數一致</div>
     <div class="row grp" data-g="owners"><span class="lbl">交易次數：</span>
       <label class="rd"><input type="radio" name="owners" value="一手中古汽車">一手中古汽車</label>
       <label class="rd"><input type="radio" name="owners" value="二手以上中古汽車">二手以上中古汽車（轉手次數</label><input class="t w2" name="ownerCount" inputmode="numeric">）
-      <label class="rd"><input type="radio" name="owners" value="不知">不知</label></div>
+      <label class="rd"><input type="radio" name="owners" value="未知">未知</label></div>
     <div class="row grp tight" data-g="usage"><span class="lbl">原使用情形：</span>
       <label class="rd"><input type="radio" name="usage" value="自用車">自用車</label>
       <label class="rd"><input type="radio" name="usage" value="計程車">計程車</label>
       <label class="rd"><input type="radio" name="usage" value="租賃車">租賃車</label>
       <label class="rd"><input type="radio" name="usage" value="教練車">教練車</label>
       <label class="rd"><input type="radio" name="usage" value="公司行號業務用車">公司行號業務用車</label>
-      <label class="rd"><input type="radio" name="usage" value="展示車">展示車</label>
-      <label class="rd"><input type="radio" name="usage" value="常租車">常租車</label>
       <label class="rd"><input type="radio" name="usage" value="法拍車">法拍車</label>
       <label class="rd"><input type="radio" name="usage" value="其他">其他</label><input class="t l" name="usageOther" style="width:3.5em"></div>
   </div>
@@ -284,8 +280,8 @@ body.paper .sig{pointer-events:none}
   <div class="box">
     <div class="row grp" data-g="accident">一、曾否發生重大事故：
       <label class="rd"><input type="radio" name="accident" value="否">否</label>
-      <label class="rd"><input type="radio" name="accident" value="是">是，受損狀況：</label><input class="t l" name="accidentDesc" style="width:24%">
-      <label class="rd" style="margin-left:2mm"><input type="radio" name="accident" value="依第三方鑑定報告為準">依第三方車況鑑定報告（附件）為準</label></div>
+      <label class="rd"><input type="radio" name="accident" value="依第三方鑑定報告為準">依第三方鑑定報告為準</label>
+      <label class="rd" style="margin-left:2mm"><input type="radio" name="accident" value="是">是，受損狀況：</label><input class="t l" name="accidentDesc" style="width:30%"></div>
     <div class="row grp" data-g="flood">二、是否為泡水車：
       <label class="rd"><input type="radio" name="flood" value="否">否</label>
       <label class="rd"><input type="radio" name="flood" value="全部泡水">全部泡水</label>
@@ -297,9 +293,9 @@ body.paper .sig{pointer-events:none}
   <div class="sec">第四條：交車　／　第五條：過戶</div>
   <div class="box">
     <div class="row"><b>預計交車日期：民國<input class="t w2" name="dlY" inputmode="numeric">年<input class="t w1" name="dlM" inputmode="numeric">月<input class="t w1" name="dlD" inputmode="numeric">日<input class="t w1" name="dlH" inputmode="numeric">時<input class="t w1" name="dlMin" inputmode="numeric">分</b>
-      <span class="note">（實際交車以交車確認單為準）</span>　甲方逾期交車之催告期間：<input class="t w1" name="remindDays" inputmode="numeric" value="5">日<span class="note">（不得少於五日）</span></div>
+      <span class="note">（實際交車以交車確認單為準）</span>　甲方逾期交車之催告期間五日</div>
     <div class="row"><b>預計過戶日期：民國<input class="t w2" name="trY" inputmode="numeric">年<input class="t w1" name="trM" inputmode="numeric">月<input class="t w1" name="trD" inputmode="numeric">日</b>　
-      甲方應於締約日之翌日起<input class="t w1" name="trDays" inputmode="numeric">日內（不得逾三日）辦理過戶。<span class="note">（詳反面第五條）</span></div>
+      甲方應於締約日之翌日起三日內辦理過戶。<span class="note">（詳反面第五條）</span></div>
   </div>
 
   <div class="sec">第十三條：辦理交車前，欠繳之一切罰鍰，均由甲方負擔　／　第十四條：稅費<small>（過戶前欠繳之一切稅費由甲方負擔，詳反面）</small></div>
@@ -328,11 +324,12 @@ body.paper .sig{pointer-events:none}
   <div class="box">
     <div class="row grp" data-g="warranty" style="display:flex;align-items:center;white-space:nowrap">其他特約事項及約定理由：
       <label class="rd"><input type="radio" name="warranty" value="無保固">無保固</label>
-      <label class="rd"><input type="radio" name="warranty" value="約定保固">甲乙雙方同意約定保固範圍：</label>
-      <input class="t l" name="warrantyScope" style="flex:1;min-width:0" placeholder="例：依附件保固範圍說明"></div>
+      <label class="rd"><input type="radio" name="warranty" value="原廠保固">原廠保固內至民國</label><input class="t w2" name="owY" inputmode="numeric">年<input class="t w1" name="owM" inputmode="numeric">月<input class="t w1" name="owD" inputmode="numeric">日
+      <label class="rd" style="margin-left:2mm"><input type="radio" name="warranty" value="約定保固">甲乙雙方同意約定保固範圍</label><span class="note">（詳附件）</span></div>
     <div class="row">
-      <div class="grp" data-g="plateFee" style="white-space:nowrap">特約事項：<label class="rd"><input type="checkbox" name="sp_plate">選號：</label>號碼<input class="t w5" name="sp_plateNo" data-auto="sp_plate" placeholder="可留白">，選號規費由<label class="rd"><input type="radio" name="plateFee" value="甲方">甲方</label><label class="rd"><input type="radio" name="plateFee" value="乙方">乙方</label>負擔<span class="note">；因選號需求，過戶期限依監理機關作業時間順延。</span></div>
-      <div style="display:flex;white-space:nowrap"><label class="rd"><input type="checkbox" name="sp_other">其他：</label><input class="t l" name="special" data-auto="sp_other" style="flex:1;min-width:0" placeholder="例：車況依第三方鑑定為準"><span class="note">（未勾選者視為無特約事項）</span></div>
+      <div style="white-space:nowrap">特約事項：<label class="rd"><input type="checkbox" name="sp_plate">選號</label><span id="plateBox">：號碼<input class="t w5" name="sp_plateNo" data-auto="sp_plate" placeholder="可留白">，選號規費由乙方負擔</span>
+        <label class="rd" style="margin-left:3mm"><input type="checkbox" name="sp_other">其他</label><span class="note">（未勾選者視為無特約事項）</span></div>
+      <div style="display:flex;white-space:nowrap">備註內容：<input class="t l" name="special" data-auto="sp_other" style="flex:1;min-width:0"></div>
     </div>
     <div class="row">本契約附件：<label class="rd"><span class="bx on"></span>附件一</label>
       <label class="rd"><input type="checkbox" name="att_payment">繳款單</label>
@@ -403,7 +400,7 @@ body.paper .sig{pointer-events:none}
     <p>預計交車日期依正面記載，實際交車日期及時間以雙方簽署之交車確認單為準。交車前應辦妥過戶手續。交車時應交付辦妥過戶手續之新行車執照。</p></div>
 
   <div class="cl"><span class="ct">第五條：過戶（續）</span>
-    <p>甲方應於締約日之翌日起<span class="fill" id="b_trDays">＿</span>日內（不得逾三日），向監理機關辦理過戶予乙方或指定之第三人。但有正當事由（如乙方選號需求）無法於期限內辦理者，不在此限。乙方於辦理過戶前，應辦理強制汽車責任險，其保險費由正面第十四條勾選之一方負擔。甲方未能於前項期限內完成過戶者，乙方得解除契約。</p></div>
+    <p>甲方應於締約日之翌日起<span class="fill" id="b_trDays">＿</span>日內（不得逾三日），向監理機關辦理過戶予乙方或指定之第三人。但有正當事由無法於期限內辦理者，不在此限；乙方有選號需求者，過戶期限依監理機關作業時間順延。乙方於辦理過戶前，應辦理強制汽車責任險，其保險費由正面第十四條勾選之一方負擔。甲方未能於前項期限內完成過戶者，乙方得解除契約。</p></div>
 
   <div class="cl"><span class="ct">第六條：出賣人給付遲延</span>
     <p>甲方逾正面所載預計交車日期未交付車輛，經乙方定<span class="fill" id="b_remind">五</span>日（不得少於五日）以上之期間催告，甲方仍不履行時，乙方得解除契約，並請求返還已支付之價金，及自支付日起至返還日止依法定利率計算之利息。前項情形，乙方證明有其他損害者，並得請求賠償。乙方支付定金者，甲方並應賠償與定金同金額之違約金。</p></div>
@@ -436,7 +433,7 @@ body.paper .sig{pointer-events:none}
     <p>除本契約所約定之保固責任外，甲方並擔保本件標的物於交車前已完成正常使用檢查，且符合交車時之其他相關法令規定。標的物交付予乙方後，因天然災害、自然耗損或可歸責於乙方之事由致生之損害，甲方不負保固責任。有無約定保固及其範圍，依正面第十五條勾選及填寫內容定之。甲方仍應依民法規定對乙方負瑕疵擔保責任。</p></div>
 
   <div class="cl"><span class="ct">第十六條：契約之內容及增刪</span>
-    <p>附件一（標的物明細，含配備、出賣人提供之配件及前車主之行車執照影本）、正面勾選之其他附件（如繳款單、交車確認單、約定保固範圍說明、第三方車況鑑定報告等，含簽約後依本契約開立或簽署者）及正面特約事項，均為本契約之一部分。本契約訂立後，若有任何增刪修改，非經甲乙雙方當事人書面同意，不生效力。</p></div>
+    <p>附件一（標的物明細，含配備、出賣人提供之配件及前車主之行車執照影本）、正面勾選之其他附件（如繳款單、約定保固範圍說明、交車委託書等，含簽約後依本契約開立或簽署者）及正面特約事項，均為本契約之一部分。本契約訂立後，若有任何增刪修改，非經甲乙雙方當事人書面同意，不生效力。</p></div>
 
   <div class="cl"><span class="ct">第十七條：個人資料之保護</span>
     <p>甲方對乙方個人資料之蒐集、處理及利用，應依個人資料保護法規定，並僅於履行本契約（含辦理過戶、保險、貸款、稅費及保固服務）之必要範圍內為之。</p></div>
@@ -444,8 +441,8 @@ body.paper .sig{pointer-events:none}
   <div class="cl"><span class="ct">第十八條：法律適用與合意管轄法院</span>
     <p>本契約之解釋適用，以中華民國法律為準據法。因本契約所生之一切爭執，雙方同意以<span class="fill" id="b_court">＿＿＿＿</span>地方法院為第一審管轄法院，但不得排除消費者保護法第四十七條及民事訴訟法第四百三十六條之九規定小額訴訟管轄法院之適用。</p></div>
 
-  <div class="cl"><span class="ct">第十九條：電子簽署及契約收執</span>
-    <p>甲乙雙方同意依電子簽章法以電子文件及電子簽名方式簽署本契約，其效力與書面簽名或蓋章相同。本契約書正本壹式二份，副本零份，由甲乙雙方各持正本一份為憑；正本得以電子檔交付。本契約自雙方簽署完成之日起生效。</p></div>
+  <div class="cl"><span class="ct" id="c19t">第十九條：電子簽署及契約收執</span>
+    <p id="c19">甲乙雙方同意依電子簽章法以電子文件及電子簽名方式簽署本契約，其效力與書面簽名或蓋章相同。本契約書正本壹式二份，副本零份，由甲乙雙方各持正本一份為憑；正本得以電子檔交付。本契約自雙方簽署完成之日起生效。</p></div>
 
   <div class="cl"><span class="ct">第二十條：補充規定</span>
     <p>本契約如有未盡事宜，依民法、消費者保護法及相關法令處理之。各條款如有疑義時，應依消費者保護法第十一條第二項規定，為有利於乙方之解釋。</p></div>
@@ -676,8 +673,7 @@ function calc(){
   if(price&&dep!=null&&!isNaN(dep)&&!isNaN(price)){const r=dep/price*100;pct.textContent=` 目前 ${r.toFixed(1)}%`;pct.style.color=r>10?'#d93025':'#1e7b4a';pct.classList.add('no-print');}
   else pct.textContent='';
   const no=v('no');$$('.f_no').forEach(s=>s.textContent=no||'＿＿＿＿');
-  const rd=num('remindDays');$('#b_remind').textContent=rd&&!isNaN(rd)?rd:'＿';
-  const td=num('trDays');$('#b_trDays').textContent=td&&!isNaN(td)?td:'＿';
+  $('#b_remind').textContent='五';$('#b_trDays').textContent='三';   // 催告五日、過戶三日固定
   $('#vh_plate').textContent=v('plate').toUpperCase();
   // 乙方自然人／法人：證號欄位、代表人、簽署欄樣式跟著換
   const corp=v('buyerType')==='法人';
@@ -704,7 +700,10 @@ F.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('[data-money
 F.addEventListener('input',e=>{const au=e.target.dataset&&e.target.dataset.auto;if(au&&e.target.value.trim())el(au).checked=true;
   const ar=e.target.dataset&&e.target.dataset.autoR;if(ar&&e.target.value.trim()){const [n,val]=ar.split(':');Array.from(document.getElementsByName(n)).forEach(r=>r.checked=r.value===val);}
   if(e.target.classList)e.target.classList.remove('err','warnf');const g=e.target.closest&&e.target.closest('.grp');if(g)g.classList.remove('err');calc();save();});
-F.addEventListener('change',e=>{if(e.target.id==='company'){showProfile();}if(e.target.name==='plateFee')el('sp_plate').checked=true;
+F.addEventListener('change',e=>{if(e.target.id==='company'){showProfile();}
+  if(e.target.name==='warranty'&&e.target.value==='約定保固')el('att_warranty').checked=true;
+  if(e.target.name==='sp_plate')plateVis();
+  if(e.target.name&&/^ow[YMD]$/.test(e.target.name)){Array.from(document.getElementsByName('warranty')).forEach(r=>r.checked=r.value==='原廠保固');}
   if(e.target.id==='agree'){$('#agreeRow').classList.remove('err');updatePads();}calc();save();});
 
 const pads={};
@@ -826,11 +825,11 @@ function validate(){
   if(req('vin')){const vin=v('vin').toUpperCase().replace(/\s/g,'');if(vin.length!==17)W('vin',`車身號碼為 ${vin.length} 碼，一般為 17 碼，請再核對`);else if(/[IOQ]/.test(vin))W('vin','車身號碼通常不含 I、O、Q，請核對是否為 1、0');}
   if(req('plate')&&!/^[A-Z0-9]{2,4}-[A-Z0-9]{2,4}$/i.test(v('plate')))W('plate','牌照號碼格式看起來不正確（例：BTN-8337），請核對');
   if(!v('engineNo'))W('engineNo','引擎號碼未填寫（建議填寫）');
-  if(reqR('engine','甲方說明本車引擎')&&v('engine')==='不知')W('@engine','引擎勾選「不知」，請確認已向乙方說明');
+  if(reqR('engine','甲方說明本車引擎')&&v('engine')==='未知')W('@engine','引擎勾選「未知」，請確認已向乙方說明');
   const mil=num('mileage');if(mil==null)E('mileage','「定車時之里程數」未填寫');else if(isNaN(mil))E('mileage','里程數只能填數字');
   if(reqR('mileGuar','里程數擔保／不擔保')&&v('mileGuar')==='不擔保')W('@mileGuar','里程數勾選「不擔保」，請確認已向乙方說明');
   if(reqR('usage','原使用情形')&&v('usage')==='其他'&&!v('usageOther'))E('usageOther','原使用情形勾選「其他」，請填寫說明');
-  if(v('owners')==='二手以上中古汽車'&&!v('ownerCount'))W('ownerCount','勾選「二手以上」，建議填寫轉手次數；不可考請勾「不知」');
+  if(v('owners')==='二手以上中古汽車'&&!v('ownerCount'))W('ownerCount','勾選「二手以上」，建議填寫轉手次數；不可考請勾「未知」');
   // 附件一
   const A='附件一：';
   reqR('origin','產地（國產／進口）');
@@ -870,10 +869,8 @@ function validate(){
   const hh=v('dlH'),mi=v('dlMin');
   if(hh&&(!/^\d{1,2}$/.test(hh)||+hh>23))E('dlH','預計交車時間（時）不正確');
   if(mi&&(!/^\d{1,2}$/.test(mi)||+mi>59))E('dlMin','預計交車時間（分）不正確');
-  const rd=num('remindDays');if(rd==null||isNaN(rd)||rd<5)E('remindDays','甲方逾期交車之催告期間不得少於五日');
   const tr=reqD('tr','預計過戶日期');
-  const trDays=num('trDays');
-  if(trDays==null)E('trDays','過戶期限「締約日之翌日起＿日內」未填寫');else if(isNaN(trDays)||trDays<1||trDays>3)E('trDays','過戶期限須為 1～3 日（不得逾三日）');
+  const trDays=3;   // 過戶期限固定締約日翌日起三日內
   if(sg&&dl&&dl<sg)E('dlY','預計交車日期不可早於簽約日期');
   if(sg&&tr&&tr<sg)E('trY','預計過戶日期不可早於簽約日期');
   if(tr&&dl&&tr>dl)E('trY','預計過戶日期晚於預計交車日期（契約約定交車前應辦妥過戶）');
@@ -888,15 +885,13 @@ function validate(){
 
   // 15 + attachments
   if(reqR('warranty','保固責任')){
-    if(v('warranty')==='約定保固'){if(!v('warrantyScope'))E('warrantyScope','勾選「約定保固範圍」，請填寫保固範圍');
-      else if(/附件/.test(v('warrantyScope'))&&!v('att_warranty'))W('att_warranty','保固範圍寫「附件」，但附件欄未勾選「保固範圍說明」');}
-    else if(v('warrantyScope'))W('warrantyScope','已勾選「無保固」，但保固範圍欄有填寫內容，請確認');
+    if(v('warranty')==='約定保固'&&!v('att_warranty'))E('att_warranty','勾選「約定保固範圍」，附件欄必須勾選「保固範圍說明」並交付乙方');
+    if(v('warranty')==='原廠保固'){const ow=reqD('ow','原廠保固到期日');if(ow&&sg&&ow<sg)W('owY','原廠保固到期日早於簽約日，請確認');}
   }
   if(v('att_other')&&!v('attOther'))E('attOther','附件勾選「其他」，請填寫附件名稱');
-  if(v('sp_plate')){if(!v('plateFee'))E('@plateFee','特約事項勾選「選號」，請勾選選號規費由誰負擔');if(!v('sp_plateNo'))W('sp_plateNo','選號號碼未填寫（尚未決定可留白）');}
-  if(v('sp_other')&&!v('special'))E('special','特約事項勾選「其他」，請填寫內容');
-  if(!v('sp_other')&&v('special'))W('special','特約事項「其他」有填內容但未勾選，未勾選視為無');
-  if(v('sp_plate')&&v('plateFee')==='甲方')W('@plateFee','選號規費由甲方負擔，請確認');
+  if(v('sp_plate')&&!v('sp_plateNo'))W('sp_plateNo','選號號碼未填寫（尚未決定可留白）');
+  if(v('sp_other')&&!v('special'))E('special','特約事項勾選「其他」，請填寫備註內容');
+  if(!v('sp_other')&&v('special'))W('special','備註內容有填寫，但特約事項未勾選「其他」，未勾選視為無特約事項');
 
   // parties
   req('salesName');
@@ -1005,7 +1000,7 @@ function setDefaults(){
   const t=new Date();el('sgY').value=t.getFullYear()-1911;el('sgM').value=t.getMonth()+1;el('sgD').value=t.getDate();
   el('taxYear1').value=el('taxYear2').value=t.getFullYear()-1911;
   el('att_payment').checked=true;
-  Array.from(document.getElementsByName('owners')).forEach(r=>r.checked=r.value==='不知');
+  Array.from(document.getElementsByName('owners')).forEach(r=>r.checked=r.value==='未知');
   Array.from(document.getElementsByName('regOwner')).forEach(r=>r.checked=r.value==='同乙方');
   Array.from(document.getElementsByName('buyerType')).forEach(r=>r.checked=r.value==='自然人');
 }
@@ -1041,6 +1036,7 @@ function carDocsForServer(){
 
 /* ---------- state ---------- */
 function applyState(){
+  plateVis();
   document.body.classList.toggle('locked',state!=='edit');
   $$('#bar .step').forEach(s=>{const order=['edit','locked','done'];const i=order.indexOf(s.dataset.s),c=order.indexOf(state);s.classList.toggle('on',i===c);s.classList.toggle('done',i<c);});
   $('#bCheck').style.display=state==='edit'?'':'none';
@@ -1178,8 +1174,14 @@ $('#licClear').onclick=()=>{if(state!=='edit')return;el('prevLic').value='';upda
 
 /* ---------- init ---------- */
 ['sig_review','sig_buyer'].forEach(makePad);
+function plateVis(){const b=$('#plateBox');if(b)b.style.display=(el('sp_plate')&&el('sp_plate').checked)||PRINT?'':'none';}
 function applyMode(){
   const pp=isPaper();document.body.classList.toggle('paper',pp);
+  // 第十九條：紙本不提電子簽名
+  $('#c19t').textContent=pp?'第十九條：契約收執':'第十九條：電子簽署及契約收執';
+  $('#c19').textContent=pp?'本契約書正本壹式二份，副本零份，由甲乙雙方各持正本一份為憑。本契約自雙方簽署完成之日起生效。'
+    :'甲乙雙方同意依電子簽章法以電子文件及電子簽名方式簽署本契約，其效力與書面簽名或蓋章相同。本契約書正本壹式二份，副本零份，由甲乙雙方各持正本一份為憑；正本得以電子檔交付。本契約自雙方簽署完成之日起生效。';
+  plateVis();
   $('#agreeTxt').textContent=pp?'乙方確認正面及附件各項記載無誤。':'乙方確認正面及附件各項記載無誤，並同意依電子簽章法以電子簽名方式簽署本契約。';
   $('#step2').textContent=pp?'② 鎖定・印出簽名':'② 鎖定・乙方線上簽名';$('#step3').textContent=pp?'③ 已簽約':'③ 完成';
   showProfile();
