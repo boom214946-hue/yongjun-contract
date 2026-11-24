@@ -92,7 +92,7 @@ table.g input.t,table.g span.t{width:100%;border-bottom:0;text-align:left}
 .sigwrap{display:flex;gap:2mm}
 .sig{position:relative;border:1px dashed #9a9a9a;height:15mm;flex:1;background:#fff;border-radius:2px}
 .sig.sm{height:11mm;width:52mm;flex:none;display:inline-block;vertical-align:middle}
-.sig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.sig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation}   /* 簽名改在放大簽名板上簽，格子本身不攔截滑動，平板才能順利往下捲 */
 .sig .cap{position:absolute;left:1.5mm;top:.6mm;font-size:7.5pt;color:#777;pointer-events:none}
 .sig .clr{position:absolute;right:1mm;top:1mm;z-index:3}
 .sig .veil{position:absolute;inset:0;background:rgba(240,240,240,.85);display:flex;align-items:center;justify-content:center;font-size:8pt;color:#666;z-index:2;text-align:center;padding:0 2mm}
