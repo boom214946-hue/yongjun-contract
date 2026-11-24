@@ -10,10 +10,12 @@
 :root{--ink:#161616;--line:#2b2b2b;--soft:#8a8a8a;--err:#ffe1de;--errline:#d93025;--warn:#fff4d6;--navy:#1d3557;--ok:#1e7b4a;--z:1}
 *{box-sizing:border-box}
 html,body{margin:0}
+#f{display:block;width:100%;overflow-x:hidden}   /* 合約頁不撐寬畫面：平板、LINE 小視窗才會正確縮放 */
 body{background:#e8e6e1;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
 /* ---------- toolbar ---------- */
 #bar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+@media (max-height:900px){#bar{position:relative}}   /* 平板／LINE 小視窗：工具列不固定在上方，留更多空間給合約 */
 #bar .steps{display:flex;gap:4px;margin-right:auto;font-size:13px;flex-wrap:wrap}
 #bar .step{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);opacity:.65;white-space:nowrap}
 #bar .step.on{background:#fff;color:var(--navy);opacity:1;font-weight:700}
@@ -36,8 +38,10 @@ body{background:#e8e6e1;font-family:"Noto Sans TC","PingFang TC","Microsoft Jhen
 #hint{font-size:13px;color:#444;text-align:center;margin:8px 0 0}
 
 /* ---------- pages ---------- */
-.page{width:210mm;height:297mm;padding:7.5mm 9.5mm 6mm;background:#fff;margin:12px auto;box-shadow:0 2px 12px rgba(0,0,0,.18);position:relative;font-size:8.7pt;line-height:1.34;overflow:hidden;zoom:var(--z)}
-#render .page{zoom:1;margin:0;box-shadow:none}
+.page{width:210mm;height:297mm;padding:7.5mm 9.5mm 6mm;background:#fff;margin:12px auto;box-shadow:0 2px 12px rgba(0,0,0,.18);position:relative;font-size:8.7pt;line-height:1.34;overflow:hidden}
+.pw{margin:12px auto;position:relative}   /* 縮放外框：用 transform 縮小合約頁（iPad 的 CSS zoom 會把頁面下半截切掉） */
+.pw>.page{margin:0;transform-origin:top left;position:absolute;left:0;top:0}
+#render .page{margin:0;box-shadow:none;transform:none!important;position:relative!important}
 h1.title{font-size:19pt;letter-spacing:.35em;text-align:center;margin:0 0 1mm;font-weight:700}
 .sub{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.2mm;font-size:10pt}
 .sub .rev{font-weight:700;letter-spacing:.08em}
@@ -181,7 +185,8 @@ body.paper .sig{pointer-events:none}
   @page{size:A4;margin:0}
   body{background:#fff}
   .no-print,#bar,#panel,.ov,#toast,#render{display:none!important}
-  .page{zoom:1;margin:0;box-shadow:none;page-break-after:always}
+  .page{margin:0;box-shadow:none;page-break-after:always;transform:none!important;position:relative!important}
+  .pw{width:auto!important;height:auto!important;margin:0!important}
   input.t::placeholder,textarea.t::placeholder{color:transparent}
   .err,.warnf{background:transparent!important;box-shadow:none!important}
   .sig{border-color:#bbb!important;box-shadow:none!important}
@@ -202,6 +207,7 @@ body.paper .sig{pointer-events:none}
   <button class="btn primary" id="bFinish" type="button">完成簽署・上傳合約</button>
   <a class="btn" id="bPay" style="text-decoration:none">簽約收款・繳款單</a>
   <button class="btn" id="bOnline" type="button">改用線上簽名</button>
+  <button class="btn" id="bFull" type="button" hidden>用瀏覽器全螢幕開啟</button>
   <button class="btn primary" id="bPrint" type="button">匯出列印 PDF（一式兩聯）</button>
 </div>
 
@@ -935,7 +941,7 @@ async function digest(s){
 function buildStatic(ids){
   const host=$('#render');host.innerHTML='';
   (ids||['front','back']).forEach(id=>{
-    const src=document.getElementById(id), cl=src.cloneNode(true);cl.removeAttribute('id');
+    const src=document.getElementById(id), cl=src.cloneNode(true);cl.removeAttribute('id');cl.style.transform='';
     const sIn=src.querySelectorAll('input,select,textarea,canvas'), cIn=cl.querySelectorAll('input,select,textarea,canvas');
     cIn.forEach((c,i)=>{const s=sIn[i];let r;
       if(s.type==='hidden'||s.type==='file'){c.remove();return;}
@@ -1144,6 +1150,9 @@ $('#bPrint').onclick=async()=>{
   }catch(e){busy(false);$('#render').innerHTML='';console.error(e);toast('產生 PDF 失敗：'+(e&&e.message||e),5000);}
 };
 $('#pdfClose').onclick=()=>$('#ovPdf').classList.remove('show');
+// LINE 裡的視窗太小（平板常見）：改用 Safari／Chrome 全螢幕開同一份合約（第一次要用 LINE 帳號登入）
+$('#bFull').onclick=()=>{const u=new URL(location.href);if(KID){u.searchParams.delete('car');u.searchParams.set('id',KID);}
+  save();try{liff.openWindow({url:u.href,external:true});}catch(x){location.href=u.href;}};
 $('#bOnline').onclick=async()=>{
   if(isPaper()){
     const p=curProfile();
@@ -1163,7 +1172,16 @@ function busy(msg){const b=$('#busy');if(msg===false){b.classList.remove('show')
 $('#seller').addEventListener('change',()=>{el('salesName').value='';el('salesPhone').value='';fillSalesRep();save();});
 
 /* ---------- zoom to fit ---------- */
-function fit(){const pw=210*96/25.4+28;const z=Math.min(1,(window.innerWidth-6)/pw);document.documentElement.style.setProperty('--z',z.toFixed(3));}
+function fit(){
+  const pw=210*96/25.4+28;const w=Math.min(window.innerWidth,document.documentElement.clientWidth||1e9,(F&&F.clientWidth)||1e9);const z=Math.min(1,(w-6)/pw);
+  document.documentElement.style.setProperty('--z',z.toFixed(3));
+  // 每一頁包一層外框，用 transform 縮放（外框大小＝縮放後的頁面大小，捲動高度才會正確）
+  F.querySelectorAll('section.page').forEach(pg=>{
+    let wr=pg.parentElement;if(!wr.classList.contains('pw')){wr=document.createElement('div');wr.className='pw';pg.parentNode.insertBefore(wr,pg);wr.appendChild(pg);}
+    pg.style.transform=z<1?`scale(${z})`:'';
+    wr.style.width=(pg.offsetWidth*z)+'px';wr.style.height=(pg.offsetHeight*z)+'px';
+  });
+}
 window.addEventListener('resize',fit);
 
 /* ---------- 行照 upload ---------- */
@@ -1194,6 +1212,7 @@ async function main(){
     await liff.init({liffId:LIFF_ID});
     if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return;}
     if(!tokenOk()){relogin();return;}
+    try{if(liff.isInClient&&liff.isInClient())$('#bFull').hidden=false;}catch(x){}
     if(!KID&&!qs.get('car')&&!BLANK){$('#loading').innerHTML='沒有指定車輛。<br><a href="index.html">回合約列表選車</a>';return;}
     const r=await api({action:'contractInit',id:KID,carId:qs.get('car')||'',blank:!!BLANK&&!KID});
     if(!r.ok){$('#loading').innerHTML=esc(r.message||'讀取失敗')+'<br><br><a href="index.html">回合約列表</a>';return;}
@@ -1210,7 +1229,7 @@ async function main(){
     fillFromCar(CAR);fillSalesRep();
     showProfile();calc();applyState();
     document.title=PRINT?'空白合約（列印）':(KNO?KNO+' ':'')+(CAR['車牌']||(v('plate')||'非公司車'))+' 合約';
-    $('#loading').remove();
+    $('#loading').remove();fit();
   }catch(e){if(e&&e.message==='relogin')return;$('#loading').innerHTML='無法連線：'+esc(e&&e.message||e)+'<br>請關閉頁面重新開啟。';}
 }
 window.__test={collect,validate,summary,buildStatic,jpegPdf,canvasJpeg};
