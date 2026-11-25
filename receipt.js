@@ -109,6 +109,127 @@
       <div class="foot"><span>繳款單 ${esc(r['繳款單編號'])}｜合約 ${esc(r['合約編號'])} 附件</span><span class="cp">${esc(copy || '')}</span></div>`;
     return sec;
   }
+  // ===== 交車委託書 =====
+  // d：{company, contract, car, buyer}；p：委託書資料（proxyView）；f：{pSig, aSig}
+  function proxyPage(d, p, f, wm) {
+    css(); f = f || {};
+    const sec = document.createElement('section'); sec.className = 'page rcp';
+    if (wm) { sec.style.backgroundImage = `url(${wm})`; sec.style.backgroundSize = '330px 230px'; }
+    const co = d.company || {}, k = d.contract || {}, car = d.car || {}, b = d.buyer || {};
+    const box = on => `<span style="display:inline-block;width:3.2mm;height:3.2mm;border:1px solid #222;margin-right:1.2mm;vertical-align:-.4mm;text-align:center;line-height:3mm;font-size:8pt">${on ? '✓' : ''}</span>`;
+    const ALL = ['代為受領車輛、鑰匙及行照等車輛文件', '代為清點車況、配備並簽署交車確認單', '代為繳付尾款／代辦費用'];
+    const items = p.items || [];
+    const t = s => String(s || '').slice(0, 16);
+    const sig = (src, cap, when, how) => `<div class="sbox" style="flex:1;height:30mm"><span class="cap">${cap}</span>
+      ${src ? `<img src="${src}" alt="" style="position:absolute;left:4mm;right:4mm;top:5mm;bottom:6mm;width:calc(100% - 8mm);height:calc(100% - 11mm);object-fit:contain">` : ''}
+      <span class="note" style="position:absolute;left:1.5mm;bottom:.6mm">${when ? '簽署時間：' + esc(t(when)) : '簽署日期：　　年　　月　　日'}${how ? '（' + esc(how) + '）' : ''}</span></div>`;
+    sec.innerHTML = `
+      <h1>交車委託書</h1>
+      <div class="sub"><span>合約編號：${esc(k.no || '')}</span><span class="no">No. ${esc(p['單號'] || '（建立後產生）')}</span></div>
+      <p style="margin:2mm 0 3mm;font-size:10pt;line-height:1.9">立委託書人（乙方）<b style="border-bottom:1px solid #222;padding:0 2mm">${esc(b.name || '')}</b>，因故無法親自辦理交車，茲委託下列受託人，代為辦理本人與<b>${esc(co.name || '')}</b>（甲方）所簽訂上開合約之車輛交車事宜，委託事項如下。</p>
+      <div class="sec">一、車輛資料</div>
+      <table><tr><td class="h">廠牌／車型</td><td>${esc(car.label || [car.brand, car.model].filter(Boolean).join(' '))}</td><td class="h">牌照號碼</td><td>${esc(car.plate || '')}</td></tr>
+        <tr><td class="h">車身號碼</td><td colspan="3">${esc(car.vin || '')}</td></tr></table>
+      <div class="sec">二、委託人及受託人資料</div>
+      <table><tr class="th"><td style="width:16%"></td><td style="width:42%">委託人（乙方）</td><td>受託人</td></tr>
+        <tr><td class="h">姓名${b.corp ? '／名稱' : ''}</td><td>${esc(b.name || '')}${b.corp && b.rep ? `<span class="note">（代表人 ${esc(b.rep)}）</span>` : ''}</td><td>${esc(p['受託人'] || '')}</td></tr>
+        <tr><td class="h">身分證字號${b.corp ? '／統編' : ''}</td><td>${esc(b.id || '')}</td><td>${esc(p['受託人身分證'] || '')}</td></tr>
+        <tr><td class="h">電話</td><td>${esc(b.phone || '')}</td><td>${esc(p['受託人電話'] || '')}</td></tr>
+        <tr><td class="h">地址／關係</td><td>${esc(b.addr || '')}</td><td>與委託人關係：${esc(p['關係'] || '')}</td></tr></table>
+      <div class="sec">三、委託事項</div>
+      <div style="border:1px solid #2b2b2b;padding:2mm 2.5mm;line-height:2;font-size:9.5pt">
+        ${ALL.map(x => `<div>${box(items.indexOf(x) >= 0)}${esc(x)}${x === '代為繳付尾款／代辦費用' ? `，金額新臺幣 <b>${p['代繳金額'] ? money(p['代繳金額']) : '＿＿＿＿＿'}</b> 元` : ''}</div>`).join('')}
+        <div>${box(!!p['其他事項'])}其他：${esc(p['其他事項'] || '＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿')}</div></div>
+      <div class="sec">四、聲明事項</div>
+      <ol style="font-size:8.8pt;line-height:1.65">
+        <li>受託人於上列委託範圍內所為之行為，視同委託人本人之行為，委託人均予承認。</li>
+        <li>車輛交付時點以受託人簽收時為準。但不影響乙方依本合約及法律就車輛瑕疵所得主張之權利。</li>
+        <li>甲方得以電話向委託人確認委託真意後再辦理交車；無法確認時，甲方得暫緩交車，不負遲延責任。</li>
+        <li>受託人應出示身分證明文件正本供甲方核對，甲方得留存影本，僅供本次交車確認使用。</li>
+        <li>本委託書自簽署日起至交車完成止有效。委託人以電子簽名方式簽署者，依電子簽章法，與親筆簽名有同等效力。</li></ol>
+      <div class="sec">五、簽名</div>
+      <div class="signs" style="margin-top:1mm">
+        ${sig(f.pSig, '委託人（乙方）簽名' + (b.corp ? '（法人請蓋大小章或代表人簽名）' : ''), p['委託人簽署時間'], p['委託人簽署方式'])}
+        ${sig(f.aSig, '受託人簽名', p['受託人簽署時間'], '')}</div>
+      ${p['電話確認時間'] ? `<p class="note" style="margin:1.5mm 0 0">甲方已於 ${esc(t(p['電話確認時間']))} 以電話向委託人確認委託真意（確認人：${esc(p['電話確認人名'] || '')}）。</p>` : ''}
+      <p style="margin:3mm 0 0;font-size:9.5pt">此致　${esc(co.name || '')}</p>
+      <div class="foot"><span>${esc(co.name || '')}${co.phone ? '｜' + esc(co.phone) : ''}</span><span>交車委託書 ${esc(p['單號'] || '')}｜附件：身分證明文件影本</span></div>`;
+    return sec;
+  }
+  // 證件影本頁：委託人、受託人各最多 2 張
+  function proxyIdPage(d, p, pIds, aIds, wm) {
+    css();
+    const sec = document.createElement('section'); sec.className = 'page rcp';
+    if (wm) { sec.style.backgroundImage = `url(${wm})`; sec.style.backgroundSize = '330px 230px'; }
+    const cell = (u, cap) => `<div style="border:1px solid #2b2b2b;height:62mm;display:flex;flex-direction:column">
+      <div style="padding:.8mm 1.6mm;border-bottom:1px solid #2b2b2b;background:rgba(120,105,80,.09);font-size:8.5pt">${cap}</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2mm;min-height:0">${u ? `<img src="${u}" alt="" style="max-width:100%;max-height:100%;object-fit:contain">` : '<span class="note">（未附）</span>'}</div></div>`;
+    sec.innerHTML = `<h1 style="letter-spacing:.3em">身分證明文件影本</h1>
+      <div class="sub"><span>交車委託書附件</span><span class="no">No. ${esc(p['單號'] || '')}</span></div>
+      <div class="sec">委託人（${esc((d.buyer || {}).name || '')}）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3mm">${cell(pIds[0], '正面')}${cell(pIds[1], '反面')}</div>
+      <div class="sec" style="margin-top:5mm">受託人（${esc(p['受託人'] || '')}）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3mm">${cell(aIds[0], '正面')}${cell(aIds[1], '反面')}</div>
+      <p class="note" style="margin-top:4mm">以上影本僅供交車委託確認使用，不作其他用途。</p>
+      <div class="foot"><span>${esc((d.company || {}).name || '')}</span><span>交車委託書 ${esc(p['單號'] || '')}｜身分證明文件影本</span></div>`;
+    return sec;
+  }
+  // ===== 放大簽名板：回傳 PNG dataURL（取消回傳 null）=====
+  function sigPad(title, note) {
+    return new Promise(resolve => {
+      if (!document.getElementById('rcSigCss')) {
+        const st = document.createElement('style'); st.id = 'rcSigCss';
+        st.textContent = `#rcSig{position:fixed;inset:0;background:rgba(10,14,22,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:10px}
+#rcSig .d{background:#fff;border-radius:12px;padding:14px;width:min(96vw,1100px);font-family:"Noto Sans TC",sans-serif}
+#rcSig .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:8px}#rcSig .h b{font-size:18px}#rcSig .h span{font-size:13px;color:#666}
+#rcSig .a{position:relative;border:2px solid #1d6fd6;border-radius:8px;touch-action:none}#rcSig canvas{display:block;width:100%;height:100%;touch-action:none}
+#rcSig .ln{position:absolute;left:6%;right:6%;bottom:22%;border-bottom:1px dashed #b9c3d3;pointer-events:none}
+#rcSig .ph{position:absolute;left:0;right:0;top:40%;text-align:center;color:#b9c3d3;font-size:22px;pointer-events:none}
+#rcSig .b{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}#rcSig .b button{font:inherit;font-size:16px;font-weight:700;padding:10px 20px;border-radius:8px;border:1px solid #ccc;background:#fff}
+#rcSig .b .ok{background:#f4b942;border-color:#f4b942}`;
+        document.head.appendChild(st);
+      }
+      const ov = document.createElement('div'); ov.id = 'rcSig';
+      ov.innerHTML = `<div class="d"><div class="h"><b>${esc(title || '簽名')}</b><span>${esc(note || '請在框內簽名，簽完按「確定」')}</span></div>
+        <div class="a"><div class="ln"></div><div class="ph">請在此簽名</div><canvas></canvas></div>
+        <div class="b"><button type="button" class="cl">重簽</button><button type="button" class="cn">取消</button><button type="button" class="ok">確定</button></div></div>`;
+      document.body.appendChild(ov);
+      const area = ov.querySelector('.a'), cv = ov.querySelector('canvas'), ph = ov.querySelector('.ph');
+      const h = Math.max(220, Math.min(Math.round(innerHeight * 0.6), innerHeight - 150));
+      area.style.height = h + 'px';
+      const dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(area.clientWidth * dpr); cv.height = Math.round(h * dpr);
+      const x = cv.getContext('2d'); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b1f4d';
+      let strokes = [], cur = null;
+      const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, p: e.pressure || .5 }; };
+      cv.addEventListener('pointerdown', e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); cur = [pos(e)]; strokes.push(cur); ph.style.display = 'none'; });
+      cv.addEventListener('pointermove', e => { if (!cur) return; e.preventDefault(); const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+        evs.forEach(ev => { const a = cur[cur.length - 1], b = pos(ev); cur.push(b); x.lineWidth = (4 + (b.p - .5) * 3) * dpr; x.beginPath(); x.moveTo(a.x * dpr, a.y * dpr); x.lineTo(b.x * dpr, b.y * dpr); x.stroke(); }); });
+      const end = () => { cur = null; }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+      const close = v => { ov.remove(); resolve(v); };
+      ov.querySelector('.cl').onclick = () => { strokes = []; x.clearRect(0, 0, cv.width, cv.height); ph.style.display = ''; };
+      ov.querySelector('.cn').onclick = () => close(null);
+      ov.querySelector('.ok').onclick = () => {
+        if (!strokes.length) { ph.textContent = '還沒有簽名'; return; }
+        const pts = strokes.flat(); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        pts.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+        const W = 900, H = 300, pad = 24, bw = Math.max(x1 - x0, 1), bh = Math.max(y1 - y0, 1), sc = Math.min((W - pad * 2) / bw, (H - pad * 2) / bh, 3);
+        const ox = (W - bw * sc) / 2 - x0 * sc, oy = (H - bh * sc) / 2 - y0 * sc;
+        const o = document.createElement('canvas'); o.width = W; o.height = H; const c = o.getContext('2d');
+        c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#0b1f4d'; c.fillStyle = '#0b1f4d';
+        strokes.forEach(st => { for (let i = 1; i < st.length; i++) { c.lineWidth = 5 + (st[i].p - .5) * 3; c.beginPath(); c.moveTo(st[i - 1].x * sc + ox, st[i - 1].y * sc + oy); c.lineTo(st[i].x * sc + ox, st[i].y * sc + oy); c.stroke(); }
+          if (st.length === 1) { c.beginPath(); c.arc(st[0].x * sc + ox, st[0].y * sc + oy, 3, 0, 7); c.fill(); } });
+        close(o.toDataURL('image/png'));
+      };
+    });
+  }
+  // 照片縮小成 JPEG（證件用）
+  function shrink(file, max) {
+    max = max || 1400;
+    return new Promise((res, rej) => { const fr = new FileReader(); fr.onerror = rej; fr.onload = () => { const img = new Image(); img.onerror = () => rej(new Error('不是圖片檔'));
+      img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .85)); };
+      img.src = fr.result; }; fr.readAsDataURL(file); });
+  }
   // 公司留底聯的內部簽核欄：經手人／會計（行政核對）／財務經辦（核准）／主管簽核；系統簽核後自動帶入姓名與時間
   function coSigns(r) {
     const t = s => String(s || '').slice(0, 16);
@@ -228,9 +349,15 @@
         <div><h1 style="text-align:left;padding-left:0;letter-spacing:.5em;margin:0">交車確認單</h1><div class="note">合約編號 ${esc(k.no)}</div></div>
         <div style="text-align:right;font-size:8.5pt;line-height:1.5"><b>${esc(c.company.name)}</b><br>${esc(c.company.addr || '')}<br>${c.company.phone ? 'Tel：' + esc(c.company.phone) : ''}<div class="no" style="font-size:10.5pt;font-weight:700">No. ${esc(r['交車單號'])}</div></div>
       </div>
+      <div style="border:1.5px solid #2b2b2b;padding:1.8mm 2.5mm;margin-bottom:2.5mm;font-size:9.5pt;line-height:1.75">
+        本確認單為合約編號 <b>${esc(k.no)}</b>「中古汽車買賣定型化契約書」之附件，補充原合約第一條里程數、第四條交車日期及第十三條罰鍰之約定：<br>
+        一、交車時里程數：<b style="font-size:11pt">${r['交車里程'] ? money(r['交車里程']) : '＿＿＿＿'}</b> 公里。${k.mileGuar === '不擔保' ? '甲方依原合約第一條約定，不擔保本車里程數與實際行駛里程一致。' : '本公司（甲方）擔保本車里程數與實際行駛里程一致。'}<br>
+        二、交車日期及時間：<b style="font-size:11pt">${(() => { const m = String(r['交車時間'] || '').match(/^(\d{4})\/(\d{2})\/(\d{2})\s*(\d{2}):(\d{2})/); return m ? `民國 ${m[1] - 1911} 年 ${+m[2]} 月 ${+m[3]} 日 ${m[4]} 時 ${m[5]} 分` : '民國＿＿年＿＿月＿＿日＿＿時＿＿分'; })()}</b><br>
+        三、交車前本車之一切違規罰鍰，均由本公司（甲方）負擔（原合約第十三條）。
+      </div>
       <table>
         <tr><td class="h">車款型式</td><td>${esc(label)}</td><td class="h">車身號碼</td><td style="letter-spacing:.04em">${esc(car.vin)}</td></tr>
-        <tr><td class="h">牌照號碼</td><td>${esc(k.newPlate || k.plate)}${k.newPlate ? `<span class="note">（原 ${esc(k.plate)}）</span>` : ''}</td><td class="h">車主（乙方）</td><td>${esc(k.buyer)}</td></tr>
+        <tr><td class="h">牌照號碼</td><td>${esc(r['交車牌照'] || (r['交車單號'] ? k.plate : ''))}${r['交車牌照'] && r['交車牌照'] !== k.plate ? `<span class="note">（原 ${esc(k.plate)}）</span>` : ''}</td><td class="h">車主（乙方）</td><td>${esc(k.buyer)}</td></tr>
       </table>
       <table style="margin-top:2.5mm"><tr class="th"><td colspan="6">車款明細</td></tr>
         <tr><td class="h">車　價</td><td class="r">${money(r['成交價'])}</td><td class="h">已收（定金及預付車款）</td><td class="r">${money(r['車價已收'])}</td>
@@ -242,7 +369,7 @@
         ${(c.checks || []).map(x => `<tr><td>${x === '汽車鑰匙' ? `汽車鑰匙 ${esc(keys || '＿')} 把` : esc(x)}</td><td>${yn(ck[x])}</td><td></td></tr>`).join('')}
         <tr><td>胎壓檢查確認　前輪 <b>${esc(r['胎壓前'] || '＿＿')}</b> psi　後輪 <b>${esc(r['胎壓後'] || '＿＿')}</b> psi</td><td>${bx(r['胎壓前'] && r['胎壓後'])}已確認</td><td></td></tr>
       </table>
-      <div style="display:flex;justify-content:space-between;margin:2.5mm 0 1.5mm;font-size:10pt"><span>里程數：<b>${money(r['交車里程'])}</b> 公里</span><span>交車日期：<b>${esc(String(r['交車時間'] || '').replace(/\//g, '-'))}</b></span></div>
+      <div style="height:2mm"></div>
       <table><tr class="th"><td>實際交車人</td><td>銷售顧問簽章</td></tr>
         <tr><td style="height:15mm;vertical-align:bottom"><span class="note">${r['實際交車人'] && r['實際交車人'] !== k.buyer ? '（非車主本人：' + esc(r['實際交車人']) + '）' : ''}</span></td><td style="vertical-align:bottom"><span class="note">${esc(k.sellerName || '')}</span></td></tr></table>
       <div style="border:1px solid #2b2b2b;margin-top:2mm;padding:1.5mm 2mm;font-size:7.8pt;line-height:1.5">
@@ -263,7 +390,7 @@
       <h1>出庫單</h1>
       <div class="sub"><span class="note">出庫＝交車；附交車確認單 ${esc(r['交車單號'])}</span><span></span><span class="no">No. ${esc(r['交車單號'])}</span></div>
       <table>
-        <tr><td class="h">車　號</td><td><b>${esc(k.newPlate || k.plate)}</b>${k.newPlate ? `<span class="note">（原 ${esc(k.plate)}）</span>` : ''}</td><td class="h">出廠年月</td><td>${esc(car.year)}</td></tr>
+        <tr><td class="h">車　號</td><td><b>${esc(r['交車牌照'] || k.plate)}</b>${r['交車牌照'] && r['交車牌照'] !== k.plate ? `<span class="note">（原 ${esc(k.plate)}）</span>` : ''}</td><td class="h">出廠年月</td><td>${esc(car.year)}</td></tr>
         <tr><td class="h">廠　牌</td><td>${esc(car.brand)}</td><td class="h">車　款</td><td>${esc(car.model)}</td></tr>
         <tr><td class="h">車身號碼</td><td colspan="3" style="letter-spacing:.04em">${esc(car.vin)}</td></tr>
         <tr><td class="h">出庫日期</td><td>${esc(String(r['交車時間'] || '').replace(/\//g, '-'))}</td><td class="h">出庫地點</td><td>${esc(r['出庫地點'])}</td></tr>
@@ -357,5 +484,5 @@
     sec.innerHTML = half('第一聯　公司留底聯') + `<div style="border-top:1px dashed #888;margin:3.5mm -11mm 4mm;position:relative"><span style="position:absolute;left:50%;top:-2.2mm;transform:translateX(-50%);background:#fff;padding:0 2mm;font-size:7pt;color:#888">✂ 沿虛線裁開</span></div>` + half('第二聯　客戶收執聯');
     return sec;
   }
-  window.RC = { css, page, proofPages, docPage, dlvPage, outPage, agentPage, agentSheet, photoPdf, watermark, zh, pdf, jpeg, roc, money };
+  window.RC = { css, page, proofPages, proxyPage, proxyIdPage, sigPad, shrink, docPage, dlvPage, outPage, agentPage, agentSheet, photoPdf, watermark, zh, pdf, jpeg, roc, money };
 })();
