@@ -101,6 +101,7 @@ table.t tr.void td:last-child,table.t tr.void td:nth-last-child(2){text-decorati
       <label>交車時間<input id="f-time" type="time" value="14:00"></label>
       <label>出庫地點<input id="f-place" maxlength="20"></label>
       <label>交車里程（公里）<input id="f-km" inputmode="numeric"></label>
+      <label>牌照號碼（交車時實際車牌）<input id="f-plate" maxlength="10" style="text-transform:uppercase" placeholder="例：ABC-1234"></label>
       <label>實際交車人<input id="f-recv" maxlength="20"></label>
     </div>
     <p class="small muted" id="recvNote" style="margin:4px 0 0"></p>
@@ -198,7 +199,7 @@ function renderHist(){
 function renderChecks(){
   $('#cks').innerHTML=D.checks.map(x=>`<div class="ck"><span>${x==='汽車鑰匙'?`汽車鑰匙 <b>${esc(D.car.keys||'?')}</b> 把`:esc(x)}</span><span class="seg"><button type="button" data-ck="${esc(x)}" data-v="有" aria-pressed="${checks[x]==='有'}">有</button><button type="button" data-ck="${esc(x)}" data-v="無" aria-pressed="${checks[x]==='無'}">無</button></span></div>`).join('');
 }
-function form(){const t=totals();return {when:($('#f-date').value||'').replace(/-/g,'/')+' '+($('#f-time').value||''),place:$('#f-place').value.trim(),km:$('#f-km').value.replace(/[,\s]/g,''),
+function form(){const t=totals();return {when:($('#f-date').value||'').replace(/-/g,'/')+' '+($('#f-time').value||''),place:$('#f-place').value.trim(),km:$('#f-km').value.replace(/[,\s]/g,''),plate:$('#f-plate').value.trim().toUpperCase(),
   receiver:$('#f-recv').value.trim(),checks,payState:t.due>0?payState:'已收',tireF:$('#f-tf').value.trim(),tireR:$('#f-tr').value.trim(),note:$('#f-note').value.trim()};}
 function check(){
   const k=D.contract,f=form(),t=totals(),out=[],E=(id,m)=>out.push({l:'E',id,m}),W=(id,m)=>out.push({l:'W',id,m});
@@ -206,6 +207,7 @@ function check(){
   const km=amt(f.km),mk=amt(k.mileage);
   if(!km)E('f-km','請填交車里程');else if(mk&&km<mk)E('f-km',`交車里程 ${money(km)} 比定車時 ${money(mk)} 還少，請確認`);else if(mk&&km-mk>500)W('f-km',`交車里程比定車時多 ${money(km-mk)} 公里，請確認`);
   if(!f.receiver)E('f-recv','請填實際交車人');
+  if(!f.plate)E('f-plate','請填交車時的牌照號碼（過戶後的實際車牌）');else if(!/^[A-Z0-9]{2,4}-[A-Z0-9]{2,4}$/.test(f.plate))E('f-plate','牌照號碼格式不對（例：ABC-1234）');
   if(t.due>0&&payState!=='已收'&&!f.note)E('f-note',`尾款 ${money(t.due)} 元還沒收，請在備註寫明原因（例如貸款撥款中）`);
   if(t.due>0&&payState==='已收')W('','選了「當天收齊」：送出後請在出庫單按「開立尾款繳款單」，Yvonne 核准後財務經辦會自動簽核');
   D.checks.forEach(x=>{if(!checks[x])E('cks','點交項目「'+x+'」請選有或無');});
@@ -221,11 +223,14 @@ function renderTot(){
   $('#dueBox').hidden=!(t.due>0);
   document.querySelectorAll('[data-ps]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ps===payState));
   $('#dueHint').textContent=payState==='已收'?'交車當天收齊：送出後在出庫單按「開立尾款繳款單」，Bella 核對、Yvonne 核准後，出庫單的財務經辦會自動簽上。':'尚未收齊（例如貸款撥款中）：備註請寫原因，主管核准出庫時也要填說明；之後收到款再開尾款繳款單。';
-  const r=$('#f-recv').value.trim();$('#recvNote').textContent=r&&r!==k.buyer?`實際交車人不是車主本人，確認單上的「責任聲明」適用，請兩人都簽名。`:'';
+  const r=$('#f-recv').value.trim(),px=D.proxy;
+  $('#recvNote').textContent=!r||r===k.buyer?'':px&&px.state==='已完成'&&r===px.name?`依交車委託書 ${px.no} 由受託人代領；確認單上的「責任聲明」適用。`
+    :px&&px.state!=='已完成'?`交車委託書 ${px.no} 還沒完成（${px.state}），請先到合約列表的「交車委託書」處理。`
+    :`實際交車人不是車主本人：建議先在合約列表開「交車委託書」讓車主簽名；確認單上的「責任聲明」適用。`;
 }
 function draftRecord(){const f=form(),t=totals(),k=D.contract;
   return {'交車單號':k.no+'-T'+(D.dlvs.length+1),'交車時間':f.when,'出庫地點':f.place,'交車里程':amt(f.km),'成交價':k.price,'車價已收':D.paid,'尾款':k.price-D.paid,
-    '應收合計':t.due,'尾款狀態':t.due>0?payState:'已收',checks,'胎壓前':f.tireF,'胎壓後':f.tireR,'實際交車人':f.receiver,'備註':f.note,
+    '應收合計':t.due,'尾款狀態':t.due>0?payState:'已收',checks,'胎壓前':f.tireF,'胎壓後':f.tireR,'實際交車人':f.receiver,'交車牌照':f.plate,'備註':f.note,
     '申請人名':D.me.name,'核准人':'','核准時間':'','財務經辦':'','建立時間':D.today,'狀態':''};}
 function renderPreview(){
   const sel=D.dlvs.find(r=>r['編號']===selId),r=sel||(canCreate()?draftRecord():null);
@@ -307,7 +312,7 @@ async function makePdf(kind){
 async function load(){const r=await api({action:'dlvInit',id:KID});if(!r.ok)throw new Error(r.message||'讀取失敗');D=r;D.car.keys=D.car.keys||'';WM=RC.watermark(D.company.name,D.contract.no);}
 function fillForm(){
   const k=D.contract;$('#apName').textContent=D.approverEn;
-  $('#f-date').value=(k.eta&&k.eta>=D.today?k.eta:D.today).replace(/\//g,'-');$('#f-place').value=D.place;$('#f-recv').value=k.buyer;
+  $('#f-date').value=(k.eta&&k.eta>=D.today?k.eta:D.today).replace(/\//g,'-');$('#f-place').value=D.place;$('#f-recv').value=D.proxy&&D.proxy.state==='已完成'?D.proxy.name:k.buyer;
   if(k.mileage)$('#f-km').placeholder='定車時 '+money(amt(k.mileage));
   D.checks.forEach(x=>{checks[x]=x==='出廠證'?(D.car.fc==='V'?'有':'無'):x==='鑑定報告'?(/^(TSI|GOO)/.test(D.car.cert)?'有':'無'):x==='汽車鑰匙'?(D.car.keys?'有':''):'有';});
   renderChecks();$('#agentLink').href='agent.html?k='+encodeURIComponent(KID);
