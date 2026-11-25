@@ -158,8 +158,8 @@ function prorate(annual,dateStr){
   const d=new Date(dateStr+'T00:00:00'),y=d.getFullYear(),end=new Date(y,11,31),total=((y%4===0&&y%100!==0)||y%400===0)?366:365;
   const days=Math.round((end-d)/864e5)+1;return {share:Math.round(annual*days/total),days,total};
 }
-// 過戶規費的牌照稅、公路養管費，合約約定「依交車日比例分攤」時，填年度稅額自動算
-function isPr(l){return D.contract&&l.cat==='過戶規費'&&rule(l.name)&&rule(l.name).prorate;}
+// 牌照稅、公路養管費一律由填寫人看實際金額填入（不用天數自動算，避免誤差）
+function isPr(l){return false;}
 function items(){return lines.map(l=>{if(isPr(l)){const p=prorate(amt(l.annual),$('#f-prdate').value);return {cat:l.cat,name:l.name,amount:p.share,note:amt(l.annual)?`年度 ${money(amt(l.annual))} 元 × ${p.days}/${p.total} 天`:''};}
   return {cat:l.cat,name:l.name.trim(),amount:amt(l.amount),note:''};});}
 function renderHead(){
@@ -184,7 +184,7 @@ function renderLines(){
     <select data-f="cat" aria-label="類別"><option value="">類別</option>${D.cats.map(c=>`<option${c===l.cat?' selected':''}>${c}</option>`).join('')}</select>
     <input data-f="name" value="${esc(l.name)}" placeholder="${l.cat==='過戶規費'?'例：強制險（可從選單挑）':'項目說明，例：機油更換'}" ${l.cat==='過戶規費'?'list="feeList"':''} maxlength="40" aria-label="項目">
     ${pr?`<input data-f="annual" inputmode="numeric" value="${amt(l.annual)?money(amt(l.annual)):''}" placeholder="年度稅額" aria-label="年度稅額">`:`<input data-f="amount" inputmode="numeric" value="${amt(l.amount)?money(amt(l.amount)):''}" placeholder="金額" aria-label="金額">`}
-    <span class="small ${r&&r.who==='甲方'?'':'muted'}" style="${r&&r.who==='甲方'?'color:var(--warn)':''}">${r?(r.who==='甲方'?'✕ '+esc(r.why)+'，不能收':pr?(amt(l.annual)&&p.days?`乙方負擔 ${money(p.share)} 元（${p.days}/${p.total} 天）`:'依交車日比例分攤'):esc(r.why)):''}</span>
+    <span class="small ${r&&r.who==='甲方'?'':'muted'}" style="${r&&r.who==='甲方'?'color:var(--warn)':''}">${r?(r.who==='甲方'?'✕ '+esc(r.why)+'，不能收':r.prorate?'合約約定依交車日比例分攤：請填乙方實際應負擔的金額':esc(r.why)):''}</span>
     <button class="x" type="button" data-del="${i}" title="刪除" ${lines.length<2?'hidden':''}>✕</button></div>`;}).join('')+`<datalist id="feeList">${feeOpts}</datalist>`;
   $('#prBox').hidden=!lines.some(isPr);
 }
