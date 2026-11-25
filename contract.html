@@ -286,8 +286,7 @@ body.paper .sig{pointer-events:none}
   <div class="box">
     <div class="row grp" data-g="accident">一、曾否發生重大事故：
       <label class="rd"><input type="radio" name="accident" value="否">否</label>
-      <label class="rd"><input type="radio" name="accident" value="依第三方鑑定報告為準">依第三方鑑定報告為準</label>
-      <label class="rd" style="margin-left:2mm"><input type="radio" name="accident" value="是">是，受損狀況：</label><input class="t l" name="accidentDesc" style="width:30%"></div>
+      <label class="rd" style="margin-left:2mm"><input type="radio" name="accident" value="是">是，受損狀況：</label><input class="t l" name="accidentDesc" style="width:36%">（依第三方鑑定報告為準）</div>
     <div class="row grp" data-g="flood">二、是否為泡水車：
       <label class="rd"><input type="radio" name="flood" value="否">否</label>
       <label class="rd"><input type="radio" name="flood" value="全部泡水">全部泡水</label>
@@ -351,7 +350,7 @@ body.paper .sig{pointer-events:none}
     <table class="g lockable pt" style="border-top:1px solid var(--line)">
       <tr><td class="h">甲方（賣方）</td><td style="width:30%"><select class="t wf" name="company" id="company"></select></td>
           <td class="h">統一編號</td><td style="width:13%"><span id="p_tax"></span></td>
-          <td class="h">代表人</td><td><span id="p_rep"></span> <span class="note" id="p_repId"></span></td></tr>
+          <td class="h">代表人</td><td><span id="p_rep"></span></td></tr>
       <tr><td class="h">地　址</td><td colspan="3"><span id="p_addr"></span></td>
           <td class="h">電話／行動</td><td><span id="p_phone"></span><span id="p_mobile"></span></td></tr>
       <tr><td class="h">電子信箱</td><td><span id="p_email"></span></td>
@@ -594,7 +593,7 @@ function showProfile(){
   makeWatermark();
   const p=curProfile()||{};
   $('#p_rep').textContent=p.rep||''; $('#p_tax').textContent=p.tax||''; $('#p_addr').textContent=p.addr||''; $('#p_phone').textContent=p.phone||'';
-  $('#p_mobile').textContent=p.mobile?'／'+p.mobile:''; $('#p_email').textContent=p.email||''; $('#p_repId').textContent=p.repId?'（身分證 '+p.repId+'）':'';
+  $('#p_mobile').textContent=p.mobile?'／'+p.mobile:''; $('#p_email').textContent=p.email||''; 
   $('#b_court').textContent=p.court?p.court.replace(/地方法院$/,''):'＿＿＿＿';
   [['sealBig','#sealBig','#sealBigImg'],['sealSmall','#sealSmall','#sealSmallImg']].forEach(([k,box,im])=>{const img=$(im);if(p[k]&&!isPaper()){img.src=p[k];$(box).classList.add('has');}else{img.removeAttribute('src');$(box).classList.remove('has');}$(box).classList.remove('err');});
 }
@@ -807,7 +806,7 @@ function validate(){
     if(!p){E(field,'尚未選擇甲方公司');return;}
     const miss=[['rep','負責人'],['tax','統一編號'],['addr','地址'],['phone','電話'],['court','管轄法院'],].concat(isPaper()?[]:[['sealBig','公司大章圖檔'],['sealSmall','負責人小章圖檔']]).filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
     if(miss.length)E(field,`「${p.name}」公司資料缺少：${miss.join('、')}（請管理員或行政到合約系統「公司設定」補齊）`);
-    const soft=[['mobile','行動電話'],['repId','代表人身分證字號']].filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
+    const soft=[['mobile','行動電話']].filter(([k])=>!(p[k]||'').trim()).map(x=>x[1]);
     if(soft.length)W(field,`「${p.name}」公司資料未填：${soft.join('、')}（官方規定應記載，建議補齊）`);
     if(p.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.email))E(field,`「${p.name}」電子信箱格式不正確`);
     if(p.tax&&!twTax(p.tax))E(field,`「${p.name}」統一編號 ${p.tax} 檢查碼不正確`);};
@@ -866,7 +865,8 @@ function validate(){
   // 第三條
   if(reqR('accident','曾否發生重大事故')){
     if(v('accident')==='是'&&!v('accidentDesc'))E('accidentDesc','重大事故勾選「是」，請填寫受損狀況');
-    if(v('accident')==='依第三方鑑定報告為準')W('@accident','重大事故勾選「依第三方鑑定報告為準」，請確認簽約前已讓乙方看過鑑定報告');
+    if(v('accident')==='是')W('@accident','重大事故勾選「是」：受損狀況依第三方鑑定報告為準，請確認簽約前已讓乙方看過鑑定報告');
+    if(v('accident')==='依第三方鑑定報告為準')E('@accident','「依第三方鑑定報告為準」已併入「是」，請改勾「否」或「是」');
   }
   if(reqR('flood','是否為泡水車')&&v('flood')!=='否')W('@flood',`已勾選「${v('flood')}」，請確認已向乙方充分說明`);
 
